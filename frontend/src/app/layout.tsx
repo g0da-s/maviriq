@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import { Inter, Space_Grotesk } from "next/font/google";
+import "./globals.css";
+import { Nav } from "@/components/nav";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "maverick — validate your idea",
+  description:
+    "4 ai agents research your startup idea and deliver a build or skip verdict",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className="dark">
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-background text-foreground`}
+      >
+        <Nav />
+        <main className="min-h-screen">{children}</main>
+      </body>
+    </html>
+  );
+}

@@ -64,53 +64,36 @@ async def stream_validation(
             }
             return
 
-        # Poll database for updates
-        last_agent = 0
+        # Track which agent completions we've already sent
+        sent_agents: set[int] = set()
+
+        # Detect already-completed agents from a prior load
+        agent_outputs = [
+            (1, "Pain & User Discovery", lambda r: r.pain_discovery),
+            (2, "Competitor Research", lambda r: r.competitor_research),
+            (3, "Viability Analysis", lambda r: r.viability),
+            (4, "Synthesis & Verdict", lambda r: r.synthesis),
+        ]
+
         while True:
             run = await repo.get(run_id)
             if not run:
                 break
 
-            # If agent progressed, send event
-            if run.current_agent > last_agent:
-                last_agent = run.current_agent
-
-                if run.current_agent == 1 and run.pain_discovery:
-                    yield {
-                        "event": "agent_completed",
-                        "data": json.dumps({
-                            "agent": 1,
-                            "name": "Pain & User Discovery",
-                            "output": run.pain_discovery.model_dump(),
-                        }),
-                    }
-                elif run.current_agent == 2 and run.competitor_research:
-                    yield {
-                        "event": "agent_completed",
-                        "data": json.dumps({
-                            "agent": 2,
-                            "name": "Competitor Research",
-                            "output": run.competitor_research.model_dump(),
-                        }),
-                    }
-                elif run.current_agent == 3 and run.viability:
-                    yield {
-                        "event": "agent_completed",
-                        "data": json.dumps({
-                            "agent": 3,
-                            "name": "Viability Analysis",
-                            "output": run.viability.model_dump(),
-                        }),
-                    }
-                elif run.current_agent == 4 and run.synthesis:
-                    yield {
-                        "event": "agent_completed",
-                        "data": json.dumps({
-                            "agent": 4,
-                            "name": "Synthesis & Verdict",
-                            "output": run.synthesis.model_dump(),
-                        }),
-                    }
+            # Emit completion events for any agent that has output we haven't sent yet
+            for agent_num, agent_name, get_output in agent_outputs:
+                if agent_num not in sent_agents:
+                    output = get_output(run)
+                    if output is not None:
+                        sent_agents.add(agent_num)
+                        yield {
+                            "event": "agent_completed",
+                            "data": json.dumps({
+                                "agent": agent_num,
+                                "name": agent_name,
+                                "output": output.model_dump(),
+                            }),
+                        }
 
             # Check if done
             if run.status == ValidationStatus.COMPLETED:
