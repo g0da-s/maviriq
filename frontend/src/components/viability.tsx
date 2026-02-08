@@ -16,16 +16,9 @@ export function Viability({ data }: { data: ViabilityOutput }) {
   const scorePercent = Math.round(data.opportunity_score * 100);
 
   return (
-    <div className="rounded-2xl border border-card-border bg-card p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-build/10 text-xs font-bold text-build">
-          3
-        </span>
-        <h3 className="font-display text-lg font-semibold">viability analysis</h3>
-      </div>
-
+    <div className="space-y-5">
       {/* opportunity score */}
-      <div className="mb-6 flex items-center gap-4">
+      <div className="flex items-center gap-4">
         <div className="relative h-20 w-20">
           <svg className="h-20 w-20 -rotate-90" viewBox="0 0 36 36">
             <circle
@@ -57,7 +50,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       </div>
 
       {/* key metrics */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
           <p className="text-xs text-muted/60 mb-1">will people pay?</p>
           <p className={`font-display font-bold ${data.people_pay ? "text-build" : "text-skip"}`}>
@@ -78,7 +71,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       </div>
 
       {/* market gap */}
-      <div className="mb-6 rounded-xl border border-card-border bg-white/[0.02] p-4">
+      <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
         <p className="text-xs text-muted/60 mb-1">
           market gap:{" "}
           <span className={`font-medium ${
@@ -94,11 +87,11 @@ export function Viability({ data }: { data: ViabilityOutput }) {
 
       {/* signals */}
       {data.signals.length > 0 && (
-        <>
+        <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
             signals
           </p>
-          <div className="space-y-2 mb-6">
+          <div className="space-y-2">
             {data.signals.map((sig, i) => (
               <div key={i} className="flex items-start gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
                 <span className={`font-mono text-sm font-bold ${directionColor[sig.direction]}`}>
@@ -111,12 +104,12 @@ export function Viability({ data }: { data: ViabilityOutput }) {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       {/* risk factors */}
       {data.risk_factors.length > 0 && (
-        <>
+        <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
             risk factors
           </p>
@@ -127,7 +120,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
               </span>
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

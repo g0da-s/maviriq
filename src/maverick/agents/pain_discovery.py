@@ -27,6 +27,7 @@ Rules:
 the subreddit they posted in, how they describe themselves).
 - Rate severity 1-5: 1=minor annoyance, 3=significant friction, 5=blocking/desperate.
 - Group the complainers into user segments and count how many pain points each segment has.
+- For willingness_to_pay, use ONLY one of these exact values: "high", "medium", or "low". No other text.
 - Pick the PRIMARY target user: the segment with the most pain points AND highest severity.
 - If the data is insufficient (fewer than 5 real pain points found), set data_quality to "partial".
 - Do NOT fabricate quotes or sources. If a snippet is vague, skip it."""

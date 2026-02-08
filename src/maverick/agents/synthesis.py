@@ -23,9 +23,17 @@ Your job: Synthesize ALL of this into a clear verdict.
 - SKIP: Weak pain OR saturated market OR unreachable users OR no gap
 - CONDITIONAL: Viable BUT only under specific conditions (specify what those are)
 
+**Confidence calibration (be precise, avoid defaulting to 0.60-0.65):**
+- 0.90+: Overwhelming evidence — strong pain, clear gap, easy reach, proven willingness to pay
+- 0.75-0.89: Strong evidence with minor concerns — most signals positive, 1-2 risks
+- 0.55-0.74: Mixed evidence — some positive signals but real concerns or data gaps
+- 0.35-0.54: Weak case — limited pain evidence, crowded market, or hard to reach users
+- Below 0.35: Very weak — insufficient data, no clear pain, or major red flags
+Think carefully about where THIS SPECIFIC idea falls. Different ideas should get meaningfully different scores.
+
 **What to include:**
-- Verdict + confidence (0.0-1.0, be honest)
-- One-line summary (what is this, why does it matter)
+- Verdict + confidence (0.0-1.0, calibrated per the scale above)
+- One-line summary: explain WHY you gave this verdict, do NOT restate the idea. Focus on the key insight (e.g. "Strong pain but saturated market with entrenched players makes differentiation difficult")
 - Reasoning (3-5 paragraphs, cite the data)
 - Key strengths (why BUILD)
 - Key risks (why SKIP or be cautious)

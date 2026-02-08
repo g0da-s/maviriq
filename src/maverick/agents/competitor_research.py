@@ -31,11 +31,12 @@ For each competitor found:
 - Review sentiment and count if mentioned
 
 Then synthesize:
-- Market saturation (low/medium/high) based on number and quality of competitors
+- Market saturation: use ONLY one of "low", "medium", or "high"
 - Average price point (free, $10-50/mo, $50-200/mo, enterprise)
 - Common complaints across competitors
 - Underserved needs (gaps in existing solutions)
 
+For review_sentiment, use ONLY one of: "positive", "mixed", or "negative". No other text.
 If fewer than 5 competitors found, set data_quality to "partial".
 Do NOT fabricate competitors. Only report what you find in the data."""
 

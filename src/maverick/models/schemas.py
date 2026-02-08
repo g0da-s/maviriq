@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ──────────────────────────────────────────────
@@ -22,7 +23,24 @@ class UserSegment(BaseModel):
     label: str  # e.g., "early-stage startup founders"
     description: str
     frequency: int  # How many pain points mention this segment
-    willingness_to_pay: str  # "high", "medium", "low"
+    willingness_to_pay: Literal["high", "medium", "low"]
+
+    @field_validator("willingness_to_pay", mode="before")
+    @classmethod
+    def normalize_willingness(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("high", "medium", "low"):
+            return v_lower
+        # LLM sometimes returns verbose strings like "Medium to High - ..."
+        if "high" in v_lower:
+            return "high"
+        if "medium" in v_lower:
+            return "medium"
+        if "low" in v_lower:
+            return "low"
+        return v  # let Pydantic raise the validation error
 
 
 class PainDiscoveryInput(BaseModel):
@@ -56,9 +74,23 @@ class Competitor(BaseModel):
     pricing: list[CompetitorPricing]
     strengths: list[str]
     weaknesses: list[str]
-    review_sentiment: str  # "positive", "mixed", "negative"
+    review_sentiment: Literal["positive", "mixed", "negative"]
     review_count: int | None = None
     source: str  # "google", "g2", "capterra"
+
+    @field_validator("review_sentiment", mode="before")
+    @classmethod
+    def normalize_sentiment(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("positive", "mixed", "negative"):
+            return v_lower
+        if "positive" in v_lower:
+            return "positive"
+        if "negative" in v_lower:
+            return "negative"
+        return "mixed"
 
 
 class CompetitorResearchInput(BaseModel):
@@ -69,11 +101,27 @@ class CompetitorResearchInput(BaseModel):
 class CompetitorResearchOutput(BaseModel):
     target_user: UserSegment
     competitors: list[Competitor]
-    market_saturation: str  # "low", "medium", "high"
+    market_saturation: Literal["low", "medium", "high"]
     avg_price_point: str
     common_complaints: list[str]
     underserved_needs: list[str]
     data_quality: str = "full"
+
+    @field_validator("market_saturation", mode="before")
+    @classmethod
+    def normalize_saturation(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("low", "medium", "high"):
+            return v_lower
+        if "high" in v_lower:
+            return "high"
+        if "medium" in v_lower:
+            return "medium"
+        if "low" in v_lower:
+            return "low"
+        return v
 
 
 # ──────────────────────────────────────────────
@@ -82,9 +130,23 @@ class CompetitorResearchOutput(BaseModel):
 
 class ViabilitySignal(BaseModel):
     signal: str
-    direction: str  # "positive", "negative", "neutral"
+    direction: Literal["positive", "negative", "neutral"]
     confidence: float = Field(ge=0.0, le=1.0)
     source: str
+
+    @field_validator("direction", mode="before")
+    @classmethod
+    def normalize_direction(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("positive", "negative", "neutral"):
+            return v_lower
+        if "positive" in v_lower:
+            return "positive"
+        if "negative" in v_lower:
+            return "negative"
+        return "neutral"
 
 
 class ViabilityInput(BaseModel):
@@ -96,13 +158,43 @@ class ViabilityInput(BaseModel):
 class ViabilityOutput(BaseModel):
     people_pay: bool
     people_pay_reasoning: str
-    reachability: str  # "easy", "moderate", "hard"
+    reachability: Literal["easy", "moderate", "hard"]
     reachability_reasoning: str
     market_gap: str
-    gap_size: str  # "large", "medium", "small", "none"
+    gap_size: Literal["large", "medium", "small", "none"]
     signals: list[ViabilitySignal]
     risk_factors: list[str]
     opportunity_score: float = Field(ge=0.0, le=1.0)
+
+    @field_validator("reachability", mode="before")
+    @classmethod
+    def normalize_reachability(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("easy", "moderate", "hard"):
+            return v_lower
+        if "easy" in v_lower:
+            return "easy"
+        if "hard" in v_lower:
+            return "hard"
+        return "moderate"
+
+    @field_validator("gap_size", mode="before")
+    @classmethod
+    def normalize_gap_size(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("large", "medium", "small", "none"):
+            return v_lower
+        if "large" in v_lower:
+            return "large"
+        if "small" in v_lower:
+            return "small"
+        if "none" in v_lower:
+            return "none"
+        return "medium"
 
 
 # ──────────────────────────────────────────────
