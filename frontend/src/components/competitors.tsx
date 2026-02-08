@@ -2,7 +2,7 @@ import type { CompetitorResearchOutput } from "@/lib/types";
 
 const sentimentColor = {
   positive: "text-build",
-  mixed: "text-conditional",
+  mixed: "text-maybe",
   negative: "text-skip",
 };
 
@@ -15,7 +15,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
           <p className="text-xs text-muted/60">saturation</p>
           <p className={`mt-1 font-display font-bold ${
             data.market_saturation === "high" ? "text-skip" :
-            data.market_saturation === "medium" ? "text-conditional" : "text-build"
+            data.market_saturation === "medium" ? "text-maybe" : "text-build"
           }`}>
             {data.market_saturation}
           </p>
@@ -40,7 +40,14 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
             <div key={i} className="rounded-xl border border-card-border bg-white/[0.02] p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-medium">{comp.name}</p>
+                  {comp.url ? (
+                    <a href={comp.url} target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
+                      {comp.name}
+                      <span className="ml-1 text-muted/40 text-xs">↗</span>
+                    </a>
+                  ) : (
+                    <p className="font-medium">{comp.name}</p>
+                  )}
                   <p className="mt-0.5 text-xs text-muted/60">{comp.one_liner}</p>
                 </div>
                 <span className={`text-xs font-medium ${sentimentColor[comp.review_sentiment]}`}>

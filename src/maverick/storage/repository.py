@@ -13,13 +13,12 @@ from maverick.models.schemas import (
     ValidationStatus,
     ViabilityOutput,
 )
-from maverick.storage.database import get_db
+from maverick.storage.database import db_connection
 
 
 class ValidationRepository:
     async def create(self, run: ValidationRun) -> None:
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             await db.execute(
                 """INSERT INTO validation_runs
                    (id, idea, status, current_agent, started_at, created_at)
@@ -34,12 +33,9 @@ class ValidationRepository:
                 ),
             )
             await db.commit()
-        finally:
-            await db.close()
 
     async def update(self, run: ValidationRun) -> None:
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             await db.execute(
                 """UPDATE validation_runs SET
                    status = ?, current_agent = ?, started_at = ?,
@@ -65,12 +61,9 @@ class ValidationRepository:
                 ),
             )
             await db.commit()
-        finally:
-            await db.close()
 
     async def get(self, run_id: str) -> ValidationRun | None:
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             cursor = await db.execute(
                 "SELECT * FROM validation_runs WHERE id = ?", (run_id,)
             )
@@ -78,12 +71,9 @@ class ValidationRepository:
             if not row:
                 return None
             return self._row_to_run(row)
-        finally:
-            await db.close()
 
     async def list(self, page: int = 1, per_page: int = 20) -> tuple[list[ValidationListItem], int]:
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             cursor = await db.execute("SELECT COUNT(*) FROM validation_runs")
             total_row = await cursor.fetchone()
             total = total_row[0] if total_row else 0
@@ -118,19 +108,14 @@ class ValidationRepository:
                     )
                 )
             return items, total
-        finally:
-            await db.close()
 
     async def delete(self, run_id: str) -> bool:
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             cursor = await db.execute(
                 "DELETE FROM validation_runs WHERE id = ?", (run_id,)
             )
             await db.commit()
             return cursor.rowcount > 0
-        finally:
-            await db.close()
 
     def _row_to_run(self, row: aiosqlite.Row) -> ValidationRun:
         return ValidationRun(
@@ -156,8 +141,7 @@ class SearchCacheRepository:
     async def get(self, query: str, source: str) -> dict | None:
         key = self._hash(query, source)
         now = self._utcnow_iso()
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             cursor = await db.execute(
                 """SELECT response FROM search_cache
                    WHERE query_hash = ? AND expires_at > ?""",
@@ -167,15 +151,12 @@ class SearchCacheRepository:
             if not row:
                 return None
             return json.loads(row["response"])
-        finally:
-            await db.close()
 
     async def set(self, query: str, source: str, response: dict, ttl_seconds: int = 86400) -> None:
         key = self._hash(query, source)
         expires = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
         expires_str = expires.strftime("%Y-%m-%dT%H:%M:%S")
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             await db.execute(
                 """INSERT OR REPLACE INTO search_cache
                    (query_hash, source, query, response, expires_at)
@@ -183,20 +164,15 @@ class SearchCacheRepository:
                 (key, source, query, json.dumps(response), expires_str),
             )
             await db.commit()
-        finally:
-            await db.close()
 
     async def cleanup_expired(self) -> int:
         now = self._utcnow_iso()
-        db = await get_db()
-        try:
+        async with db_connection() as db:
             cursor = await db.execute(
                 "DELETE FROM search_cache WHERE expires_at <= ?", (now,)
             )
             await db.commit()
             return cursor.rowcount
-        finally:
-            await db.close()
 
     def _hash(self, query: str, source: str) -> str:
         return hashlib.sha256(f"{source}:{query}".encode()).hexdigest()

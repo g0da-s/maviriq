@@ -15,6 +15,7 @@ export function DetailSection({
     <div className="rounded-2xl border border-card-border bg-card">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-white/[0.02]"
       >
         <span className="text-sm font-medium text-muted">{title}</span>

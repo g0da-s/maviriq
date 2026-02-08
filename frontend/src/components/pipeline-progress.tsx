@@ -25,56 +25,76 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const [verdict, setVerdict] = useState<{ verdict: Verdict; confidence: number } | null>(null);
   const [failed, setFailed] = useState(false);
   const esRef = useRef<EventSource | null>(null);
+  const retriesRef = useRef(0);
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    // Start at agent 1 immediately
-    setCurrentAgent(1);
+    const MAX_RETRIES = 5;
+    doneRef.current = false;
+    retriesRef.current = 0;
 
-    const es = new EventSource(getStreamUrl(runId));
-    esRef.current = es;
+    function connect() {
+      if (doneRef.current) return;
 
-    es.addEventListener("agent_completed", (e) => {
-      const data = JSON.parse(e.data);
-      const agentNum = data.agent as number;
-      setCompletedAgents((prev) => new Set([...prev, agentNum]));
-      // Advance to next agent
-      if (agentNum < 4) {
-        setCurrentAgent(agentNum + 1);
-      }
-    });
+      // Start at agent 1 immediately
+      setCurrentAgent(1);
 
-    es.addEventListener("pipeline_completed", async (e) => {
-      const data = JSON.parse(e.data);
-      setVerdict({ verdict: data.verdict, confidence: data.confidence });
-      setCompletedAgents(new Set([1, 2, 3, 4]));
-      es.close();
+      const es = new EventSource(getStreamUrl(runId));
+      esRef.current = es;
 
-      // Fetch full results
-      try {
-        const run = await getValidation(runId);
-        onComplete(run);
-      } catch {
-        onError("failed to fetch results");
-      }
-    });
+      es.addEventListener("agent_completed", (e) => {
+        retriesRef.current = 0; // reset on success
+        const data = JSON.parse(e.data);
+        const agentNum = data.agent as number;
+        setCompletedAgents((prev) => new Set([...prev, agentNum]));
+        if (agentNum < 4) {
+          setCurrentAgent(agentNum + 1);
+        }
+      });
 
-    es.addEventListener("pipeline_error", (e) => {
-      const data = JSON.parse(e.data);
-      setFailed(true);
-      onError(data.error);
-      es.close();
-    });
+      es.addEventListener("pipeline_completed", async (e) => {
+        doneRef.current = true;
+        const data = JSON.parse(e.data);
+        setVerdict({ verdict: data.verdict, confidence: data.confidence });
+        setCompletedAgents(new Set([1, 2, 3, 4]));
+        es.close();
 
-    es.addEventListener("error", () => {
-      // EventSource auto-reconnects; only handle if closed
-      if (es.readyState === EventSource.CLOSED) {
+        try {
+          const run = await getValidation(runId);
+          onComplete(run);
+        } catch {
+          onError("failed to fetch results");
+        }
+      });
+
+      es.addEventListener("pipeline_error", (e) => {
+        doneRef.current = true;
+        const data = JSON.parse(e.data);
         setFailed(true);
-        onError("connection lost");
-      }
-    });
+        onError(data.error);
+        es.close();
+      });
+
+      es.addEventListener("error", () => {
+        if (doneRef.current) return;
+        es.close();
+
+        if (retriesRef.current < MAX_RETRIES) {
+          const delay = Math.min(1000 * 2 ** retriesRef.current, 10_000);
+          retriesRef.current += 1;
+          setTimeout(connect, delay);
+        } else {
+          setFailed(true);
+          onError("connection lost after multiple retries");
+        }
+      });
+    }
+
+    connect();
 
     return () => {
-      es.close();
+      doneRef.current = true;
+      esRef.current?.close();
     };
   }, [runId, onComplete, onError]);
 
@@ -95,7 +115,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
                 ? "text-build"
                 : verdict.verdict === "SKIP"
                   ? "text-skip"
-                  : "text-conditional"
+                  : "text-maybe"
             }`}
           >
             {verdict.verdict.toLowerCase()}

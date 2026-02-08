@@ -40,6 +40,7 @@ async def create_validation(
     # Start pipeline in background
     task = asyncio.create_task(_run_pipeline_background(run_id, request.idea, runner))
     _running_pipelines[run_id] = task
+    task.add_done_callback(lambda _: _running_pipelines.pop(run_id, None))
 
     return CreateValidationResponse(
         id=run_id,
@@ -143,6 +144,10 @@ async def list_validations(
 async def delete_validation(
     run_id: str, repo: ValidationRepository = Depends(get_validation_repo)
 ) -> dict:
+    # Cancel running pipeline if still active
+    task = _running_pipelines.pop(run_id, None)
+    if task and not task.done():
+        task.cancel()
     deleted = await repo.delete(run_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Validation not found")
@@ -157,5 +162,4 @@ async def _run_pipeline_background(run_id: str, idea: str, runner: PipelineRunne
     except Exception as e:
         logger.exception(f"Background pipeline failed for {run_id}")
     finally:
-        if run_id in _running_pipelines:
-            del _running_pipelines[run_id]
+        _running_pipelines.pop(run_id, None)

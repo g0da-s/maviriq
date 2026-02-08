@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ class AgentStartedEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int, name: str) -> "AgentStartedEvent":
-        return cls(data={"agent": agent_num, "name": name, "timestamp": datetime.now().isoformat()})
+        return cls(data={"agent": agent_num, "name": name, "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
 class AgentProgressEvent(SSEEvent):
@@ -30,7 +30,7 @@ class AgentCompletedEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int, name: str, output: dict) -> "AgentCompletedEvent":
-        return cls(data={"agent": agent_num, "name": name, "output": output, "timestamp": datetime.now().isoformat()})
+        return cls(data={"agent": agent_num, "name": name, "output": output, "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
 class PipelineCompletedEvent(SSEEvent):
@@ -38,7 +38,7 @@ class PipelineCompletedEvent(SSEEvent):
 
     @classmethod
     def create(cls, run_id: str, verdict: str, confidence: float) -> "PipelineCompletedEvent":
-        return cls(data={"id": run_id, "verdict": verdict, "confidence": confidence, "timestamp": datetime.now().isoformat()})
+        return cls(data={"id": run_id, "verdict": verdict, "confidence": confidence, "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
 class PipelineErrorEvent(SSEEvent):
@@ -46,4 +46,4 @@ class PipelineErrorEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int, error: str) -> "PipelineErrorEvent":
-        return cls(data={"agent": agent_num, "error": error, "timestamp": datetime.now().isoformat()})
+        return cls(data={"agent": agent_num, "error": error, "timestamp": datetime.now(timezone.utc).isoformat()})

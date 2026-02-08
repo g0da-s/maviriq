@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import AsyncGenerator
@@ -6,6 +7,7 @@ from maverick.agents.competitor_research import CompetitorResearchAgent
 from maverick.agents.pain_discovery import PainDiscoveryAgent
 from maverick.agents.synthesis import SynthesisAgent
 from maverick.agents.viability_analysis import ViabilityAnalysisAgent
+from maverick.config import settings
 from maverick.models.schemas import (
     CompetitorResearchInput,
     PainDiscoveryInput,
@@ -52,7 +54,10 @@ class PipelineRunner:
             await self.repository.update(run)
             yield AgentStartedEvent.create(1, self.agent1.name)
 
-            run.pain_discovery = await self.agent1.run(PainDiscoveryInput(idea=idea))
+            run.pain_discovery = await asyncio.wait_for(
+                self.agent1.run(PainDiscoveryInput(idea=idea)),
+                timeout=settings.agent_timeout,
+            )
             await self.repository.update(run)
             yield AgentCompletedEvent.create(
                 1, self.agent1.name, run.pain_discovery.model_dump()
@@ -63,10 +68,13 @@ class PipelineRunner:
             await self.repository.update(run)
             yield AgentStartedEvent.create(2, self.agent2.name)
 
-            run.competitor_research = await self.agent2.run(
-                CompetitorResearchInput(
-                    idea=idea, target_user=run.pain_discovery.primary_target_user
-                )
+            run.competitor_research = await asyncio.wait_for(
+                self.agent2.run(
+                    CompetitorResearchInput(
+                        idea=idea, target_user=run.pain_discovery.primary_target_user
+                    )
+                ),
+                timeout=settings.agent_timeout,
             )
             await self.repository.update(run)
             yield AgentCompletedEvent.create(
@@ -78,12 +86,15 @@ class PipelineRunner:
             await self.repository.update(run)
             yield AgentStartedEvent.create(3, self.agent3.name)
 
-            run.viability = await self.agent3.run(
-                ViabilityInput(
-                    idea=idea,
-                    pain_discovery=run.pain_discovery,
-                    competitor_research=run.competitor_research,
-                )
+            run.viability = await asyncio.wait_for(
+                self.agent3.run(
+                    ViabilityInput(
+                        idea=idea,
+                        pain_discovery=run.pain_discovery,
+                        competitor_research=run.competitor_research,
+                    )
+                ),
+                timeout=settings.agent_timeout,
             )
             await self.repository.update(run)
             yield AgentCompletedEvent.create(
@@ -95,13 +106,16 @@ class PipelineRunner:
             await self.repository.update(run)
             yield AgentStartedEvent.create(4, self.agent4.name)
 
-            run.synthesis = await self.agent4.run(
-                SynthesisInput(
-                    idea=idea,
-                    pain_discovery=run.pain_discovery,
-                    competitor_research=run.competitor_research,
-                    viability=run.viability,
-                )
+            run.synthesis = await asyncio.wait_for(
+                self.agent4.run(
+                    SynthesisInput(
+                        idea=idea,
+                        pain_discovery=run.pain_discovery,
+                        competitor_research=run.competitor_research,
+                        viability=run.viability,
+                    )
+                ),
+                timeout=settings.agent_timeout,
             )
             await self.repository.update(run)
             yield AgentCompletedEvent.create(
@@ -117,6 +131,14 @@ class PipelineRunner:
                 run.id, run.synthesis.verdict.value, run.synthesis.confidence
             )
 
+        except asyncio.TimeoutError:
+            msg = f"Agent {run.current_agent} timed out after {settings.agent_timeout}s"
+            logger.error(f"Pipeline failed for run {run_id}: {msg}")
+            run.status = ValidationStatus.FAILED
+            run.error = msg
+            run.completed_at = datetime.now(timezone.utc)
+            await self.repository.update(run)
+            yield PipelineErrorEvent.create(run.current_agent, msg)
         except Exception as e:
             logger.exception(f"Pipeline failed for run {run_id}")
             run.status = ValidationStatus.FAILED

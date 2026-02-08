@@ -45,7 +45,13 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-muted/60">
-                <span>{pp.source}</span>
+                {pp.source_url ? (
+                  <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {pp.source} <span className="text-muted/30">↗</span>
+                  </a>
+                ) : (
+                  <span>{pp.source}</span>
+                )}
                 {pp.author_context && (
                   <>
                     <span>&middot;</span>

@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator
+
 import aiosqlite
 
 DB_PATH = "maverick.db"
@@ -36,10 +39,16 @@ async def get_db() -> aiosqlite.Connection:
     return db
 
 
-async def init_db() -> None:
+@asynccontextmanager
+async def db_connection() -> AsyncGenerator[aiosqlite.Connection]:
     db = await get_db()
     try:
-        await db.executescript(SCHEMA)
-        await db.commit()
+        yield db
     finally:
         await db.close()
+
+
+async def init_db() -> None:
+    async with db_connection() as db:
+        await db.executescript(SCHEMA)
+        await db.commit()

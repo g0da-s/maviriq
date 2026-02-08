@@ -8,7 +8,7 @@
   --card-border: rgba(255, 255, 255, 0.08);
   --build: #22c55e;
   --skip: #ef4444;
-  --conditional: #eab308;
+  --maybe: #eab308;
 }
 
 @theme inline {
@@ -19,7 +19,7 @@
   --color-card-border: var(--card-border);
   --color-build: var(--build);
   --color-skip: var(--skip);
-  --color-conditional: var(--conditional);
+  --color-maybe: var(--maybe);
   --font-sans: var(--font-inter);
   --font-display: var(--font-space-grotesk);
 }

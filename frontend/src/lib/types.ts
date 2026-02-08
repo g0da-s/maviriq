@@ -1,136 +1,179 @@
-export type ValidationStatus = "pending" | "running" | "completed" | "failed";
-export type Verdict = "BUILD" | "SKIP" | "MAYBE";
-export type WillingnessToPay = "high" | "medium" | "low";
-export type MarketSaturation = "low" | "medium" | "high";
-export type GapSize = "large" | "medium" | "small" | "none";
-export type SignalDirection = "positive" | "negative" | "neutral";
-export type Reachability = "easy" | "moderate" | "hard";
-export type ReviewSentiment = "positive" | "mixed" | "negative";
+import { z } from "zod";
 
-export interface PainPoint {
-  source: string;
-  source_url: string;
-  quote: string;
-  author_context: string;
-  pain_severity: number;
-  date: string | null;
-}
+// ── Enums ──
 
-export interface UserSegment {
-  label: string;
-  description: string;
-  frequency: number;
-  willingness_to_pay: WillingnessToPay;
-}
+const ValidationStatusSchema = z.enum(["pending", "running", "completed", "failed"]);
+const VerdictSchema = z.enum(["BUILD", "SKIP", "MAYBE"]);
+const WillingsToPaySchema = z.enum(["high", "medium", "low"]);
+const MarketSaturationSchema = z.enum(["low", "medium", "high"]);
+const GapSizeSchema = z.enum(["large", "medium", "small", "none"]);
+const SignalDirectionSchema = z.enum(["positive", "negative", "neutral"]);
+const ReachabilitySchema = z.enum(["easy", "moderate", "hard"]);
+const ReviewSentimentSchema = z.enum(["positive", "mixed", "negative"]);
 
-export interface PainDiscoveryOutput {
-  idea: string;
-  pain_points: PainPoint[];
-  user_segments: UserSegment[];
-  primary_target_user: UserSegment;
-  pain_summary: string;
-  search_queries_used: string[];
-  data_quality: "full" | "partial";
-}
+export type ValidationStatus = z.infer<typeof ValidationStatusSchema>;
+export type Verdict = z.infer<typeof VerdictSchema>;
+export type WillingnessToPay = z.infer<typeof WillingsToPaySchema>;
+export type MarketSaturation = z.infer<typeof MarketSaturationSchema>;
+export type GapSize = z.infer<typeof GapSizeSchema>;
+export type SignalDirection = z.infer<typeof SignalDirectionSchema>;
+export type Reachability = z.infer<typeof ReachabilitySchema>;
+export type ReviewSentiment = z.infer<typeof ReviewSentimentSchema>;
 
-export interface CompetitorPricing {
-  plan_name: string;
-  price: string;
-  features: string[];
-}
+// ── Pain Discovery ──
 
-export interface Competitor {
-  name: string;
-  url: string;
-  one_liner: string;
-  pricing: CompetitorPricing[];
-  strengths: string[];
-  weaknesses: string[];
-  review_sentiment: ReviewSentiment;
-  review_count: number;
-  source: string;
-}
+const PainPointSchema = z.object({
+  source: z.string(),
+  source_url: z.string(),
+  quote: z.string(),
+  author_context: z.string(),
+  pain_severity: z.number(),
+  date: z.string().nullable(),
+});
 
-export interface CompetitorResearchOutput {
-  target_user: UserSegment;
-  competitors: Competitor[];
-  market_saturation: MarketSaturation;
-  avg_price_point: string;
-  common_complaints: string[];
-  underserved_needs: string[];
-  data_quality: "full" | "partial";
-}
+const UserSegmentSchema = z.object({
+  label: z.string(),
+  description: z.string(),
+  frequency: z.number(),
+  willingness_to_pay: WillingsToPaySchema,
+});
 
-export interface ViabilitySignal {
-  signal: string;
-  direction: SignalDirection;
-  confidence: number;
-  source: string;
-}
+const PainDiscoveryOutputSchema = z.object({
+  idea: z.string(),
+  pain_points: z.array(PainPointSchema),
+  user_segments: z.array(UserSegmentSchema),
+  primary_target_user: UserSegmentSchema,
+  pain_summary: z.string(),
+  search_queries_used: z.array(z.string()),
+  data_quality: z.enum(["full", "partial"]),
+});
 
-export interface ViabilityOutput {
-  people_pay: boolean;
-  people_pay_reasoning: string;
-  reachability: Reachability;
-  reachability_reasoning: string;
-  market_gap: string;
-  gap_size: GapSize;
-  signals: ViabilitySignal[];
-  risk_factors: string[];
-  opportunity_score: number;
-}
+export type PainPoint = z.infer<typeof PainPointSchema>;
+export type UserSegment = z.infer<typeof UserSegmentSchema>;
+export type PainDiscoveryOutput = z.infer<typeof PainDiscoveryOutputSchema>;
 
-export interface SynthesisOutput {
-  verdict: Verdict;
-  confidence: number;
-  one_line_summary: string;
-  reasoning: string;
-  key_strengths: string[];
-  key_risks: string[];
-  recommended_mvp: string | null;
-  recommended_positioning: string | null;
-  target_user_summary: string;
-  estimated_market_size: string;
-  next_steps: string[];
-}
+// ── Competitor Research ──
 
-export interface ValidationRun {
-  id: string;
-  idea: string;
-  status: ValidationStatus;
-  current_agent: number;
-  started_at: string | null;
-  completed_at: string | null;
-  pain_discovery: PainDiscoveryOutput | null;
-  competitor_research: CompetitorResearchOutput | null;
-  viability: ViabilityOutput | null;
-  synthesis: SynthesisOutput | null;
-  error: string | null;
-  total_cost_cents: number;
-}
+const CompetitorPricingSchema = z.object({
+  plan_name: z.string(),
+  price: z.string(),
+  features: z.array(z.string()),
+});
 
-export interface CreateValidationResponse {
-  id: string;
-  idea: string;
-  status: ValidationStatus;
-  stream_url: string;
-}
+const CompetitorSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  one_liner: z.string(),
+  pricing: z.array(CompetitorPricingSchema),
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+  review_sentiment: ReviewSentimentSchema,
+  review_count: z.number(),
+  source: z.string(),
+});
 
-export interface ValidationListItem {
-  id: string;
-  idea: string;
-  status: ValidationStatus;
-  verdict: Verdict | null;
-  confidence: number | null;
-  created_at: string | null;
-}
+const CompetitorResearchOutputSchema = z.object({
+  target_user: UserSegmentSchema,
+  competitors: z.array(CompetitorSchema),
+  market_saturation: MarketSaturationSchema,
+  avg_price_point: z.string(),
+  common_complaints: z.array(z.string()),
+  underserved_needs: z.array(z.string()),
+  data_quality: z.enum(["full", "partial"]),
+});
 
-export interface ValidationListResponse {
-  items: ValidationListItem[];
-  total: number;
-  page: number;
-  per_page: number;
-}
+export type CompetitorPricing = z.infer<typeof CompetitorPricingSchema>;
+export type Competitor = z.infer<typeof CompetitorSchema>;
+export type CompetitorResearchOutput = z.infer<typeof CompetitorResearchOutputSchema>;
+
+// ── Viability ──
+
+const ViabilitySignalSchema = z.object({
+  signal: z.string(),
+  direction: SignalDirectionSchema,
+  confidence: z.number(),
+  source: z.string(),
+});
+
+const ViabilityOutputSchema = z.object({
+  people_pay: z.boolean(),
+  people_pay_reasoning: z.string(),
+  reachability: ReachabilitySchema,
+  reachability_reasoning: z.string(),
+  market_gap: z.string(),
+  gap_size: GapSizeSchema,
+  signals: z.array(ViabilitySignalSchema),
+  risk_factors: z.array(z.string()),
+  opportunity_score: z.number(),
+});
+
+export type ViabilitySignal = z.infer<typeof ViabilitySignalSchema>;
+export type ViabilityOutput = z.infer<typeof ViabilityOutputSchema>;
+
+// ── Synthesis ──
+
+const SynthesisOutputSchema = z.object({
+  verdict: VerdictSchema,
+  confidence: z.number(),
+  one_line_summary: z.string(),
+  reasoning: z.string(),
+  key_strengths: z.array(z.string()),
+  key_risks: z.array(z.string()),
+  recommended_mvp: z.string().nullable(),
+  recommended_positioning: z.string().nullable(),
+  target_user_summary: z.string(),
+  estimated_market_size: z.string(),
+  next_steps: z.array(z.string()),
+});
+
+export type SynthesisOutput = z.infer<typeof SynthesisOutputSchema>;
+
+// ── API Responses ──
+
+export const ValidationRunSchema = z.object({
+  id: z.string(),
+  idea: z.string(),
+  status: ValidationStatusSchema,
+  current_agent: z.number(),
+  started_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  pain_discovery: PainDiscoveryOutputSchema.nullable(),
+  competitor_research: CompetitorResearchOutputSchema.nullable(),
+  viability: ViabilityOutputSchema.nullable(),
+  synthesis: SynthesisOutputSchema.nullable(),
+  error: z.string().nullable(),
+  total_cost_cents: z.number(),
+});
+
+export const CreateValidationResponseSchema = z.object({
+  id: z.string(),
+  idea: z.string(),
+  status: ValidationStatusSchema,
+  stream_url: z.string(),
+});
+
+export const ValidationListItemSchema = z.object({
+  id: z.string(),
+  idea: z.string(),
+  status: ValidationStatusSchema,
+  verdict: VerdictSchema.nullable(),
+  confidence: z.number().nullable(),
+  created_at: z.string().nullable(),
+});
+
+export const ValidationListResponseSchema = z.object({
+  items: z.array(ValidationListItemSchema),
+  total: z.number(),
+  page: z.number(),
+  per_page: z.number(),
+});
+
+export type ValidationRun = z.infer<typeof ValidationRunSchema>;
+export type CreateValidationResponse = z.infer<typeof CreateValidationResponseSchema>;
+export type ValidationListItem = z.infer<typeof ValidationListItemSchema>;
+export type ValidationListResponse = z.infer<typeof ValidationListResponseSchema>;
+
+// ── SSE Events ──
 
 export interface AgentCompletedEvent {
   agent: number;

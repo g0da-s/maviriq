@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-background text-foreground`}
       >
         <Nav />
-        <main className="min-h-screen">{children}</main>
+        <main className="min-h-screen">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
       </body>
     </html>
   );

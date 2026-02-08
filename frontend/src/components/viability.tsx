@@ -9,7 +9,7 @@ const directionIcon = {
 const directionColor = {
   positive: "text-build",
   negative: "text-skip",
-  neutral: "text-conditional",
+  neutral: "text-maybe",
 };
 
 export function Viability({ data }: { data: ViabilityOutput }) {
@@ -30,7 +30,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
             <circle
               cx="18" cy="18" r="15.5"
               fill="none"
-              className={scorePercent >= 60 ? "text-build" : scorePercent >= 40 ? "text-conditional" : "text-skip"}
+              className={scorePercent >= 60 ? "text-build" : scorePercent >= 40 ? "text-maybe" : "text-skip"}
               stroke="currentColor"
               strokeWidth="3"
               strokeDasharray={`${scorePercent} ${100 - scorePercent}`}
@@ -62,7 +62,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
           <p className="text-xs text-muted/60 mb-1">reachability</p>
           <p className={`font-display font-bold ${
             data.reachability === "easy" ? "text-build" :
-            data.reachability === "moderate" ? "text-conditional" : "text-skip"
+            data.reachability === "moderate" ? "text-maybe" : "text-skip"
           }`}>
             {data.reachability}
           </p>
@@ -76,7 +76,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
           market gap:{" "}
           <span className={`font-medium ${
             data.gap_size === "large" ? "text-build" :
-            data.gap_size === "medium" ? "text-conditional" :
+            data.gap_size === "medium" ? "text-maybe" :
             data.gap_size === "small" ? "text-muted" : "text-skip"
           }`}>
             {data.gap_size}

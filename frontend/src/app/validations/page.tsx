@@ -2,41 +2,50 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { deleteValidation, listValidations } from "@/lib/api";
 import type { ValidationListItem, ValidationListResponse } from "@/lib/types";
 import { VerdictBadge } from "@/components/verdict-badge";
+import { ConfirmModal } from "@/components/confirm-modal";
 
 export default function HistoryPage() {
+  const searchParams = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
+
   const [data, setData] = useState<ValidationListResponse | null>(null);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   const load = useCallback(async (p: number) => {
     setLoading(true);
+    setError("");
     try {
       const res = await listValidations(p);
       setData(res);
-      setPage(p);
-    } catch {
-      // ignore
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to load validations");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load(1);
-  }, [load]);
+    load(page);
+  }, [load, page]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("delete this validation?")) return;
+  async function handleDelete() {
+    if (!confirmId) return;
+    const id = confirmId;
+    setConfirmId(null);
     setDeleting(id);
+    setError("");
     try {
       await deleteValidation(id);
       load(page);
-    } catch {
-      // ignore
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "failed to delete validation");
     } finally {
       setDeleting(null);
     }
@@ -46,6 +55,13 @@ export default function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
+      <ConfirmModal
+        open={confirmId !== null}
+        title="delete this validation?"
+        description="this action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmId(null)}
+      />
       <div className="mb-8 flex items-center justify-between">
         <h1 className="font-display text-3xl font-bold">history</h1>
         <Link
@@ -56,11 +72,27 @@ export default function HistoryPage() {
         </Link>
       </div>
 
-      {loading && !data ? (
-        <div className="flex justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+      {error && (
+        <div className="mb-4 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-sm text-skip">
+          {error}
         </div>
-      ) : !data || data.items.length === 0 ? (
+      )}
+
+      {loading && !data ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 rounded-2xl border border-card-border bg-card p-5">
+              <div className="w-28 shrink-0">
+                <div className="h-6 w-16 animate-pulse rounded-full bg-white/5" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-white/5" />
+                <div className="h-3 w-1/3 animate-pulse rounded bg-white/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : error && !data ? null : !data || data.items.length === 0 ? (
         <div className="rounded-2xl border border-card-border bg-card p-12 text-center">
           <p className="text-muted">no validations yet</p>
           <Link href="/" className="mt-4 inline-block text-sm text-build hover:underline">
@@ -101,7 +133,7 @@ export default function HistoryPage() {
 
                 {/* delete */}
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => setConfirmId(item.id)}
                   disabled={deleting === item.id}
                   className="shrink-0 rounded-lg p-2 text-muted/30 opacity-0 transition-all hover:bg-skip/10 hover:text-skip group-hover:opacity-100"
                 >
@@ -120,23 +152,21 @@ export default function HistoryPage() {
           {/* pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
-              <button
-                onClick={() => load(page - 1)}
-                disabled={page <= 1}
-                className="rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 disabled:opacity-30"
+              <Link
+                href={`/validations?page=${page - 1}`}
+                className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page <= 1 ? "pointer-events-none opacity-30" : ""}`}
               >
                 prev
-              </button>
+              </Link>
               <span className="px-3 text-sm text-muted">
                 {page} / {totalPages}
               </span>
-              <button
-                onClick={() => load(page + 1)}
-                disabled={page >= totalPages}
-                className="rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 disabled:opacity-30"
+              <Link
+                href={`/validations?page=${page + 1}`}
+                className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page >= totalPages ? "pointer-events-none opacity-30" : ""}`}
               >
                 next
-              </button>
+              </Link>
             </div>
           )}
         </>

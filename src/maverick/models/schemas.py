@@ -217,6 +217,13 @@ class SynthesisInput(BaseModel):
 class SynthesisOutput(BaseModel):
     verdict: Verdict
     confidence: float = Field(ge=0.0, le=1.0)
+
+    @field_validator("verdict", mode="before")
+    @classmethod
+    def normalize_verdict(cls, v: str) -> str:
+        if isinstance(v, str) and v.upper().strip() == "CONDITIONAL":
+            return "MAYBE"
+        return v
     one_line_summary: str
     reasoning: str
     key_strengths: list[str]
