@@ -1,10 +1,15 @@
 import os
-import pytest
-import pytest_asyncio
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
-# Point DB to a test-specific file before any maverick imports
+import pytest
+
+# Set env vars before any maverick imports
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("SERPER_API_KEY", "test-key")
+os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
+os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
+os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
 
 from maverick.models.schemas import (
     Competitor,
@@ -18,23 +23,65 @@ from maverick.models.schemas import (
     ViabilityOutput,
     ViabilitySignal,
 )
-from maverick.storage import database as db_module
-from maverick.storage.database import init_db
 
 
 # ──────────────────────────────────────────────
-# Database fixture — use a temp file per test session
+# Mock Supabase client
 # ──────────────────────────────────────────────
 
-@pytest_asyncio.fixture(autouse=True)
-async def setup_test_db(tmp_path_factory):
-    """Use a temporary SQLite database for each test session."""
-    tmp = tmp_path_factory.mktemp("db")
-    test_db = str(tmp / "test_maverick.db")
-    db_module.DB_PATH = test_db
-    await init_db()
-    yield
-    # cleanup happens when tmp_path is removed
+def _make_result(data=None, count=None):
+    """Create a mock Supabase execute() result."""
+    return SimpleNamespace(data=data or [], count=count)
+
+
+def _make_chain_mock():
+    """Create a chainable mock that supports .table().select().eq().execute() etc."""
+    chain = MagicMock()
+    # Make execute() return a default result
+    chain.execute = AsyncMock(return_value=_make_result())
+    # Every method call returns the same chain for fluent API
+    for method in [
+        "table", "select", "insert", "update", "upsert", "delete",
+        "eq", "neq", "gt", "gte", "lt", "lte",
+        "order", "range", "maybe_single", "single",
+    ]:
+        getattr(chain, method).return_value = chain
+    # rpc also returns chain
+    chain.rpc = MagicMock(return_value=chain)
+    return chain
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase():
+    """Patch get_supabase at all import sites to return a mock client."""
+    mock_client = _make_chain_mock()
+    mock_fn = AsyncMock(return_value=mock_client)
+    with (
+        patch("maverick.supabase_client.get_supabase", mock_fn),
+        patch("maverick.storage.repository.get_supabase", mock_fn),
+        patch("maverick.storage.user_repository.get_supabase", mock_fn),
+        patch("maverick.storage.credit_repository.get_supabase", mock_fn),
+    ):
+        yield mock_client
+
+
+# ──────────────────────────────────────────────
+# Auth helper
+# ──────────────────────────────────────────────
+
+FAKE_USER = {
+    "id": "test-user-id-123",
+    "email": "test@example.com",
+    "credits": 5,
+    "signup_bonus_granted": True,
+    "created_at": "2025-01-01T00:00:00Z",
+}
+
+
+@pytest.fixture
+def auth_headers():
+    """Returns headers with a fake Bearer token (JWT decoding is mocked separately)."""
+    return {"Authorization": "Bearer fake-supabase-jwt"}
 
 
 # ──────────────────────────────────────────────

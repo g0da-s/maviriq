@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { login as apiLogin } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
@@ -12,22 +11,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const auth = useAuth();
+  const { signIn } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const res = await apiLogin(email, password);
-      auth.login(res.token, res.user);
-      router.push("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "login failed");
-    } finally {
+    const { error: signInError } = await signIn(email, password);
+    if (signInError) {
+      setError(signInError);
       setLoading(false);
+      return;
     }
+    router.push("/");
   }
 
   return (

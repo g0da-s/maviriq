@@ -12,12 +12,12 @@ export function IdeaForm() {
   const [error, setError] = useState("");
   const [needsCredits, setNeedsCredits] = useState(false);
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, session } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!user || !token) {
+    if (!user || !session) {
       router.push("/login");
       return;
     }
@@ -32,7 +32,7 @@ export function IdeaForm() {
     setNeedsCredits(false);
 
     try {
-      const res = await createValidation(idea.trim(), token);
+      const res = await createValidation(idea.trim());
       router.push(`/validations/${res.id}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "something went wrong";

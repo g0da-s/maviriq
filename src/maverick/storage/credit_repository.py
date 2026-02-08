@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from maverick.storage.database import db_connection
+from maverick.supabase_client import get_supabase
 
 
 class CreditTransactionRepository:
@@ -12,10 +12,17 @@ class CreditTransactionRepository:
         stripe_session_id: str | None = None,
     ) -> None:
         txn_id = f"txn_{uuid4().hex[:12]}"
-        async with db_connection() as db:
-            await db.execute(
-                """INSERT INTO credit_transactions (id, user_id, amount, type, stripe_session_id)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (txn_id, user_id, amount, txn_type, stripe_session_id),
+        sb = await get_supabase()
+        await (
+            sb.table("credit_transactions")
+            .insert(
+                {
+                    "id": txn_id,
+                    "user_id": user_id,
+                    "amount": amount,
+                    "type": txn_type,
+                    "stripe_session_id": stripe_session_id,
+                }
             )
-            await db.commit()
+            .execute()
+        )

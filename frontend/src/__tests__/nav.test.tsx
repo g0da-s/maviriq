@@ -18,10 +18,11 @@ vi.mock("next/link", () => ({
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
     user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
-    token: "test-token",
+    session: { access_token: "test-token" },
     loading: false,
-    logout: vi.fn(),
-    login: vi.fn(),
+    signUp: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
     refreshUser: vi.fn(),
   }),
 }));

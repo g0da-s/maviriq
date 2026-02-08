@@ -14,10 +14,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
     user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
-    token: "test-token",
+    session: { access_token: "test-token" },
     loading: false,
-    logout: vi.fn(),
-    login: vi.fn(),
+    signUp: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
     refreshUser: vi.fn(),
   }),
 }));
@@ -104,7 +105,7 @@ describe("IdeaForm", () => {
     await user.type(screen.getByPlaceholderText("describe your startup idea..."), "AI meeting scheduler");
     await user.click(screen.getByRole("button", { name: "validate" }));
 
-    expect(createValidation).toHaveBeenCalledWith("AI meeting scheduler", "test-token");
+    expect(createValidation).toHaveBeenCalledWith("AI meeting scheduler");
     expect(mockPush).toHaveBeenCalledWith("/validations/run-123");
   });
 

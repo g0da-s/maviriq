@@ -36,7 +36,7 @@ export default function HistoryPage() {
 function HistoryContent() {
   const searchParams = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const { user, token, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [data, setData] = useState<ValidationListResponse | null>(null);
@@ -46,26 +46,26 @@ function HistoryContent() {
   const [error, setError] = useState("");
 
   const load = useCallback(async (p: number) => {
-    if (!token) return;
+    if (!session) return;
     setLoading(true);
     setError("");
     try {
-      const res = await listValidations(p, 20, token);
+      const res = await listValidations(p, 20);
       setData(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "failed to load validations");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [session]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
       return;
     }
-    if (token) load(page);
-  }, [load, page, authLoading, user, token, router]);
+    if (session) load(page);
+  }, [load, page, authLoading, user, session, router]);
 
   async function handleDelete() {
     if (!confirmId) return;
@@ -74,7 +74,7 @@ function HistoryContent() {
     setDeleting(id);
     setError("");
     try {
-      await deleteValidation(id, token!);
+      await deleteValidation(id);
       load(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : "failed to delete validation");

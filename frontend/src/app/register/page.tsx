@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { register as apiRegister } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 export default function RegisterPage() {
@@ -12,8 +10,8 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
-  const auth = useAuth();
+  const [emailSent, setEmailSent] = useState(false);
+  const { signUp } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,15 +27,37 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    try {
-      const res = await apiRegister(email, password);
-      auth.login(res.token, res.user);
-      router.push("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "registration failed");
-    } finally {
+    const { error: signUpError, needsVerification } = await signUp(email, password);
+    if (signUpError) {
+      setError(signUpError);
       setLoading(false);
+      return;
     }
+    if (needsVerification) {
+      setEmailSent(true);
+    }
+    setLoading(false);
+  }
+
+  if (emailSent) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center">
+          <h1 className="font-display text-3xl font-bold">check your email</h1>
+          <p className="mt-4 text-sm text-muted">
+            we sent a verification link to{" "}
+            <strong className="text-foreground">{email}</strong>. click it to
+            activate your account and get your free credit.
+          </p>
+          <Link
+            href="/login"
+            className="mt-8 inline-block text-sm text-foreground hover:underline"
+          >
+            go to login
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -45,7 +65,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <h1 className="font-display text-3xl font-bold text-center">sign up</h1>
         <p className="mt-2 text-center text-sm text-muted">
-          get 1 free validation to start
+          get 1 free validation after verifying your email
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

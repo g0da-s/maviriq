@@ -19,8 +19,10 @@ class Settings(BaseSettings):
     # CORS (comma-separated origins, e.g. "http://localhost:3000,https://myapp.com")
     cors_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:3002"
 
-    # Database
-    database_url: str = "sqlite+aiosqlite:///maverick.db"
+    # Supabase
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    supabase_jwt_secret: str = ""
 
     # Search cache TTL (seconds)
     search_cache_ttl: int = 86400  # 24 hours
@@ -31,10 +33,6 @@ class Settings(BaseSettings):
     max_competitors: int = 10
     agent_timeout: int = 120  # seconds per agent before giving up
 
-    # Auth
-    jwt_secret: str = "change-me-to-a-random-string"
-    jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 10080  # 7 days
     # Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

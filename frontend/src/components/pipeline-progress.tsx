@@ -28,22 +28,23 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const esRef = useRef<EventSource | null>(null);
   const retriesRef = useRef(0);
   const doneRef = useRef(false);
-  const { token } = useAuth();
+  const { session } = useAuth();
 
   useEffect(() => {
-    if (!token) return;
+    if (!session) return;
 
     const MAX_RETRIES = 5;
     doneRef.current = false;
     retriesRef.current = 0;
 
-    function connect() {
+    async function connect() {
       if (doneRef.current) return;
 
       // Start at agent 1 immediately
       setCurrentAgent(1);
 
-      const es = new EventSource(getStreamUrl(runId, token!));
+      const url = await getStreamUrl(runId);
+      const es = new EventSource(url);
       esRef.current = es;
 
       es.addEventListener("agent_completed", (e) => {
@@ -64,7 +65,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         es.close();
 
         try {
-          const run = await getValidation(runId, token!);
+          const run = await getValidation(runId);
           onComplete(run);
         } catch {
           onError("failed to fetch results");
@@ -100,7 +101,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       doneRef.current = true;
       esRef.current?.close();
     };
-  }, [runId, token, onComplete, onError]);
+  }, [runId, session, onComplete, onError]);
 
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";

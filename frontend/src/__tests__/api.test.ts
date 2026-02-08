@@ -8,6 +8,19 @@ import {
 } from "@/lib/api";
 import { mockCompletedRun, mockValidationList } from "./fixtures";
 
+// Mock Supabase — getAccessToken reads from supabase.auth.getSession()
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(() =>
+        Promise.resolve({
+          data: { session: { access_token: "test-jwt-token" } },
+        })
+      ),
+    },
+  },
+}));
+
 const mockFetch = vi.fn();
 const TEST_TOKEN = "test-jwt-token";
 
@@ -45,7 +58,7 @@ describe("createValidation", () => {
     };
     mockFetch.mockReturnValue(jsonResponse(responseData));
 
-    const result = await createValidation("test idea", TEST_TOKEN);
+    const result = await createValidation("test idea");
 
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:8000/api/validations",
@@ -64,7 +77,7 @@ describe("createValidation", () => {
   it("throws on API error with detail message", async () => {
     mockFetch.mockReturnValue(errorResponse("Idea is too short"));
 
-    await expect(createValidation("ab", TEST_TOKEN)).rejects.toThrow("Idea is too short");
+    await expect(createValidation("ab")).rejects.toThrow("Idea is too short");
   });
 
   it("throws on API error with status when no detail", async () => {
@@ -76,7 +89,7 @@ describe("createValidation", () => {
       })
     );
 
-    await expect(createValidation("test", TEST_TOKEN)).rejects.toThrow("Request failed: 500");
+    await expect(createValidation("test")).rejects.toThrow("Request failed: 500");
   });
 });
 
@@ -84,7 +97,7 @@ describe("getValidation", () => {
   it("fetches a single validation by id", async () => {
     mockFetch.mockReturnValue(jsonResponse(mockCompletedRun));
 
-    const result = await getValidation("run-123", TEST_TOKEN);
+    const result = await getValidation("run-123");
 
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:8000/api/validations/run-123",
@@ -102,7 +115,7 @@ describe("getValidation", () => {
   it("throws on 404", async () => {
     mockFetch.mockReturnValue(errorResponse("Not found", 404));
 
-    await expect(getValidation("missing", TEST_TOKEN)).rejects.toThrow("Not found");
+    await expect(getValidation("missing")).rejects.toThrow("Not found");
   });
 });
 
@@ -110,7 +123,7 @@ describe("listValidations", () => {
   it("fetches paginated list with defaults", async () => {
     mockFetch.mockReturnValue(jsonResponse(mockValidationList));
 
-    const result = await listValidations(1, 20, TEST_TOKEN);
+    const result = await listValidations(1, 20);
 
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:8000/api/validations?page=1&per_page=20",
@@ -128,7 +141,7 @@ describe("listValidations", () => {
   it("passes custom page and perPage", async () => {
     mockFetch.mockReturnValue(jsonResponse(mockValidationList));
 
-    await listValidations(2, 10, TEST_TOKEN);
+    await listValidations(2, 10);
 
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:8000/api/validations?page=2&per_page=10",
@@ -141,7 +154,7 @@ describe("deleteValidation", () => {
   it("sends DELETE request", async () => {
     mockFetch.mockReturnValue(jsonResponse({ status: "deleted" }));
 
-    const result = await deleteValidation("run-123", TEST_TOKEN);
+    const result = await deleteValidation("run-123");
 
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:8000/api/validations/run-123",
@@ -159,13 +172,13 @@ describe("deleteValidation", () => {
   it("throws on server error", async () => {
     mockFetch.mockReturnValue(errorResponse("Internal error", 500));
 
-    await expect(deleteValidation("run-123", TEST_TOKEN)).rejects.toThrow("Internal error");
+    await expect(deleteValidation("run-123")).rejects.toThrow("Internal error");
   });
 });
 
 describe("getStreamUrl", () => {
-  it("returns the correct SSE URL with token", () => {
-    const url = getStreamUrl("run-123", TEST_TOKEN);
+  it("returns the correct SSE URL with token", async () => {
+    const url = await getStreamUrl("run-123");
     expect(url).toBe(`http://localhost:8000/api/validations/run-123/stream?token=${encodeURIComponent(TEST_TOKEN)}`);
   });
 });
@@ -204,7 +217,7 @@ describe("request timeout", () => {
       }
     );
 
-    await expect(getValidation("run-123", TEST_TOKEN)).rejects.toThrow("Request timed out");
+    await expect(getValidation("run-123")).rejects.toThrow("Request timed out");
 
     vi.stubGlobal("AbortController", originalAbortController);
   });

@@ -25,7 +25,7 @@ export default function CreditsPage() {
 }
 
 function CreditsContent() {
-  const { user, token, loading: authLoading, refreshUser } = useAuth();
+  const { user, session, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [purchasing, setPurchasing] = useState<number | null>(null);
@@ -48,12 +48,12 @@ function CreditsContent() {
   }, [authLoading, user, router]);
 
   async function handleBuy(pack: number) {
-    if (!token) return;
+    if (!session) return;
     setPurchasing(pack);
     setError("");
 
     try {
-      const res = await createCheckout(pack, token);
+      const res = await createCheckout(pack);
       window.location.href = res.checkout_url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "checkout failed");

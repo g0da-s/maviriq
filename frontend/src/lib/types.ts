@@ -183,17 +183,11 @@ export const UserResponseSchema = z.object({
   created_at: z.string(),
 });
 
-export const AuthResponseSchema = z.object({
-  token: z.string(),
-  user: UserResponseSchema,
-});
-
 export const CheckoutResponseSchema = z.object({
   checkout_url: z.string(),
 });
 
 export type UserResponse = z.infer<typeof UserResponseSchema>;
-export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 export type CheckoutResponse = z.infer<typeof CheckoutResponseSchema>;
 
 // ── SSE Events ──

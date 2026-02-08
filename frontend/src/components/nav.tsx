@@ -8,7 +8,7 @@ export function Nav() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isHistory = pathname.startsWith("/validations");
-  const { user, loading, logout } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
@@ -53,7 +53,7 @@ export function Nav() {
               </Link>
               <div className="mx-2 h-4 w-px bg-card-border" />
               <button
-                onClick={logout}
+                onClick={signOut}
                 className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
                 log out

@@ -8,7 +8,6 @@ from maverick.api.auth_routes import router as auth_router
 from maverick.api.routes import router
 from maverick.api.stripe_routes import router as stripe_router
 from maverick.config import settings
-from maverick.storage.database import init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing database...")
-    await init_db()
-    logger.info("Maverick backend started")
+    logger.info("Maverick backend starting...")
     yield
     logger.info("Shutting down...")
 

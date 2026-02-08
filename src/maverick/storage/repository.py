@@ -1,8 +1,5 @@
 import hashlib
-import json
 from datetime import datetime, timedelta, timezone
-
-import aiosqlite
 
 from maverick.models.schemas import (
     CompetitorResearchOutput,
@@ -13,143 +10,111 @@ from maverick.models.schemas import (
     ValidationStatus,
     ViabilityOutput,
 )
-from maverick.storage.database import db_connection
+from maverick.supabase_client import get_supabase
 
 
 class ValidationRepository:
     async def create(self, run: ValidationRun) -> None:
-        async with db_connection() as db:
-            await db.execute(
-                """INSERT INTO validation_runs
-                   (id, idea, status, current_agent, started_at, created_at, user_id)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    run.id,
-                    run.idea,
-                    run.status.value,
-                    run.current_agent,
-                    run.started_at.isoformat() if run.started_at else None,
-                    datetime.now(timezone.utc).isoformat(),
-                    run.user_id,
-                ),
+        sb = await get_supabase()
+        await (
+            sb.table("validation_runs")
+            .insert(
+                {
+                    "id": run.id,
+                    "user_id": run.user_id,
+                    "idea": run.idea,
+                    "status": run.status.value,
+                    "current_agent": run.current_agent,
+                    "started_at": run.started_at.isoformat() if run.started_at else None,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
             )
-            await db.commit()
+            .execute()
+        )
 
     async def update(self, run: ValidationRun) -> None:
-        async with db_connection() as db:
-            await db.execute(
-                """UPDATE validation_runs SET
-                   status = ?, current_agent = ?, started_at = ?,
-                   completed_at = ?, error = ?,
-                   pain_discovery_output = ?,
-                   competitor_research_output = ?,
-                   viability_output = ?,
-                   synthesis_output = ?,
-                   total_cost_cents = ?
-                   WHERE id = ?""",
-                (
-                    run.status.value,
-                    run.current_agent,
-                    run.started_at.isoformat() if run.started_at else None,
-                    run.completed_at.isoformat() if run.completed_at else None,
-                    run.error,
-                    run.pain_discovery.model_dump_json() if run.pain_discovery else None,
-                    run.competitor_research.model_dump_json() if run.competitor_research else None,
-                    run.viability.model_dump_json() if run.viability else None,
-                    run.synthesis.model_dump_json() if run.synthesis else None,
-                    run.total_cost_cents,
-                    run.id,
-                ),
+        sb = await get_supabase()
+        await (
+            sb.table("validation_runs")
+            .update(
+                {
+                    "status": run.status.value,
+                    "current_agent": run.current_agent,
+                    "started_at": run.started_at.isoformat() if run.started_at else None,
+                    "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+                    "error": run.error,
+                    "pain_discovery_output": run.pain_discovery.model_dump() if run.pain_discovery else None,
+                    "competitor_research_output": run.competitor_research.model_dump() if run.competitor_research else None,
+                    "viability_output": run.viability.model_dump() if run.viability else None,
+                    "synthesis_output": run.synthesis.model_dump() if run.synthesis else None,
+                    "total_cost_cents": run.total_cost_cents,
+                }
             )
-            await db.commit()
+            .eq("id", run.id)
+            .execute()
+        )
 
     async def get(self, run_id: str) -> ValidationRun | None:
-        async with db_connection() as db:
-            cursor = await db.execute(
-                "SELECT * FROM validation_runs WHERE id = ?", (run_id,)
-            )
-            row = await cursor.fetchone()
-            if not row:
-                return None
-            return self._row_to_run(row)
+        sb = await get_supabase()
+        result = await sb.table("validation_runs").select("*").eq("id", run_id).maybe_single().execute()
+        if not result.data:
+            return None
+        return self._row_to_run(result.data)
 
     async def list(
         self, page: int = 1, per_page: int = 20, user_id: str | None = None
     ) -> tuple[list[ValidationListItem], int]:
-        async with db_connection() as db:
-            if user_id:
-                cursor = await db.execute(
-                    "SELECT COUNT(*) FROM validation_runs WHERE user_id = ?", (user_id,)
-                )
-            else:
-                cursor = await db.execute("SELECT COUNT(*) FROM validation_runs")
-            total_row = await cursor.fetchone()
-            total = total_row[0] if total_row else 0
+        sb = await get_supabase()
+        query = sb.table("validation_runs").select(
+            "id, idea, status, synthesis_output, created_at", count="exact"
+        )
+        if user_id:
+            query = query.eq("user_id", user_id)
 
-            offset = (page - 1) * per_page
-            if user_id:
-                cursor = await db.execute(
-                    """SELECT id, idea, status, synthesis_output, created_at
-                       FROM validation_runs
-                       WHERE user_id = ?
-                       ORDER BY created_at DESC
-                       LIMIT ? OFFSET ?""",
-                    (user_id, per_page, offset),
-                )
-            else:
-                cursor = await db.execute(
-                    """SELECT id, idea, status, synthesis_output, created_at
-                       FROM validation_runs
-                       ORDER BY created_at DESC
-                       LIMIT ? OFFSET ?""",
-                    (per_page, offset),
-                )
-            rows = await cursor.fetchall()
+        offset = (page - 1) * per_page
+        result = await query.order("created_at", desc=True).range(offset, offset + per_page - 1).execute()
 
-            items = []
-            for row in rows:
-                verdict = None
-                confidence = None
-                if row["synthesis_output"]:
-                    synthesis = SynthesisOutput.model_validate_json(row["synthesis_output"])
-                    verdict = synthesis.verdict
-                    confidence = synthesis.confidence
-
-                items.append(
-                    ValidationListItem(
-                        id=row["id"],
-                        idea=row["idea"],
-                        status=ValidationStatus(row["status"]),
-                        verdict=verdict,
-                        confidence=confidence,
-                        created_at=datetime.fromisoformat(row["created_at"]),
-                    )
+        total = result.count or 0
+        items = []
+        for row in result.data:
+            verdict = None
+            confidence = None
+            if row.get("synthesis_output"):
+                synthesis = SynthesisOutput.model_validate(row["synthesis_output"])
+                verdict = synthesis.verdict
+                confidence = synthesis.confidence
+            items.append(
+                ValidationListItem(
+                    id=row["id"],
+                    idea=row["idea"],
+                    status=ValidationStatus(row["status"]),
+                    verdict=verdict,
+                    confidence=confidence,
+                    created_at=datetime.fromisoformat(row["created_at"]),
                 )
-            return items, total
+            )
+        return items, total
 
     async def delete(self, run_id: str) -> bool:
-        async with db_connection() as db:
-            cursor = await db.execute(
-                "DELETE FROM validation_runs WHERE id = ?", (run_id,)
-            )
-            await db.commit()
-            return cursor.rowcount > 0
+        sb = await get_supabase()
+        result = await sb.table("validation_runs").delete().eq("id", run_id).execute()
+        return len(result.data) > 0
 
-    def _row_to_run(self, row: aiosqlite.Row) -> ValidationRun:
+    def _row_to_run(self, row: dict) -> ValidationRun:
         return ValidationRun(
             id=row["id"],
             idea=row["idea"],
             status=ValidationStatus(row["status"]),
-            current_agent=row["current_agent"],
-            started_at=datetime.fromisoformat(row["started_at"]) if row["started_at"] else None,
-            completed_at=datetime.fromisoformat(row["completed_at"]) if row["completed_at"] else None,
-            error=row["error"],
-            pain_discovery=PainDiscoveryOutput.model_validate_json(row["pain_discovery_output"]) if row["pain_discovery_output"] else None,
-            competitor_research=CompetitorResearchOutput.model_validate_json(row["competitor_research_output"]) if row["competitor_research_output"] else None,
-            viability=ViabilityOutput.model_validate_json(row["viability_output"]) if row["viability_output"] else None,
-            synthesis=SynthesisOutput.model_validate_json(row["synthesis_output"]) if row["synthesis_output"] else None,
-            total_cost_cents=row["total_cost_cents"],
-            user_id=row["user_id"] if "user_id" in row.keys() else None,
+            current_agent=row.get("current_agent", 0),
+            started_at=datetime.fromisoformat(row["started_at"]) if row.get("started_at") else None,
+            completed_at=datetime.fromisoformat(row["completed_at"]) if row.get("completed_at") else None,
+            error=row.get("error"),
+            pain_discovery=PainDiscoveryOutput.model_validate(row["pain_discovery_output"]) if row.get("pain_discovery_output") else None,
+            competitor_research=CompetitorResearchOutput.model_validate(row["competitor_research_output"]) if row.get("competitor_research_output") else None,
+            viability=ViabilityOutput.model_validate(row["viability_output"]) if row.get("viability_output") else None,
+            synthesis=SynthesisOutput.model_validate(row["synthesis_output"]) if row.get("synthesis_output") else None,
+            total_cost_cents=row.get("total_cost_cents", 0),
+            user_id=row.get("user_id"),
         )
 
 
@@ -160,38 +125,45 @@ class SearchCacheRepository:
     async def get(self, query: str, source: str) -> dict | None:
         key = self._hash(query, source)
         now = self._utcnow_iso()
-        async with db_connection() as db:
-            cursor = await db.execute(
-                """SELECT response FROM search_cache
-                   WHERE query_hash = ? AND expires_at > ?""",
-                (key, now),
-            )
-            row = await cursor.fetchone()
-            if not row:
-                return None
-            return json.loads(row["response"])
+        sb = await get_supabase()
+        result = await (
+            sb.table("search_cache")
+            .select("response")
+            .eq("query_hash", key)
+            .gt("expires_at", now)
+            .maybe_single()
+            .execute()
+        )
+        if not result.data:
+            return None
+        return result.data["response"]
 
     async def set(self, query: str, source: str, response: dict, ttl_seconds: int = 86400) -> None:
         key = self._hash(query, source)
-        expires = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
-        expires_str = expires.strftime("%Y-%m-%dT%H:%M:%S")
-        async with db_connection() as db:
-            await db.execute(
-                """INSERT OR REPLACE INTO search_cache
-                   (query_hash, source, query, response, expires_at)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (key, source, query, json.dumps(response), expires_str),
+        expires = (datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )
+        sb = await get_supabase()
+        await (
+            sb.table("search_cache")
+            .upsert(
+                {
+                    "query_hash": key,
+                    "source": source,
+                    "query": query,
+                    "response": response,
+                    "expires_at": expires,
+                },
+                on_conflict="query_hash",
             )
-            await db.commit()
+            .execute()
+        )
 
     async def cleanup_expired(self) -> int:
         now = self._utcnow_iso()
-        async with db_connection() as db:
-            cursor = await db.execute(
-                "DELETE FROM search_cache WHERE expires_at <= ?", (now,)
-            )
-            await db.commit()
-            return cursor.rowcount
+        sb = await get_supabase()
+        result = await sb.table("search_cache").delete().lte("expires_at", now).execute()
+        return len(result.data)
 
     def _hash(self, query: str, source: str) -> str:
         return hashlib.sha256(f"{source}:{query}".encode()).hexdigest()

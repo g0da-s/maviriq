@@ -19,7 +19,7 @@ export default function ValidationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const { user, token, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function ValidationPage() {
       router.push("/login");
       return;
     }
-    if (!token) return;
+    if (!session) return;
 
     let cancelled = false;
 
@@ -38,7 +38,7 @@ export default function ValidationPage() {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         if (cancelled) return;
         try {
-          const data = await getValidation(id, token!);
+          const data = await getValidation(id);
           if (cancelled) return;
           setRun(data);
           if (data.status === "running" || data.status === "pending") {
@@ -65,7 +65,7 @@ export default function ValidationPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [id, token, authLoading, user, router]);
+  }, [id, session, authLoading, user, router]);
 
   const handleComplete = useCallback((completedRun: ValidationRun) => {
     setRun(completedRun);

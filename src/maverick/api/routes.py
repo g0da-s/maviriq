@@ -71,9 +71,15 @@ async def stream_validation(
     repo: ValidationRepository = Depends(get_validation_repo),
 ):
     # EventSource can't send Authorization headers, so accept token as query param
-    from maverick.services.auth import decode_access_token
+    from maverick.api.dependencies import decode_supabase_jwt
 
-    token_user_id = decode_access_token(token) if token else None
+    token_user_id = None
+    if token:
+        try:
+            payload = decode_supabase_jwt(token)
+            token_user_id = payload.get("sub")
+        except Exception:
+            pass
     if not token_user_id:
         async def auth_error():
             yield {"event": "error", "data": json.dumps({"error": "Not authenticated"})}
