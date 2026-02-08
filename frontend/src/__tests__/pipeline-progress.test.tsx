@@ -3,6 +3,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PipelineProgress } from "@/components/pipeline-progress";
 import { mockCompletedRun } from "./fixtures";
 
+// Mock auth context
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
+    token: "test-token",
+    loading: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    refreshUser: vi.fn(),
+  }),
+}));
+
 // Mock API
 vi.mock("@/lib/api", () => ({
   getStreamUrl: vi.fn((id: string) => `http://localhost:8000/api/validations/${id}/stream`),
@@ -122,7 +134,7 @@ describe("PipelineProgress", () => {
       es.emit("pipeline_completed", { id: "run-123", verdict: "BUILD", confidence: 0.78 });
     });
 
-    expect(getValidation).toHaveBeenCalledWith("run-123");
+    expect(getValidation).toHaveBeenCalledWith("run-123", "test-token");
     expect(onComplete).toHaveBeenCalledWith(mockCompletedRun);
   });
 

@@ -259,6 +259,7 @@ class ValidationRun(BaseModel):
     synthesis: SynthesisOutput | None = None
     error: str | None = None
     total_cost_cents: int = 0
+    user_id: str | None = None
 
 
 # ──────────────────────────────────────────────

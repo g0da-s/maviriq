@@ -42,9 +42,9 @@ class PipelineRunner:
         self.agent3 = ViabilityAnalysisAgent(self.llm, self.search)
         self.agent4 = SynthesisAgent(self.llm, self.search)
 
-    async def run(self, run_id: str, idea: str) -> AsyncGenerator[SSEEvent, None]:
+    async def run(self, run_id: str, idea: str, user_id: str | None = None) -> AsyncGenerator[SSEEvent, None]:
         """Run the full 4-agent pipeline, streaming progress via SSE."""
-        run = ValidationRun(id=run_id, idea=idea, status=ValidationStatus.RUNNING)
+        run = ValidationRun(id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id)
         run.started_at = datetime.now(timezone.utc)
         await self.repository.create(run)
 

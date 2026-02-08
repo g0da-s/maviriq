@@ -143,6 +143,7 @@ export const ValidationRunSchema = z.object({
   synthesis: SynthesisOutputSchema.nullable(),
   error: z.string().nullable(),
   total_cost_cents: z.number(),
+  user_id: z.string().nullable().optional(),
 });
 
 export const CreateValidationResponseSchema = z.object({
@@ -172,6 +173,28 @@ export type ValidationRun = z.infer<typeof ValidationRunSchema>;
 export type CreateValidationResponse = z.infer<typeof CreateValidationResponseSchema>;
 export type ValidationListItem = z.infer<typeof ValidationListItemSchema>;
 export type ValidationListResponse = z.infer<typeof ValidationListResponseSchema>;
+
+// ── Auth ──
+
+export const UserResponseSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  credits: z.number(),
+  created_at: z.string(),
+});
+
+export const AuthResponseSchema = z.object({
+  token: z.string(),
+  user: UserResponseSchema,
+});
+
+export const CheckoutResponseSchema = z.object({
+  checkout_url: z.string(),
+});
+
+export type UserResponse = z.infer<typeof UserResponseSchema>;
+export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type CheckoutResponse = z.infer<typeof CheckoutResponseSchema>;
 
 // ── SSE Events ──
 

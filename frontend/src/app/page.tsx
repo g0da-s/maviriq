@@ -2,8 +2,8 @@ import { IdeaForm } from "@/components/idea-form";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6">
-      <div className="w-full max-w-2xl text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center px-6 pt-16">
+      <div className="w-full max-w-3xl text-center">
         {/* hero */}
         <h1 className="font-display text-5xl font-bold tracking-tight sm:text-7xl">
           validate your{" "}
@@ -12,8 +12,8 @@ export default function Home() {
             <span className="cursor-blink h-1.5 sm:h-2 w-full rounded-full bg-build -mt-1"></span>
           </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-lg text-lg text-muted">
-          4 ai agents research your startup idea and deliver a build or skip
+        <p className="mt-6 text-lg text-muted">
+          4 agents research your startup idea and deliver a build or skip
           verdict in minutes
         </p>
 

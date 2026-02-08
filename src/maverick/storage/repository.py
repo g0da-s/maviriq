@@ -21,8 +21,8 @@ class ValidationRepository:
         async with db_connection() as db:
             await db.execute(
                 """INSERT INTO validation_runs
-                   (id, idea, status, current_agent, started_at, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
+                   (id, idea, status, current_agent, started_at, created_at, user_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
                     run.id,
                     run.idea,
@@ -30,6 +30,7 @@ class ValidationRepository:
                     run.current_agent,
                     run.started_at.isoformat() if run.started_at else None,
                     datetime.now(timezone.utc).isoformat(),
+                    run.user_id,
                 ),
             )
             await db.commit()
@@ -72,20 +73,37 @@ class ValidationRepository:
                 return None
             return self._row_to_run(row)
 
-    async def list(self, page: int = 1, per_page: int = 20) -> tuple[list[ValidationListItem], int]:
+    async def list(
+        self, page: int = 1, per_page: int = 20, user_id: str | None = None
+    ) -> tuple[list[ValidationListItem], int]:
         async with db_connection() as db:
-            cursor = await db.execute("SELECT COUNT(*) FROM validation_runs")
+            if user_id:
+                cursor = await db.execute(
+                    "SELECT COUNT(*) FROM validation_runs WHERE user_id = ?", (user_id,)
+                )
+            else:
+                cursor = await db.execute("SELECT COUNT(*) FROM validation_runs")
             total_row = await cursor.fetchone()
             total = total_row[0] if total_row else 0
 
             offset = (page - 1) * per_page
-            cursor = await db.execute(
-                """SELECT id, idea, status, synthesis_output, created_at
-                   FROM validation_runs
-                   ORDER BY created_at DESC
-                   LIMIT ? OFFSET ?""",
-                (per_page, offset),
-            )
+            if user_id:
+                cursor = await db.execute(
+                    """SELECT id, idea, status, synthesis_output, created_at
+                       FROM validation_runs
+                       WHERE user_id = ?
+                       ORDER BY created_at DESC
+                       LIMIT ? OFFSET ?""",
+                    (user_id, per_page, offset),
+                )
+            else:
+                cursor = await db.execute(
+                    """SELECT id, idea, status, synthesis_output, created_at
+                       FROM validation_runs
+                       ORDER BY created_at DESC
+                       LIMIT ? OFFSET ?""",
+                    (per_page, offset),
+                )
             rows = await cursor.fetchall()
 
             items = []
@@ -131,6 +149,7 @@ class ValidationRepository:
             viability=ViabilityOutput.model_validate_json(row["viability_output"]) if row["viability_output"] else None,
             synthesis=SynthesisOutput.model_validate_json(row["synthesis_output"]) if row["synthesis_output"] else None,
             total_cost_cents=row["total_cost_cents"],
+            user_id=row["user_id"] if "user_id" in row.keys() else None,
         )
 
 

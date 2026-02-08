@@ -2,16 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createValidation } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export function IdeaForm() {
   const [idea, setIdea] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [needsCredits, setNeedsCredits] = useState(false);
   const router = useRouter();
+  const { user, token } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!user || !token) {
+      router.push("/login");
+      return;
+    }
+
     if (idea.trim().length < 3) {
       setError("idea must be at least 3 characters");
       return;
@@ -19,24 +29,31 @@ export function IdeaForm() {
 
     setLoading(true);
     setError("");
+    setNeedsCredits(false);
 
     try {
-      const res = await createValidation(idea.trim());
+      const res = await createValidation(idea.trim(), token);
       router.push(`/validations/${res.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "something went wrong");
+      const msg = err instanceof Error ? err.message : "something went wrong";
+      if (msg.includes("Insufficient credits") || msg.includes("402")) {
+        setNeedsCredits(true);
+      } else {
+        setError(msg);
+      }
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl">
       <div className="relative">
         <textarea
           value={idea}
           onChange={(e) => {
             setIdea(e.target.value);
             setError("");
+            setNeedsCredits(false);
           }}
           placeholder="describe your startup idea..."
           maxLength={500}
@@ -50,6 +67,16 @@ export function IdeaForm() {
 
       {error && <p className="mt-3 text-sm text-skip">{error}</p>}
 
+      {needsCredits && (
+        <div className="mt-3 rounded-xl border border-maybe/30 bg-maybe/5 px-4 py-3 text-sm text-maybe">
+          you&apos;re out of credits.{" "}
+          <Link href="/credits" className="underline hover:text-foreground">
+            buy more credits
+          </Link>{" "}
+          to continue validating ideas.
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={loading || idea.trim().length < 3}
@@ -60,6 +87,8 @@ export function IdeaForm() {
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
             validating...
           </span>
+        ) : !user ? (
+          "sign in to validate"
         ) : (
           "validate"
         )}

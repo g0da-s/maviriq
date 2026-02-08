@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getStreamUrl, getValidation } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun, Verdict } from "@/lib/types";
 
 const AGENTS = [
@@ -27,8 +28,11 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const esRef = useRef<EventSource | null>(null);
   const retriesRef = useRef(0);
   const doneRef = useRef(false);
+  const { token } = useAuth();
 
   useEffect(() => {
+    if (!token) return;
+
     const MAX_RETRIES = 5;
     doneRef.current = false;
     retriesRef.current = 0;
@@ -39,7 +43,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       // Start at agent 1 immediately
       setCurrentAgent(1);
 
-      const es = new EventSource(getStreamUrl(runId));
+      const es = new EventSource(getStreamUrl(runId, token!));
       esRef.current = es;
 
       es.addEventListener("agent_completed", (e) => {
@@ -60,7 +64,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         es.close();
 
         try {
-          const run = await getValidation(runId);
+          const run = await getValidation(runId, token!);
           onComplete(run);
         } catch {
           onError("failed to fetch results");
@@ -96,7 +100,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       doneRef.current = true;
       esRef.current?.close();
     };
-  }, [runId, onComplete, onError]);
+  }, [runId, token, onComplete, onError]);
 
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";

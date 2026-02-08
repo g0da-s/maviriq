@@ -14,6 +14,18 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock auth context
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
+    token: "test-token",
+    loading: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    refreshUser: vi.fn(),
+  }),
+}));
+
 import { usePathname } from "next/navigation";
 
 describe("Nav", () => {
@@ -27,9 +39,9 @@ describe("Nav", () => {
     expect(screen.getByText("history")).toBeInTheDocument();
   });
 
-  it("renders new validation link", () => {
+  it("renders new link", () => {
     render(<Nav />);
-    expect(screen.getByText("new validation")).toBeInTheDocument();
+    expect(screen.getByText("new")).toBeInTheDocument();
   });
 
   it("brand link points to home", () => {

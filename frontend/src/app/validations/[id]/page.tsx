@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getValidation } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun } from "@/lib/types";
 import { PipelineProgress } from "@/components/pipeline-progress";
 import { VerdictBadge } from "@/components/verdict-badge";
@@ -18,8 +19,16 @@ export default function ValidationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const { user, token, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+      return;
+    }
+    if (!token) return;
+
     let cancelled = false;
 
     async function load() {
@@ -29,7 +38,7 @@ export default function ValidationPage() {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         if (cancelled) return;
         try {
-          const data = await getValidation(id);
+          const data = await getValidation(id, token!);
           if (cancelled) return;
           setRun(data);
           if (data.status === "running" || data.status === "pending") {
@@ -56,7 +65,7 @@ export default function ValidationPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, token, authLoading, user, router]);
 
   const handleComplete = useCallback((completedRun: ValidationRun) => {
     setRun(completedRun);

@@ -6,8 +6,10 @@ import { mockValidationList } from "./fixtures";
 
 // Mock next/navigation
 const mockSearchParams = new URLSearchParams();
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ push: mockPush }),
 }));
 
 // Mock next/link
@@ -15,6 +17,18 @@ vi.mock("next/link", () => ({
   default: ({ children, href, className, ...props }: { children: React.ReactNode; href: string; className?: string } & Record<string, unknown>) => (
     <a href={href} className={className} {...props}>{children}</a>
   ),
+}));
+
+// Mock auth context
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
+    token: "test-token",
+    loading: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    refreshUser: vi.fn(),
+  }),
 }));
 
 // Mock API
@@ -107,17 +121,21 @@ describe("HistoryPage", () => {
 
     await screen.findByText("AI meeting scheduler");
 
+    const callsBefore = vi.mocked(listValidations).mock.calls.length;
+
     const deleteButtons = screen.getAllByRole("button");
     await user.click(deleteButtons[0]);
 
     await user.click(screen.getByText("delete"));
 
     await waitFor(() => {
-      expect(deleteValidation).toHaveBeenCalledWith("run-1");
+      expect(deleteValidation).toHaveBeenCalledWith("run-1", "test-token");
     });
 
-    // Should reload the list
-    expect(listValidations).toHaveBeenCalledTimes(2);
+    // Should reload the list after delete
+    await waitFor(() => {
+      expect(vi.mocked(listValidations).mock.calls.length).toBeGreaterThan(callsBefore);
+    });
   });
 
   it("closes confirm modal on cancel", async () => {

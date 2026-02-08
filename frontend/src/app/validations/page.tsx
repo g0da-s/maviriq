@@ -1,16 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { deleteValidation, listValidations } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { ValidationListItem, ValidationListResponse } from "@/lib/types";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { ConfirmModal } from "@/components/confirm-modal";
 
 export default function HistoryPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 rounded-2xl border border-card-border bg-card p-5">
+              <div className="w-28 shrink-0">
+                <div className="h-6 w-16 animate-pulse rounded-full bg-white/5" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-white/5" />
+                <div className="h-3 w-1/3 animate-pulse rounded bg-white/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <HistoryContent />
+    </Suspense>
+  );
+}
+
+function HistoryContent() {
   const searchParams = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const { user, token, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [data, setData] = useState<ValidationListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,21 +46,26 @@ export default function HistoryPage() {
   const [error, setError] = useState("");
 
   const load = useCallback(async (p: number) => {
+    if (!token) return;
     setLoading(true);
     setError("");
     try {
-      const res = await listValidations(p);
+      const res = await listValidations(p, 20, token);
       setData(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "failed to load validations");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    load(page);
-  }, [load, page]);
+    if (!authLoading && !user) {
+      router.push("/login");
+      return;
+    }
+    if (token) load(page);
+  }, [load, page, authLoading, user, token, router]);
 
   async function handleDelete() {
     if (!confirmId) return;
@@ -42,7 +74,7 @@ export default function HistoryPage() {
     setDeleting(id);
     setError("");
     try {
-      await deleteValidation(id);
+      await deleteValidation(id, token!);
       load(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : "failed to delete validation");

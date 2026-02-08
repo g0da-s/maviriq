@@ -10,6 +10,25 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// Mock auth context
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "u1", email: "test@test.com", credits: 3, created_at: "2025-01-01" },
+    token: "test-token",
+    loading: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    refreshUser: vi.fn(),
+  }),
+}));
+
+// Mock next/link
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string } & Record<string, unknown>) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 // Mock API
 vi.mock("@/lib/api", () => ({
   createValidation: vi.fn(),
@@ -85,7 +104,7 @@ describe("IdeaForm", () => {
     await user.type(screen.getByPlaceholderText("describe your startup idea..."), "AI meeting scheduler");
     await user.click(screen.getByRole("button", { name: "validate" }));
 
-    expect(createValidation).toHaveBeenCalledWith("AI meeting scheduler");
+    expect(createValidation).toHaveBeenCalledWith("AI meeting scheduler", "test-token");
     expect(mockPush).toHaveBeenCalledWith("/validations/run-123");
   });
 

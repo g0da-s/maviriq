@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from maverick.api.auth_routes import router as auth_router
 from maverick.api.routes import router
+from maverick.api.stripe_routes import router as stripe_router
 from maverick.config import settings
 from maverick.storage.database import init_db
 
@@ -41,6 +43,8 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(auth_router)
+app.include_router(stripe_router)
 
 
 if __name__ == "__main__":

@@ -31,5 +31,17 @@ class Settings(BaseSettings):
     max_competitors: int = 10
     agent_timeout: int = 120  # seconds per agent before giving up
 
+    # Auth
+    jwt_secret: str = "change-me-to-a-random-string"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 10080  # 7 days
+    # Stripe
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_5: str = ""
+    stripe_price_20: str = ""
+    stripe_price_50: str = ""
+    frontend_url: str = "http://localhost:3000"
+
 
 settings = Settings()  # type: ignore[call-arg]

@@ -111,7 +111,11 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
 
         async def scrape_one(url: str) -> tuple[str, str | None]:
             try:
-                async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                async with httpx.AsyncClient(
+                    timeout=10.0,
+                    follow_redirects=True,
+                    headers={"User-Agent": "Mozilla/5.0 (compatible; Maverick/1.0)"},
+                ) as client:
                     response = await client.get(url)
                     response.raise_for_status()
 

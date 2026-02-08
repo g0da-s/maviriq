@@ -30,6 +30,23 @@ CREATE TABLE IF NOT EXISTS search_cache (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     expires_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    credits INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS credit_transactions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    amount INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    stripe_session_id TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 
@@ -52,3 +69,11 @@ async def init_db() -> None:
     async with db_connection() as db:
         await db.executescript(SCHEMA)
         await db.commit()
+        # Migration: add user_id to validation_runs if not present
+        try:
+            await db.execute(
+                "ALTER TABLE validation_runs ADD COLUMN user_id TEXT REFERENCES users(id)"
+            )
+            await db.commit()
+        except Exception:
+            pass  # Column already exists
