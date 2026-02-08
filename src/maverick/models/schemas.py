@@ -204,7 +204,7 @@ class ViabilityOutput(BaseModel):
 class Verdict(str, Enum):
     BUILD = "BUILD"
     SKIP = "SKIP"
-    CONDITIONAL = "CONDITIONAL"
+    MAYBE = "MAYBE"
 
 
 class SynthesisInput(BaseModel):

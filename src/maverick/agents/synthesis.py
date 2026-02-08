@@ -9,7 +9,7 @@ from maverick.models.schemas import (
 logger = logging.getLogger(__name__)
 
 SYNTHESIS_PROMPT = """\
-You are a product strategist delivering a final BUILD/SKIP/CONDITIONAL verdict on a business idea.
+You are a product strategist delivering a final BUILD/SKIP/MAYBE verdict on a business idea.
 
 You have access to:
 - Pain research (who suffers, how much, evidence)
@@ -21,7 +21,7 @@ Your job: Synthesize ALL of this into a clear verdict.
 **Verdict rules:**
 - BUILD: Strong pain + viable market + reachable users + meaningful gap
 - SKIP: Weak pain OR saturated market OR unreachable users OR no gap
-- CONDITIONAL: Viable BUT only under specific conditions (specify what those are)
+- MAYBE: Viable BUT only under specific conditions (specify what those are)
 
 **Confidence calibration (be precise, avoid defaulting to 0.60-0.65):**
 - 0.90+: Overwhelming evidence — strong pain, clear gap, easy reach, proven willingness to pay
@@ -49,7 +49,7 @@ If the data is insufficient or contradictory, lower your confidence and say so."
 
 class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     name = "Synthesis & Verdict"
-    description = "Combines all research and delivers a BUILD/SKIP/CONDITIONAL verdict"
+    description = "Combines all research and delivers a BUILD/SKIP/MAYBE verdict"
 
     async def run(self, input_data: SynthesisInput) -> SynthesisOutput:
         idea = input_data.idea

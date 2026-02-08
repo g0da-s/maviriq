@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-A fully functional **idea validation backend** that runs 4 sequential AI agents to research business ideas and deliver BUILD/SKIP/CONDITIONAL verdicts.
+A fully functional **idea validation backend** that runs 4 sequential AI agents to research business ideas and deliver BUILD/SKIP/MAYBE verdicts.
 
 ---
 
@@ -98,7 +98,7 @@ Agent 3: Viability Analysis
     ↓
 Agent 4: Synthesis & Verdict
   - Combine all research
-  - Generate BUILD/SKIP/CONDITIONAL verdict (Sonnet)
+  - Generate BUILD/SKIP/MAYBE verdict (Sonnet)
   - Save to DB
     ↓
 Pipeline complete → User gets final report

@@ -216,7 +216,7 @@ class TestSynthesisAgent:
         )
 
         assert isinstance(result, SynthesisOutput)
-        assert result.verdict in ["BUILD", "SKIP", "CONDITIONAL"]
+        assert result.verdict in ["BUILD", "SKIP", "MAYBE"]
         assert 0 <= result.confidence <= 1
         assert len(result.next_steps) > 0
 

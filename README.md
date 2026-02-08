@@ -2,7 +2,7 @@
 
 **Idea validation pipeline** — A 4-agent research system that automatically validates business ideas.
 
-Submit an idea (e.g., "AI-powered pitch deck generator"), and Maverick runs sequential research to deliver a BUILD/SKIP/CONDITIONAL verdict with confidence scoring.
+Submit an idea (e.g., "AI-powered pitch deck generator"), and Maverick runs sequential research to deliver a BUILD/SKIP/MAYBE verdict with confidence scoring.
 
 ---
 
@@ -13,7 +13,7 @@ Maverick runs 4 agents sequentially:
 1. **Pain & User Discovery** — Searches Reddit, Hacker News, forums for complaints. Extracts 10-15 pain points, identifies target users.
 2. **Competitor Research** — Maps the competitive landscape. Finds 8-10 competitors, pricing, strengths/weaknesses, market gaps.
 3. **Viability Analysis** — Analyzes willingness to pay, user reachability, market gaps.
-4. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/CONDITIONAL verdict with reasoning.
+4. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/MAYBE verdict with reasoning.
 
 **Estimated cost per validation:** ~$0.30-0.50 (Serper + Claude API calls)
 

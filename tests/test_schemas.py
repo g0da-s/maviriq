@@ -97,7 +97,7 @@ class TestVerdict:
     def test_verdict_values(self):
         assert Verdict.BUILD == "BUILD"
         assert Verdict.SKIP == "SKIP"
-        assert Verdict.CONDITIONAL == "CONDITIONAL"
+        assert Verdict.MAYBE == "MAYBE"
 
 
 class TestPainDiscoveryOutputSerialization:

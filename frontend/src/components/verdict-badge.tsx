@@ -3,7 +3,7 @@ import type { Verdict } from "@/lib/types";
 const styles: Record<Verdict, string> = {
   BUILD: "border-build text-build",
   SKIP: "border-skip text-skip",
-  CONDITIONAL: "border-conditional text-conditional",
+  MAYBE: "border-conditional text-conditional",
 };
 
 export function VerdictBadge({
