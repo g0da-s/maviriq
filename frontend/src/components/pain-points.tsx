@@ -1,5 +1,24 @@
 import type { PainDiscoveryOutput } from "@/lib/types";
 
+const sourceLabels: Record<string, { label: string; color: string }> = {
+  reddit: { label: "Reddit", color: "border-orange-500/30 text-orange-400" },
+  hackernews: { label: "Hacker News", color: "border-amber-500/30 text-amber-400" },
+  twitter: { label: "X / Twitter", color: "border-sky-500/30 text-sky-400" },
+  youtube: { label: "YouTube", color: "border-red-500/30 text-red-400" },
+  google_news: { label: "News", color: "border-blue-500/30 text-blue-400" },
+  producthunt: { label: "Product Hunt", color: "border-orange-400/30 text-orange-300" },
+};
+
+function SourceBadge({ source }: { source: string }) {
+  const key = source.toLowerCase().replace(/\s+/g, "");
+  const info = sourceLabels[key];
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${info?.color ?? "border-white/10 text-muted/60"}`}>
+      {info?.label ?? source}
+    </span>
+  );
+}
+
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   return (
     <div className="space-y-5">
@@ -46,11 +65,11 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-muted/60">
                 {pp.source_url ? (
-                  <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    {pp.source} <span className="text-muted/30">↗</span>
+                  <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
+                    <SourceBadge source={pp.source} />
                   </a>
                 ) : (
-                  <span>{pp.source}</span>
+                  <SourceBadge source={pp.source} />
                 )}
                 {pp.author_context && (
                   <>
@@ -63,6 +82,16 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
           ))}
         </div>
       </div>
+
+      {/* sources searched */}
+      {data.pain_points.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-muted/40 mr-1">sources:</span>
+          {[...new Set(data.pain_points.map((p) => p.source))].map((src) => (
+            <SourceBadge key={src} source={src} />
+          ))}
+        </div>
+      )}
 
       {/* user segments */}
       {data.user_segments.length > 1 && (

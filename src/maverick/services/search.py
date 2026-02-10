@@ -100,6 +100,79 @@ class SerperService:
             r.source = "capterra"
         return results
 
+    async def search_twitter(self, query: str, num_results: int = 10) -> list[SearchResult]:
+        """Search Twitter/X via Serper site: query."""
+        results = await self.search(f"site:x.com {query}", num_results)
+        for r in results:
+            r.source = "twitter"
+        return results
+
+    async def search_producthunt(self, query: str, num_results: int = 10) -> list[SearchResult]:
+        """Search Product Hunt via Serper site: query."""
+        results = await self.search(f"site:producthunt.com {query}", num_results)
+        for r in results:
+            r.source = "producthunt"
+        return results
+
+    async def search_linkedin_jobs(self, query: str, num_results: int = 5) -> list[SearchResult]:
+        """Search LinkedIn Jobs via Serper site: query."""
+        results = await self.search(f"site:linkedin.com/jobs {query}", num_results)
+        for r in results:
+            r.source = "linkedin_jobs"
+        return results
+
+    async def search_crunchbase(self, query: str, num_results: int = 5) -> list[SearchResult]:
+        """Search Crunchbase via Serper site: query."""
+        results = await self.search(f"site:crunchbase.com {query}", num_results)
+        for r in results:
+            r.source = "crunchbase"
+        return results
+
+    async def search_youtube(self, query: str, num_results: int = 10) -> list[SearchResult]:
+        """Search YouTube via Serper site: query."""
+        results = await self.search(f"site:youtube.com {query}", num_results)
+        for r in results:
+            r.source = "youtube"
+        return results
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    async def search_news(self, query: str, num_results: int = 10) -> list[SearchResult]:
+        """Search Google News via Serper /news endpoint."""
+        cached = await self.cache.get(query, "serper_news")
+        if cached:
+            logger.debug(f"Cache hit for news query: {query}")
+            return [SearchResult(**r) for r in cached]
+
+        async with self._semaphore:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.post(
+                    f"{self.base_url}/news",
+                    headers={
+                        "X-API-KEY": self.api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json={"q": query, "num": num_results},
+                )
+                response.raise_for_status()
+                data = response.json()
+
+        results = []
+        for item in data.get("news", []):
+            results.append(
+                SearchResult(
+                    title=item.get("title", ""),
+                    url=item.get("link", ""),
+                    snippet=item.get("snippet", ""),
+                    source="google_news",
+                )
+            )
+
+        await self.cache.set(
+            query, "serper_news", [r.to_dict() for r in results], settings.search_cache_ttl
+        )
+
+        return results
+
     async def multi_search(self, queries: list[str]) -> list[SearchResult]:
         """Run multiple searches in parallel, deduplicate results by URL."""
         tasks = [self.search(q) for q in queries]

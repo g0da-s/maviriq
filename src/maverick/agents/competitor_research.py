@@ -21,6 +21,15 @@ Include:
 - Specific competitor sites: "site:g2.com [idea]", "site:capterra.com [idea]"
 Keep natural and varied."""
 
+RETRY_COMPETITOR_QUERIES_PROMPT = """\
+Generate 5-7 BROADER search queries to find competitors for this idea.
+The first round found insufficient competitors. Generate NEW queries that are:
+- Broader in scope (include adjacent markets)
+- Using different terminology and angles
+- Targeting review sites and comparison articles
+- Looking for alternatives and substitutes
+Do NOT repeat queries from the previous round. No quotes around the query text."""
+
 COMPETITOR_ANALYSIS_PROMPT = """\
 You are a competitive intelligence analyst. Extract competitor information from search results.
 
@@ -48,21 +57,40 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
     async def run(self, input_data: CompetitorResearchInput) -> CompetitorResearchOutput:
         idea = input_data.idea
         target_user = input_data.target_user
+        is_retry = input_data.retry_queries is not None
+        target_label = target_user.label if target_user else "general users"
 
-        # Step 1: Generate search queries
-        queries = await self.llm.generate_list(
-            system_prompt=COMPETITOR_SEARCH_QUERIES_PROMPT,
-            user_prompt=f"Idea: {idea}\nTarget user: {target_user.label}",
-            use_cheap_model=True,
-        )
-        logger.info(f"Generated {len(queries)} competitor search queries")
+        # Step 1: Get queries (either generated or from retry)
+        if is_retry:
+            queries = input_data.retry_queries
+            logger.info(f"Using {len(queries)} retry queries for competitor research")
+        else:
+            queries = await self.llm.generate_list(
+                system_prompt=COMPETITOR_SEARCH_QUERIES_PROMPT,
+                user_prompt=f"Idea: {idea}\nTarget user: {target_label}",
+                use_cheap_model=True,
+            )
+            logger.info(f"Generated {len(queries)} competitor search queries")
 
-        # Step 2: Run searches (including G2/Capterra)
-        search_tasks = [
-            *[self.search.search(q) for q in queries],
-            self.search.search_g2(idea),
-            self.search.search_capterra(idea),
-        ]
+        # Step 2: Run searches with source mix based on attempt
+        if is_retry:
+            # Retry: alternative sources (News, YouTube reviews, broad, ProductHunt)
+            search_tasks = [
+                *[self.search.search_news(q) for q in queries[:2]],
+                self.search.search_youtube(f"{idea} review"),
+                *[self.search.search(q) for q in queries],
+                self.search.search_producthunt(idea),
+            ]
+        else:
+            # First attempt: standard + new sources
+            search_tasks = [
+                *[self.search.search(q) for q in queries],
+                self.search.search_g2(idea),
+                self.search.search_capterra(idea),
+                self.search.search_producthunt(idea),
+                self.search.search_crunchbase(idea),
+                self.search.search_linkedin_jobs(f"{idea} {target_label}"),
+            ]
 
         results_lists = await asyncio.gather(*search_tasks, return_exceptions=True)
 
@@ -81,7 +109,6 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
         logger.info(f"Found {len(all_results)} unique results")
 
         # Step 3: For top 10 competitors, try to scrape pricing pages
-        # (Simple heuristic: look for URLs that seem like product pages)
         pricing_data = await self._scrape_pricing_pages(all_results[:10])
 
         # Step 4: Feed everything to Claude for structured extraction
@@ -94,15 +121,35 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
             f"Pricing from {url}:\n{text}" for url, text in pricing_data.items()
         )
 
+        # If retry, include previously found competitors so the LLM can merge
+        if is_retry and input_data.previous_result:
+            prev = input_data.previous_result
+            previous_competitors = "\n".join(
+                f"- {c.name}: {c.one_liner} ({c.url})"
+                for c in prev.competitors
+            )
+            user_prompt = (
+                f"Idea: {idea}\nTarget user: {target_label}\n\n"
+                f"Previously found competitors (include these plus any new ones):\n"
+                f"{previous_competitors}\n\n"
+                f"New search results:\n{search_text}\n\n"
+                f"Pricing pages:\n{pricing_text}"
+            )
+        else:
+            user_prompt = (
+                f"Idea: {idea}\nTarget user: {target_label}\n\n"
+                f"Search results:\n{search_text}\n\n"
+                f"Pricing pages:\n{pricing_text}"
+            )
+
         result = await self.llm.generate_structured(
             system_prompt=COMPETITOR_ANALYSIS_PROMPT,
-            user_prompt=f"Idea: {idea}\nTarget user: {target_user.label}\n\n"
-            f"Search results:\n{search_text}\n\n"
-            f"Pricing pages:\n{pricing_text}",
+            user_prompt=user_prompt,
             output_schema=CompetitorResearchOutput,
         )
 
-        result.target_user = target_user
+        if target_user is not None:
+            result.target_user = target_user
         return result
 
     async def _scrape_pricing_pages(self, results: list[dict]) -> dict[str, str]:

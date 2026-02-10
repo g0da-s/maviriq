@@ -15,7 +15,7 @@ from maverick.models.schemas import (
     ValidationStatus,
 )
 from maverick.pipeline import pubsub
-from maverick.pipeline.runner import PipelineRunner
+from maverick.pipeline.runner import PipelineGraph
 from maverick.storage.credit_repository import CreditTransactionRepository
 from maverick.storage.repository import ValidationRepository
 from maverick.storage.user_repository import UserRepository
@@ -37,8 +37,36 @@ async def health() -> dict:
 async def create_validation(
     request: CreateValidationRequest,
     user: dict = Depends(get_current_user),
-    runner: PipelineRunner = Depends(get_pipeline_runner),
+    runner: PipelineGraph = Depends(get_pipeline_runner),
 ) -> CreateValidationResponse:
+    # LLM coherence check — runs before credit deduction
+    from maverick.services.llm import LLMService
+    from pydantic import BaseModel as _BM
+
+    class _IdeaCheck(_BM):
+        is_valid: bool
+        reason: str
+
+    llm = LLMService()
+    try:
+        check = await llm.generate_structured(
+            system_prompt=(
+                "You decide whether user input is a coherent product, startup, or business idea. "
+                "Reject gibberish, random words, profanity-only inputs, or clearly non-idea text. "
+                "Be lenient — vague or unusual ideas are fine. Only reject obvious garbage."
+            ),
+            user_prompt=request.idea,
+            output_schema=_IdeaCheck,
+            use_cheap_model=True,
+        )
+        if not check.is_valid:
+            raise HTTPException(status_code=422, detail=check.reason)
+    except HTTPException:
+        raise
+    except Exception:
+        # If the LLM check fails, let the request through rather than blocking
+        logger.warning("LLM idea check failed — allowing request through")
+
     # Deduct credit
     user_repo = UserRepository()
     if not await user_repo.deduct_credit(user["id"]):
@@ -225,14 +253,12 @@ async def _replay_from_db(run: ValidationRun):
 
 
 async def _run_pipeline_background(
-    run_id: str, idea: str, runner: PipelineRunner, user_id: str | None = None
+    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None
 ):
-    """Run pipeline in background, publishing SSE events via pubsub."""
+    """Run pipeline in background. PipelineGraph.run() handles pubsub internally."""
     try:
-        async for event in runner.run(run_id, idea, user_id=user_id):
-            pubsub.publish(run_id, event)
+        await runner.run(run_id, idea, user_id=user_id)
     except Exception as e:
         logger.exception(f"Background pipeline failed for {run_id}")
     finally:
-        pubsub.publish(run_id, None)  # Signal stream end
         _running_pipelines.pop(run_id, None)

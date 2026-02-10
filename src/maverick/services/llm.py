@@ -1,8 +1,8 @@
-import json
 import logging
 from typing import TypeVar
 
-import anthropic
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -15,7 +15,17 @@ T = TypeVar("T", bound=BaseModel)
 
 class LLMService:
     def __init__(self) -> None:
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self.model = ChatAnthropic(
+            model=settings.reasoning_model,
+            max_tokens=4096,
+        )
+        self.cheap_model = ChatAnthropic(
+            model=settings.cheap_model,
+            max_tokens=4096,
+        )
+
+    def _get_model(self, use_cheap_model: bool = False) -> ChatAnthropic:
+        return self.cheap_model if use_cheap_model else self.model
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     async def generate_structured(
@@ -25,32 +35,15 @@ class LLMService:
         output_schema: type[T],
         use_cheap_model: bool = False,
     ) -> T:
-        model = settings.cheap_model if use_cheap_model else settings.reasoning_model
+        model = self._get_model(use_cheap_model)
+        structured_model = model.with_structured_output(output_schema)
 
-        # Build JSON schema from Pydantic model for tool use
-        schema = output_schema.model_json_schema()
+        result = await structured_model.ainvoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ])
 
-        response = await self.client.messages.create(
-            model=model,
-            max_tokens=4096,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-            tools=[
-                {
-                    "name": "structured_output",
-                    "description": f"Return the analysis as a {output_schema.__name__}",
-                    "input_schema": schema,
-                }
-            ],
-            tool_choice={"type": "tool", "name": "structured_output"},
-        )
-
-        # Extract the tool use block
-        for block in response.content:
-            if block.type == "tool_use":
-                return output_schema.model_validate(block.input)
-
-        raise ValueError("LLM did not return a tool_use block")
+        return result
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     async def generate_text(
@@ -59,16 +52,14 @@ class LLMService:
         user_prompt: str,
         use_cheap_model: bool = False,
     ) -> str:
-        model = settings.cheap_model if use_cheap_model else settings.reasoning_model
+        model = self._get_model(use_cheap_model)
 
-        response = await self.client.messages.create(
-            model=model,
-            max_tokens=2048,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
+        response = await model.ainvoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ])
 
-        return response.content[0].text
+        return response.content
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     async def generate_list(

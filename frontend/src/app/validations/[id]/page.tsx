@@ -217,9 +217,13 @@ export default function ValidationPage() {
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-xs text-muted/60">pain severity</p>
-            <p className="mt-1 font-display text-2xl font-bold">
-              {avgSeverity.toFixed(1)}<span className="text-sm text-muted/40">/5</span>
-            </p>
+            {pain.pain_points.length > 0 ? (
+              <p className="mt-1 font-display text-2xl font-bold">
+                {avgSeverity.toFixed(1)}<span className="text-sm text-muted/40">/5</span>
+              </p>
+            ) : (
+              <p className="mt-1 font-display text-lg font-bold text-muted/40">N/A</p>
+            )}
           </div>
         )}
         {comp && (

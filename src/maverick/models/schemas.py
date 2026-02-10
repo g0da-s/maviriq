@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Literal
@@ -45,6 +47,8 @@ class UserSegment(BaseModel):
 
 class PainDiscoveryInput(BaseModel):
     idea: str
+    retry_queries: list[str] | None = None
+    previous_result: PainDiscoveryOutput | None = None
 
 
 class PainDiscoveryOutput(BaseModel):
@@ -95,7 +99,9 @@ class Competitor(BaseModel):
 
 class CompetitorResearchInput(BaseModel):
     idea: str
-    target_user: UserSegment
+    target_user: UserSegment | None = None
+    retry_queries: list[str] | None = None
+    previous_result: CompetitorResearchOutput | None = None
 
 
 class CompetitorResearchOutput(BaseModel):
@@ -267,7 +273,19 @@ class ValidationRun(BaseModel):
 # ──────────────────────────────────────────────
 
 class CreateValidationRequest(BaseModel):
-    idea: str = Field(min_length=3, max_length=500)
+    idea: str = Field(min_length=10, max_length=500)
+
+    @field_validator("idea")
+    @classmethod
+    def validate_idea_quality(cls, v: str) -> str:
+        words = v.strip().split()
+        if len(words) < 3:
+            raise ValueError("please describe your idea in at least a few words")
+        from maverick.services.input_validation import validate_idea_input
+        error = validate_idea_input(v)
+        if error:
+            raise ValueError(error)
+        return v
 
 
 class CreateValidationResponse(BaseModel):

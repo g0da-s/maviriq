@@ -6,6 +6,43 @@ import Link from "next/link";
 import { createValidation } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
+const BLOCKED_WORDS = new Set([
+  "fuck", "shit", "ass", "bitch", "damn", "cunt", "dick", "cock",
+  "pussy", "whore", "slut", "bastard", "nigger", "nigga", "faggot",
+  "retard", "retarded",
+]);
+
+const CONSONANT_MASH = /[^aeiou\s\d\W]{5,}/i;
+const REPEATED_CHARS = /(.)\1{2,}/;
+
+function validateIdea(text: string): string | null {
+  const trimmed = text.trim();
+  const words = trimmed.split(/\s+/).filter((w) => w.length > 0);
+
+  if (trimmed.length < 10 || words.length < 3) {
+    return "please describe your idea in at least a few words";
+  }
+
+  // Profanity check
+  const inputWords = new Set(trimmed.toLowerCase().match(/[a-z]+/g) ?? []);
+  for (const bad of BLOCKED_WORDS) {
+    if (inputWords.has(bad)) return "please keep your input appropriate";
+  }
+
+  // Gibberish check — flag words with 5+ consecutive consonants or repeated chars
+  const substantialWords = words.filter((w) => w.length > 3);
+  if (substantialWords.length > 0) {
+    const gibberishCount = substantialWords.filter(
+      (w) => CONSONANT_MASH.test(w) || REPEATED_CHARS.test(w),
+    ).length;
+    if (gibberishCount / substantialWords.length > 0.3) {
+      return "your input doesn't look like a real idea — please try again";
+    }
+  }
+
+  return null;
+}
+
 export function IdeaForm() {
   const [idea, setIdea] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,8 +59,9 @@ export function IdeaForm() {
       return;
     }
 
-    if (idea.trim().length < 3) {
-      setError("idea must be at least 3 characters");
+    const validationError = validateIdea(idea);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -79,7 +117,7 @@ export function IdeaForm() {
 
       <button
         type="submit"
-        disabled={loading || idea.trim().length < 3}
+        disabled={loading || idea.trim().length < 10}
         className="mt-4 w-full rounded-full border border-foreground bg-foreground px-8 py-3 text-base font-medium text-background transition-all hover:bg-transparent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
       >
         {loading ? (

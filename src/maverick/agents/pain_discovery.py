@@ -18,6 +18,15 @@ Return 6-8 diverse search queries. Mix these types:
 - Question-based: "how to [topic] without [pain]"
 Keep queries natural and varied. No quotes around the query text."""
 
+RETRY_QUERY_GENERATION_PROMPT = """\
+You generate BROADER search queries to find evidence of people struggling with a problem.
+The first round of searches found insufficient data. Generate 6-8 NEW queries that are:
+- Broader in scope (less specific keywords)
+- Targeting different communities or platforms
+- Using different phrasing and angles
+- Exploring adjacent problem spaces
+Do NOT repeat queries from the previous round. No quotes around the query text."""
+
 PAIN_EXTRACTION_PROMPT = """\
 You are a market research analyst. Your job is to extract real pain points from search results.
 
@@ -39,25 +48,38 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
 
     async def run(self, input_data: PainDiscoveryInput) -> PainDiscoveryOutput:
         idea = input_data.idea
+        is_retry = input_data.retry_queries is not None
 
-        # Step 1: Generate search queries using cheap model
-        queries = await self.llm.generate_list(
-            system_prompt=QUERY_GENERATION_PROMPT,
-            user_prompt=f"Generate search queries for this idea: {idea}",
-            use_cheap_model=True,
-        )
-        logger.info(f"Generated {len(queries)} search queries for '{idea}'")
+        # Step 1: Get queries (either generated or from retry)
+        if is_retry:
+            queries = input_data.retry_queries
+            logger.info(f"Using {len(queries)} retry queries for '{idea}'")
+        else:
+            queries = await self.llm.generate_list(
+                system_prompt=QUERY_GENERATION_PROMPT,
+                user_prompt=f"Generate search queries for this idea: {idea}",
+                use_cheap_model=True,
+            )
+            logger.info(f"Generated {len(queries)} search queries for '{idea}'")
 
-        # Step 2: Run searches in parallel (Reddit, HN, and broad)
-        reddit_queries = queries[:3]  # First 3 queries target Reddit
-        hn_queries = queries[:2]  # First 2 for Hacker News
-        broad_queries = queries  # All for broad search
-
-        search_tasks = [
-            *[self.search.search_reddit(q) for q in reddit_queries],
-            *[self.search.search_hackernews(q) for q in hn_queries],
-            *[self.search.search(q) for q in broad_queries],
-        ]
+        # Step 2: Run searches with source mix based on attempt
+        if is_retry:
+            # Retry: use alternative sources (Twitter, YouTube, News, broad)
+            search_tasks = [
+                *[self.search.search_twitter(q) for q in queries[:3]],
+                *[self.search.search_youtube(q) for q in queries[:2]],
+                *[self.search.search_news(q) for q in queries[:2]],
+                *[self.search.search(q) for q in queries],
+            ]
+        else:
+            # First attempt: standard sources + Twitter/YouTube
+            search_tasks = [
+                *[self.search.search_reddit(q) for q in queries[:3]],
+                *[self.search.search_hackernews(q) for q in queries[:2]],
+                *[self.search.search(q) for q in queries],
+                *[self.search.search_twitter(q) for q in queries[:2]],
+                self.search.search_youtube(queries[0]),
+            ]
 
         results_lists = await asyncio.gather(*search_tasks, return_exceptions=True)
 
@@ -81,9 +103,25 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
             for s in all_snippets[:50]  # Cap at 50 to stay within token limits
         )
 
+        # If retry, include previous pain points so the LLM can merge
+        if is_retry and input_data.previous_result:
+            prev = input_data.previous_result
+            previous_points = "\n".join(
+                f'- "{p.quote}" (source: {p.source}, severity: {p.pain_severity})'
+                for p in prev.pain_points
+            )
+            user_prompt = (
+                f"Idea: {idea}\n\n"
+                f"Previously found pain points (include these plus any new ones):\n"
+                f"{previous_points}\n\n"
+                f"New search results:\n\n{snippets_text}"
+            )
+        else:
+            user_prompt = f"Idea: {idea}\n\nSearch results:\n\n{snippets_text}"
+
         result = await self.llm.generate_structured(
             system_prompt=PAIN_EXTRACTION_PROMPT,
-            user_prompt=f"Idea: {idea}\n\nSearch results:\n\n{snippets_text}",
+            user_prompt=user_prompt,
             output_schema=PainDiscoveryOutput,
         )
 

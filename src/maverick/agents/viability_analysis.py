@@ -46,6 +46,12 @@ class ViabilityAnalysisAgent(BaseAgent[ViabilityInput, ViabilityOutput]):
         pain = input_data.pain_discovery
         competitors = input_data.competitor_research
 
+        avg_severity = (
+            f"{sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5"
+            if pain.pain_points else "N/A (no pain points found)"
+        )
+        sources = ", ".join(set(p.source for p in pain.pain_points)) if pain.pain_points else "none"
+
         # Build a comprehensive context from prior agents
         context = f"""
 IDEA: {idea}
@@ -55,12 +61,12 @@ TARGET USER:
 Willingness to pay: {pain.primary_target_user.willingness_to_pay}
 
 PAIN EVIDENCE:
-{len(pain.pain_points)} pain points found across {', '.join(set(p.source for p in pain.pain_points))}
-Average severity: {sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5
+{len(pain.pain_points)} pain points found across {sources}
+Average severity: {avg_severity}
 Pain summary: {pain.pain_summary}
 
 Sample complaints:
-{chr(10).join(f'- "{p.quote}" ({p.source})' for p in pain.pain_points[:5])}
+{chr(10).join(f'- "{p.quote}" ({p.source})' for p in pain.pain_points[:5]) or "None found"}
 
 COMPETITIVE LANDSCAPE:
 {len(competitors.competitors)} competitors found
@@ -68,13 +74,13 @@ Market saturation: {competitors.market_saturation}
 Average price: {competitors.avg_price_point}
 
 Competitors:
-{chr(10).join(f'- {c.name}: {c.one_liner} (Pricing: {", ".join(p.price for p in c.pricing[:2])})' for c in competitors.competitors[:5])}
+{chr(10).join(f'- {c.name}: {c.one_liner} (Pricing: {", ".join(p.price for p in c.pricing[:2])})' for c in competitors.competitors[:5]) or "None found"}
 
 Common complaints:
-{chr(10).join(f'- {c}' for c in competitors.common_complaints)}
+{chr(10).join(f'- {c}' for c in competitors.common_complaints) or "None found"}
 
 Underserved needs:
-{chr(10).join(f'- {n}' for n in competitors.underserved_needs)}
+{chr(10).join(f'- {n}' for n in competitors.underserved_needs) or "None found"}
 """
 
         result = await self.llm.generate_structured(

@@ -6,6 +6,27 @@ const sentimentColor = {
   negative: "text-skip",
 };
 
+const sourceLabels: Record<string, { label: string; color: string }> = {
+  google: { label: "Google", color: "border-blue-500/30 text-blue-400" },
+  g2: { label: "G2", color: "border-orange-500/30 text-orange-400" },
+  capterra: { label: "Capterra", color: "border-teal-500/30 text-teal-400" },
+  producthunt: { label: "Product Hunt", color: "border-orange-400/30 text-orange-300" },
+  crunchbase: { label: "Crunchbase", color: "border-indigo-500/30 text-indigo-400" },
+  linkedin_jobs: { label: "LinkedIn", color: "border-sky-600/30 text-sky-400" },
+  google_news: { label: "News", color: "border-blue-500/30 text-blue-400" },
+  youtube: { label: "YouTube", color: "border-red-500/30 text-red-400" },
+};
+
+function SourceBadge({ source }: { source: string }) {
+  const key = source.toLowerCase().replace(/\s+/g, "");
+  const info = sourceLabels[key];
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${info?.color ?? "border-white/10 text-muted/60"}`}>
+      {info?.label ?? source}
+    </span>
+  );
+}
+
 export function Competitors({ data }: { data: CompetitorResearchOutput }) {
   return (
     <div className="space-y-5">
@@ -50,10 +71,13 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   )}
                   <p className="mt-0.5 text-xs text-muted/60">{comp.one_liner}</p>
                 </div>
-                <span className={`text-xs font-medium ${sentimentColor[comp.review_sentiment]}`}>
-                  {comp.review_sentiment}
-                  {comp.review_count > 0 && ` (${comp.review_count})`}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <SourceBadge source={comp.source} />
+                  <span className={`text-xs font-medium ${sentimentColor[comp.review_sentiment]}`}>
+                    {comp.review_sentiment}
+                    {comp.review_count != null && comp.review_count > 0 && ` (${comp.review_count})`}
+                  </span>
+                </div>
               </div>
               {comp.pricing.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -107,6 +131,16 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* sources searched */}
+      {data.competitors.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-muted/40 mr-1">sources:</span>
+          {[...new Set(data.competitors.map((c) => c.source))].map((src) => (
+            <SourceBadge key={src} source={src} />
+          ))}
         </div>
       )}
 

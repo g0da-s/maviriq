@@ -12,6 +12,9 @@ const AGENTS = [
   { num: 4, name: "synthesis & verdict", desc: "combining all research into a final build/skip verdict" },
 ];
 
+// Agents 1 & 2 run in parallel, then 3 & 4 run sequentially
+const PARALLEL_AGENTS = new Set([1, 2]);
+
 type Status = "waiting" | "running" | "done";
 
 interface Props {
@@ -21,7 +24,7 @@ interface Props {
 }
 
 export function PipelineProgress({ runId, onComplete, onError }: Props) {
-  const [currentAgent, setCurrentAgent] = useState(0);
+  const [runningAgents, setRunningAgents] = useState<Set<number>>(new Set());
   const [completedAgents, setCompletedAgents] = useState<Set<number>>(new Set());
   const [verdict, setVerdict] = useState<{ verdict: Verdict; confidence: number } | null>(null);
   const [failed, setFailed] = useState(false);
@@ -40,8 +43,8 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     async function connect() {
       if (doneRef.current) return;
 
-      // Start at agent 1 immediately
-      setCurrentAgent(1);
+      // Agents 1 & 2 start in parallel immediately
+      setRunningAgents(new Set([1, 2]));
 
       const url = await getStreamUrl(runId);
       const es = new EventSource(url);
@@ -51,10 +54,23 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         retriesRef.current = 0; // reset on success
         const data = JSON.parse(e.data);
         const agentNum = data.agent as number;
-        setCompletedAgents((prev) => new Set([...prev, agentNum]));
-        if (agentNum < 4) {
-          setCurrentAgent(agentNum + 1);
-        }
+
+        setCompletedAgents((prev) => {
+          const next = new Set([...prev, agentNum]);
+
+          // When both parallel agents (1 & 2) are done, start agent 3
+          if (PARALLEL_AGENTS.has(agentNum)) {
+            const bothDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
+            if (bothDone) {
+              setRunningAgents(new Set([3]));
+            }
+          } else if (agentNum < 4) {
+            // Sequential agents (3 → 4)
+            setRunningAgents(new Set([agentNum + 1]));
+          }
+
+          return next;
+        });
       });
 
       es.addEventListener("pipeline_completed", async (e) => {
@@ -62,6 +78,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         const data = JSON.parse(e.data);
         setVerdict({ verdict: data.verdict, confidence: data.confidence });
         setCompletedAgents(new Set([1, 2, 3, 4]));
+        setRunningAgents(new Set());
         es.close();
 
         try {
@@ -105,7 +122,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";
-    if (agentNum === currentAgent && !failed) return "running";
+    if (runningAgents.has(agentNum) && !failed) return "running";
     return "waiting";
   }
 

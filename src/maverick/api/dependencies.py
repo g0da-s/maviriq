@@ -1,28 +1,32 @@
 import logging
 
 import jwt as pyjwt
+from jwt import PyJWKClient
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from maverick.config import settings
-from maverick.pipeline.runner import PipelineRunner
+from maverick.pipeline.runner import PipelineGraph
 from maverick.storage.credit_repository import CreditTransactionRepository
 from maverick.storage.repository import ValidationRepository
 from maverick.storage.user_repository import UserRepository
+from maverick.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
-_pipeline_runner: PipelineRunner | None = None
+_jwks_client = PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
+
+_pipeline_runner: PipelineGraph | None = None
 _validation_repo: ValidationRepository | None = None
 _user_repo: UserRepository | None = None
 
 security = HTTPBearer(auto_error=False)
 
 
-def get_pipeline_runner() -> PipelineRunner:
+def get_pipeline_runner() -> PipelineGraph:
     global _pipeline_runner
     if _pipeline_runner is None:
-        _pipeline_runner = PipelineRunner()
+        _pipeline_runner = PipelineGraph()
     return _pipeline_runner
 
 
@@ -41,13 +45,15 @@ def get_user_repo() -> UserRepository:
 
 
 def decode_supabase_jwt(token: str) -> dict:
-    """Decode and verify a Supabase JWT. Returns the full payload or raises."""
+    """Decode and verify a Supabase JWT using the JWKS public key."""
     try:
+        signing_key = _jwks_client.get_signing_key_from_jwt(token)
         payload = pyjwt.decode(
             token,
-            settings.supabase_jwt_secret,
+            signing_key.key,
             audience="authenticated",
-            algorithms=["HS256"],
+            algorithms=["ES256"],
+            leeway=10,
         )
         return payload
     except pyjwt.PyJWTError as e:
@@ -68,8 +74,6 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token: no sub claim")
 
-    email_confirmed = payload.get("email_confirmed_at") is not None
-
     repo = get_user_repo()
     profile = await repo.get_by_id(user_id)
 
@@ -77,11 +81,14 @@ async def get_current_user(
         profile = await repo.ensure_profile(user_id, email)
 
     # Grant signup bonus if email is verified and not yet granted
-    if email_confirmed and not profile.get("signup_bonus_granted"):
-        txn_repo = CreditTransactionRepository()
-        granted = await repo.grant_signup_bonus(user_id)
-        if granted:
-            await txn_repo.record(user_id, 1, "signup_bonus")
-        profile = await repo.get_by_id(user_id)
+    if not profile.get("signup_bonus_granted"):
+        sb = await get_supabase()
+        auth_user = await sb.auth.admin.get_user_by_id(user_id)
+        if auth_user and auth_user.user and auth_user.user.email_confirmed_at:
+            txn_repo = CreditTransactionRepository()
+            granted = await repo.grant_signup_bonus(user_id)
+            if granted:
+                await txn_repo.record(user_id, 1, "signup_bonus")
+            profile = await repo.get_by_id(user_id)
 
     return profile

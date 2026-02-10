@@ -68,7 +68,7 @@ const CompetitorSchema = z.object({
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
   review_sentiment: ReviewSentimentSchema,
-  review_count: z.number(),
+  review_count: z.number().nullable(),
   source: z.string(),
 });
 

@@ -57,20 +57,25 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         competitors = input_data.competitor_research
         viability = input_data.viability
 
+        avg_severity = (
+            f"{sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5"
+            if pain.pain_points else "N/A"
+        )
+
         # Build the full context
         context = f"""
 IDEA: {idea}
 
 ═══ PAIN RESEARCH ═══
 Target user: {pain.primary_target_user.label}
-{len(pain.pain_points)} pain points found (avg severity: {sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5)
+{len(pain.pain_points)} pain points found (avg severity: {avg_severity})
 Pain summary: {pain.pain_summary}
 
 Top pain points:
-{chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}/5, source: {p.source})' for i, p in enumerate(pain.pain_points[:5]))}
+{chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}/5, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
 
 User segments found:
-{chr(10).join(f'- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})' for s in pain.user_segments)}
+{chr(10).join(f'- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})' for s in pain.user_segments) or "None found"}
 
 ═══ COMPETITIVE LANDSCAPE ═══
 {len(competitors.competitors)} competitors
@@ -78,13 +83,13 @@ Market saturation: {competitors.market_saturation}
 Avg price: {competitors.avg_price_point}
 
 Top competitors:
-{chr(10).join(f'{i+1}. {c.name}: {c.one_liner}' + chr(10) + f'   Pricing: {", ".join(p.price for p in c.pricing)}' + chr(10) + f'   Strengths: {", ".join(c.strengths[:2])}' + chr(10) + f'   Weaknesses: {", ".join(c.weaknesses[:2])}' for i, c in enumerate(competitors.competitors[:5]))}
+{chr(10).join(f'{i+1}. {c.name}: {c.one_liner}' + chr(10) + f'   Pricing: {", ".join(p.price for p in c.pricing)}' + chr(10) + f'   Strengths: {", ".join(c.strengths[:2])}' + chr(10) + f'   Weaknesses: {", ".join(c.weaknesses[:2])}' for i, c in enumerate(competitors.competitors[:5])) or "None found"}
 
 Common complaints:
-{chr(10).join(f'- {c}' for c in competitors.common_complaints)}
+{chr(10).join(f'- {c}' for c in competitors.common_complaints) or "None found"}
 
 Underserved needs:
-{chr(10).join(f'- {n}' for n in competitors.underserved_needs)}
+{chr(10).join(f'- {n}' for n in competitors.underserved_needs) or "None found"}
 
 ═══ VIABILITY ANALYSIS ═══
 People pay: {viability.people_pay} - {viability.people_pay_reasoning}
@@ -93,10 +98,10 @@ Market gap: {viability.gap_size} - {viability.market_gap}
 Opportunity score: {viability.opportunity_score:.0%}
 
 Key signals:
-{chr(10).join(f'- [{s.direction.upper()}] {s.signal} (confidence: {s.confidence:.0%})' for s in viability.signals[:5])}
+{chr(10).join(f'- [{s.direction.upper()}] {s.signal} (confidence: {s.confidence:.0%})' for s in viability.signals[:5]) or "None"}
 
 Risk factors:
-{chr(10).join(f'- {r}' for r in viability.risk_factors)}
+{chr(10).join(f'- {r}' for r in viability.risk_factors) or "None"}
 """
 
         result = await self.llm.generate_structured(

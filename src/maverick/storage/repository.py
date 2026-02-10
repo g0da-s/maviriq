@@ -57,7 +57,7 @@ class ValidationRepository:
     async def get(self, run_id: str) -> ValidationRun | None:
         sb = await get_supabase()
         result = await sb.table("validation_runs").select("*").eq("id", run_id).maybe_single().execute()
-        if not result.data:
+        if result is None or not result.data:
             return None
         return self._row_to_run(result.data)
 
@@ -134,7 +134,7 @@ class SearchCacheRepository:
             .maybe_single()
             .execute()
         )
-        if not result.data:
+        if result is None or not result.data:
             return None
         return result.data["response"]
 
