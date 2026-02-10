@@ -1,125 +1,99 @@
 # Maverick
 
-**Idea validation pipeline** — A 4-agent research system that automatically validates business ideas.
+**AI-powered startup idea validator** — a multi-agent research system that tells you whether your idea is worth building before you write a single line of code.
 
-Submit an idea (e.g., "AI-powered pitch deck generator"), and Maverick runs sequential research to deliver a BUILD/SKIP/MAYBE verdict with confidence scoring.
+Maverick takes a business idea (e.g., "AI-powered pitch deck generator"), runs 4 specialized AI agents that search the real web for evidence, and delivers a BUILD / SKIP / MAYBE verdict backed by data — pain points from Reddit and HN, competitor analysis from G2 and Capterra, viability signals, and a final synthesis with confidence scoring.
+
+**The problem it solves:** Founders spend weeks or months researching an idea manually. Maverick does this in under 2 minutes, surfacing real complaints, real competitors, and real market gaps — so you can make an informed decision fast.
 
 ---
 
 ## How It Works
 
-Maverick runs 4 agents sequentially:
+Maverick orchestrates 4 AI agents via LangGraph:
 
-1. **Pain & User Discovery** — Searches Reddit, Hacker News, forums for complaints. Extracts 10-15 pain points, identifies target users.
-2. **Competitor Research** — Maps the competitive landscape. Finds 8-10 competitors, pricing, strengths/weaknesses, market gaps.
-3. **Viability Analysis** — Analyzes willingness to pay, user reachability, market gaps.
-4. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/MAYBE verdict with reasoning.
+```
+START --> [Agent 1 + Agent 2] (parallel) --> Agent 3 --> Agent 4 --> END
+```
 
-**Estimated cost per validation:** ~$0.30-0.50 (Serper + Claude API calls)
+1. **Pain & User Discovery** — Searches Reddit, Hacker News, Twitter, YouTube, and forums for real complaints. Extracts pain points with severity scores, identifies target user segments.
+2. **Competitor Research** — Maps the competitive landscape using Google, G2, Capterra, Product Hunt, and Crunchbase. Scrapes pricing pages, analyzes strengths/weaknesses, finds market gaps.
+3. **Viability Analysis** — Evaluates willingness to pay, user reachability, market gap size, and opportunity score based on data from agents 1 and 2.
+4. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/MAYBE verdict with confidence score, reasoning, key strengths/risks, and recommended next steps.
+
+Agents 1 and 2 run **in parallel** (saving ~15-20 seconds), then results feed into agents 3 and 4 sequentially. Each agent has automatic retry logic — if data quality is insufficient, it generates broader queries and searches again.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python 3.12, FastAPI (async) |
+| **Frontend** | Next.js 16, React 19, Tailwind CSS 4 |
+| **LLM** | Claude Sonnet 4.5 (reasoning) + Claude Haiku 4.5 (cheap tasks) via `langchain-anthropic` |
+| **Orchestration** | LangGraph (parallel fan-out/fan-in, conditional retry edges) |
+| **Search** | Serper API (Google, Reddit, HN, G2, Capterra, Product Hunt, Crunchbase, YouTube, Twitter, LinkedIn) |
+| **Database** | Supabase (PostgreSQL + Auth) |
+| **Auth** | Email/password via Supabase Auth, JWT verification |
+| **Payments** | Stripe Checkout (credit packs: 5/$5, 20/$15, 50/$30) |
+| **Observability** | LangSmith tracing (auto-traced via ChatAnthropic) |
+| **Streaming** | Server-Sent Events (SSE) for real-time progress |
+
+---
+
+## Features
+
+- **Parallel agent execution** — Agents 1 and 2 run simultaneously via LangGraph fan-out
+- **Real-time streaming** — Watch each agent complete in real-time via SSE
+- **Automatic retries** — Agents retry with broader queries if data is insufficient
+- **Input validation** — 3-layer protection: regex (profanity + gibberish), Pydantic validators, LLM coherence check
+- **Credit system** — 1 free credit on signup, purchase more via Stripe
+- **Search caching** — 24-hour TTL on search results to reduce API costs
+- **LangSmith tracing** — Full observability into every LLM call
+- **Rate limiting** — Sliding window limiter on auth endpoints
 
 ---
 
 ## Setup
 
-### 1. Prerequisites
+### Prerequisites
 
 - Python 3.12+
+- Node.js 18+
 - [uv](https://github.com/astral-sh/uv) package manager
-- API keys:
-  - **Anthropic** (Claude) — [Get key](https://console.anthropic.com/)
-  - **Serper** (Google search) — [Get free tier](https://serper.dev/) (2,500 queries)
+- API keys: Anthropic, Serper, Supabase, Stripe
 
-### 2. Install
+### 1. Install
 
 ```bash
-# Clone and navigate
 cd maverick
 
-# Install dependencies
+# Backend
 uv sync
 
-# Create .env file
+# Frontend
+cd frontend && npm install && cd ..
+```
+
+### 2. Configure
+
+```bash
 cp .env.example .env
+# Edit .env with your API keys
 ```
 
-### 3. Configure
-
-Edit `.env`:
+### 3. Run
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...
-SERPER_API_KEY=...
+# Backend (terminal 1)
+uv run uvicorn maverick.main:app --reload --app-dir src
+
+# Frontend (terminal 2)
+cd frontend && npm run dev
 ```
 
-### 4. Run
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-
-# Start the server
-python -m maverick.main
-```
-
-Server runs at `http://localhost:8000`
-
-OpenAPI docs: `http://localhost:8000/docs`
-
----
-
-## API Usage
-
-### Start a validation
-
-```bash
-curl -X POST http://localhost:8000/api/validations \
-  -H "Content-Type: application/json" \
-  -d '{"idea": "AI-powered pitch deck generator"}'
-```
-
-Response:
-```json
-{
-  "id": "val_abc123",
-  "idea": "AI-powered pitch deck generator",
-  "status": "running",
-  "stream_url": "/api/validations/val_abc123/stream"
-}
-```
-
-### Stream progress (SSE)
-
-```bash
-curl -N http://localhost:8000/api/validations/val_abc123/stream
-```
-
-You'll receive events as each agent completes:
-```
-event: agent_completed
-data: {"agent": 1, "name": "Pain & User Discovery", "output": {...}}
-
-event: agent_completed
-data: {"agent": 2, "name": "Competitor Research", "output": {...}}
-
-...
-
-event: pipeline_completed
-data: {"id": "val_abc123", "verdict": "BUILD", "confidence": 0.78}
-```
-
-### Get full results
-
-```bash
-curl http://localhost:8000/api/validations/val_abc123
-```
-
-Returns the complete `ValidationRun` object with all agent outputs.
-
-### List past validations
-
-```bash
-curl http://localhost:8000/api/validations
-```
+Backend: `http://localhost:8000` | Frontend: `http://localhost:3000`
 
 ---
 
@@ -127,96 +101,95 @@ curl http://localhost:8000/api/validations
 
 ```
 src/maverick/
-├── main.py                    # FastAPI entry point
-├── config.py                  # Settings (API keys, models)
-├── models/
-│   └── schemas.py             # Pydantic models (data contracts)
-├── agents/
-│   ├── base.py                # BaseAgent abstract class
-│   ├── pain_discovery.py      # Agent 1
-│   ├── competitor_research.py # Agent 2
-│   ├── viability_analysis.py  # Agent 3
-│   └── synthesis.py           # Agent 4
-├── services/
-│   ├── llm.py                 # Claude API wrapper
-│   └── search.py              # Serper search wrapper
-├── pipeline/
-│   ├── runner.py              # Sequential orchestrator
-│   └── events.py              # SSE event types
-├── storage/
-│   ├── database.py            # SQLite setup
-│   └── repository.py          # CRUD operations
-└── api/
-    ├── routes.py              # API endpoints
-    └── dependencies.py        # FastAPI DI
+  main.py                       # FastAPI entry point + CORS
+  config.py                     # pydantic-settings config + LangSmith env propagation
+  supabase_client.py            # Async Supabase client
+  models/
+    schemas.py                  # All Pydantic models (agents, API, validation)
+  agents/
+    base.py                     # BaseAgent[I, O] abstract class
+    pain_discovery.py           # Agent 1: search + extract pain points
+    competitor_research.py      # Agent 2: search + competitor analysis
+    viability_analysis.py       # Agent 3: viability scoring
+    synthesis.py                # Agent 4: final verdict
+  services/
+    llm.py                      # ChatAnthropic wrapper (structured output, text, lists)
+    search.py                   # Serper API wrapper (10+ search types)
+    input_validation.py         # Profanity blocklist + gibberish detection
+  pipeline/
+    runner.py                   # LangGraph state machine (parallel topology)
+    events.py                   # SSE event types
+    pubsub.py                   # In-memory pub/sub for live streaming
+  storage/
+    repository.py               # Validation CRUD + search cache (Supabase)
+    user_repository.py          # User profiles + credit management
+    credit_repository.py        # Credit transaction log
+  api/
+    routes.py                   # Validation endpoints + SSE streaming
+    auth_routes.py              # Auth endpoints
+    stripe_routes.py            # Stripe webhook + checkout
+    rate_limit.py               # Sliding window rate limiter
+    dependencies.py             # JWT verification + DI
+
+frontend/src/
+  app/
+    page.tsx                    # Home — idea submission form
+    login/page.tsx              # Email/password login
+    register/page.tsx           # Signup with email verification
+    credits/page.tsx            # Stripe credit purchase
+    validations/page.tsx        # Validation history
+    validations/[id]/page.tsx   # Validation detail + live progress
+  components/
+    idea-form.tsx               # Input with 3-layer validation
+    pipeline-progress.tsx       # Real-time agent progress (parallel-aware)
+    pain-points.tsx             # Pain discovery results display
+    competitors.tsx             # Competitor research results display
+    viability.tsx               # Viability analysis display
+    verdict-badge.tsx           # BUILD/SKIP/MAYBE badge
+    nav.tsx                     # Navigation bar
+    error-boundary.tsx          # React error boundary
+  lib/
+    api.ts                      # Centralized API client
+    auth-context.tsx            # Auth context (Supabase session management)
+    types.ts                    # Zod schemas + TypeScript types
 ```
 
 ---
 
-## Tech Stack
+## API Endpoints
 
-- **Language:** Python 3.12
-- **Framework:** FastAPI (async, OpenAPI docs)
-- **LLM:** Claude Sonnet 4 (reasoning) + Haiku 4.5 (cheap tasks)
-- **Search:** Serper (Google + Reddit via `site:reddit.com`)
-- **Database:** SQLite (via aiosqlite)
-- **Streaming:** SSE (Server-Sent Events)
-
----
-
-## Configuration
-
-Edit `src/maverick/config.py` to customize:
-
-- LLM models (Sonnet vs Haiku)
-- Search rate limits
-- Cache TTL
-- Max queries per agent
-- Max pain points/competitors
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/validations` | Start a new validation (deducts 1 credit) |
+| GET | `/api/validations/:id` | Get full results |
+| GET | `/api/validations/:id/stream` | Stream progress (SSE) |
+| GET | `/api/validations` | List past validations |
+| DELETE | `/api/validations/:id` | Delete a validation |
+| POST | `/api/auth/register` | Register with email/password |
+| POST | `/api/auth/login` | Login |
+| GET | `/api/credits/balance` | Get credit balance |
+| POST | `/api/credits/checkout` | Create Stripe checkout session |
+| POST | `/api/stripe/webhook` | Stripe webhook (credit fulfillment) |
+| GET | `/api/health` | Health check |
 
 ---
 
-## Next Steps
+## Ethical Considerations
 
-1. **Sign up for API keys:**
-   - Anthropic: https://console.anthropic.com/
-   - Serper: https://serper.dev/ (free tier: 2,500 queries)
+### Data Privacy
+- User ideas are stored in Supabase (PostgreSQL) and only accessible to the submitting user via JWT-scoped queries. Ideas are not shared, sold, or used for model training.
+- Search data is sourced from publicly available web pages via the Serper API. No private or authenticated data is accessed.
+- Supabase Auth handles password hashing and session management — no raw passwords are stored.
 
-2. **Test with a real idea:**
-   ```bash
-   curl -X POST http://localhost:8000/api/validations \
-     -H "Content-Type: application/json" \
-     -d '{"idea": "pitch deck generator for technical founders"}'
-   ```
+### Bias and Fairness
+- LLM verdicts may carry biases from Claude's training data. The system is designed as a research accelerator, not a definitive business oracle. Users should treat verdicts as starting points for further investigation, not final decisions.
+- The "data_quality" flag on each agent's output makes it transparent when insufficient evidence was found, so users know when the verdict is based on limited data.
 
-3. **Build the frontend** (React/Next.js recommended):
-   - Connect to `POST /api/validations`
-   - Use `EventSource` to stream from `/stream` endpoint
-   - Display results with verdict, reasoning, pain points, competitors
+### Content Moderation
+- Input validation includes profanity blocking, gibberish detection, and an LLM coherence check to prevent misuse of the system and ensure meaningful outputs.
 
-4. **Deploy:**
-   - Backend: Railway, Render, or Fly.io
-   - Database: Migrate SQLite → PostgreSQL for production
-   - Add authentication (optional)
-
----
-
-## Troubleshooting
-
-**"ModuleNotFoundError: No module named 'maverick'"**
-- Run `uv sync` to install dependencies
-- Activate venv: `source .venv/bin/activate`
-
-**"anthropic_api_key field required"**
-- Create `.env` file with your API keys
-
-**Search returns no results**
-- Check Serper API key is valid
-- Verify you have remaining quota (free tier: 2,500 queries)
-
-**Database locked errors**
-- SQLite only supports one writer at a time
-- For production, migrate to PostgreSQL
+### Cost Transparency
+- The credit system ensures users are aware of costs upfront. No hidden charges — 1 credit = 1 validation, credit packs are clearly priced.
 
 ---
 
