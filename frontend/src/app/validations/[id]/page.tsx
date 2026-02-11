@@ -127,9 +127,19 @@ export default function ValidationPage() {
   if (error && !isStreaming) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 pt-20">
-        <p className="text-skip">{error}</p>
-        <Link href="/" className="text-sm text-muted hover:text-foreground transition-colors">
-          try again
+        <p role="alert" className="text-skip">{error}</p>
+        <button
+          onClick={() => {
+            setError("");
+            setLoading(true);
+            router.refresh();
+          }}
+          className="rounded-lg border border-card-border px-4 py-2 text-sm text-muted transition-colors hover:bg-white/5"
+        >
+          retry
+        </button>
+        <Link href="/" className="text-sm text-muted/50 hover:text-foreground transition-colors">
+          go home
         </Link>
       </div>
     );

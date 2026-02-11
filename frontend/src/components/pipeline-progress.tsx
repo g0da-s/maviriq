@@ -28,6 +28,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const [completedAgents, setCompletedAgents] = useState<Set<number>>(new Set());
   const [verdict, setVerdict] = useState<{ verdict: Verdict; confidence: number } | null>(null);
   const [failed, setFailed] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const esRef = useRef<EventSource | null>(null);
   const retriesRef = useRef(0);
   const doneRef = useRef(false);
@@ -51,8 +52,10 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       esRef.current = es;
 
       es.addEventListener("agent_completed", (e) => {
-        retriesRef.current = 0; // reset on success
-        const data = JSON.parse(e.data);
+        retriesRef.current = 0;
+        setReconnecting(false);
+        let data: Record<string, unknown>;
+        try { data = JSON.parse(e.data); } catch { return; }
         const agentNum = data.agent as number;
 
         setCompletedAgents((prev) => {
@@ -75,8 +78,13 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
       es.addEventListener("pipeline_completed", async (e) => {
         doneRef.current = true;
-        const data = JSON.parse(e.data);
-        setVerdict({ verdict: data.verdict, confidence: data.confidence });
+        let data: Record<string, unknown>;
+        try { data = JSON.parse(e.data); } catch {
+          es.close();
+          onError("something went wrong");
+          return;
+        }
+        setVerdict({ verdict: data.verdict as Verdict, confidence: data.confidence as number });
         setCompletedAgents(new Set([1, 2, 3, 4]));
         setRunningAgents(new Set());
         es.close();
@@ -91,9 +99,15 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
       es.addEventListener("pipeline_error", (e) => {
         doneRef.current = true;
-        const data = JSON.parse(e.data);
+        let data: Record<string, unknown>;
+        try { data = JSON.parse(e.data); } catch {
+          setFailed(true);
+          onError("something went wrong");
+          es.close();
+          return;
+        }
         setFailed(true);
-        onError(data.error);
+        onError(data.error as string);
         es.close();
       });
 
@@ -102,10 +116,12 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         es.close();
 
         if (retriesRef.current < MAX_RETRIES) {
+          setReconnecting(true);
           const delay = Math.min(1000 * 2 ** retriesRef.current, 10_000);
           retriesRef.current += 1;
           setTimeout(connect, delay);
         } else {
+          setReconnecting(false);
           setFailed(true);
           onError("connection lost after multiple retries");
         }
@@ -216,9 +232,18 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         })}
       </div>
 
+      {reconnecting && (
+        <div role="alert" className="mt-4 rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center text-sm text-maybe">
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-maybe" />
+            reconnecting...
+          </span>
+        </div>
+      )}
+
       {failed && (
-        <div className="mt-4 rounded-xl border border-skip/30 bg-skip/5 p-4 text-center text-sm text-skip">
-          pipeline failed — check server logs
+        <div role="alert" className="mt-4 rounded-xl border border-skip/30 bg-skip/5 p-4 text-center text-sm text-skip">
+          something went wrong — please try again
         </div>
       )}
     </div>

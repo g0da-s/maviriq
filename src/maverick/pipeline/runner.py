@@ -153,7 +153,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.current_agent = 1
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(1, self.agent1.name).model_dump())
+        writer(AgentStartedEvent.create(1).model_dump())
 
         # Run agent
         result = await asyncio.wait_for(
@@ -165,7 +165,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.pain_discovery = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(1, self.agent1.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(1, result.model_dump()).model_dump())
 
         return {
             "pain_discovery": result,
@@ -181,7 +181,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.current_agent = 1
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(1, f"{self.agent1.name} (retry)").model_dump())
+        writer(AgentStartedEvent.create(1).model_dump())
 
         # Generate broader retry queries
         retry_queries = await self.llm.generate_list(
@@ -208,7 +208,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.pain_discovery = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(1, self.agent1.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(1, result.model_dump()).model_dump())
 
         return {
             "pain_discovery": result,
@@ -223,7 +223,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.current_agent = 2
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(2, self.agent2.name).model_dump())
+        writer(AgentStartedEvent.create(2).model_dump())
 
         # First attempt runs without target_user (parallel with pain discovery)
         result = await asyncio.wait_for(
@@ -235,7 +235,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.competitor_research = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(2, self.agent2.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(2, result.model_dump()).model_dump())
 
         return {
             "competitor_research": result,
@@ -255,7 +255,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.current_agent = 2
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(2, f"{self.agent2.name} (retry)").model_dump())
+        writer(AgentStartedEvent.create(2).model_dump())
 
         # Generate broader retry queries
         target_label = target_user.label if target_user else "general users"
@@ -284,7 +284,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.competitor_research = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(2, self.agent2.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(2, result.model_dump()).model_dump())
 
         return {
             "competitor_research": result,
@@ -308,7 +308,7 @@ class PipelineGraph:
         run.pain_discovery = pain
         run.competitor_research = competitor
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(3, self.agent3.name).model_dump())
+        writer(AgentStartedEvent.create(3).model_dump())
 
         # Run agent
         result = await asyncio.wait_for(
@@ -324,7 +324,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.viability = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(3, self.agent3.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(3, result.model_dump()).model_dump())
 
         return {
             "viability": result,
@@ -339,7 +339,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.current_agent = 4
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(4, self.agent4.name).model_dump())
+        writer(AgentStartedEvent.create(4).model_dump())
 
         # Run agent
         result = await asyncio.wait_for(
@@ -356,7 +356,7 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.synthesis = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(4, self.agent4.name, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(4, result.model_dump()).model_dump())
 
         return {}
 
@@ -410,25 +410,25 @@ class PipelineGraph:
         except asyncio.TimeoutError:
             run = await self.repository.get(run_id)
             agent_num = run.current_agent if run else 0
-            msg = f"Agent {agent_num} timed out after {settings.agent_timeout}s"
-            logger.error(f"Pipeline failed for run {run_id}: {msg}")
+            internal_msg = f"Agent {agent_num} timed out after {settings.agent_timeout}s"
+            logger.error("Pipeline failed for run %s: %s", run_id, internal_msg)
             if run:
                 run.status = ValidationStatus.FAILED
-                run.error = msg
+                run.error = internal_msg
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
-            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, msg))
+            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, "Processing timed out. Please try again."))
 
         except Exception as e:
-            logger.exception(f"Pipeline failed for run {run_id}")
             run = await self.repository.get(run_id)
             agent_num = run.current_agent if run else 0
+            logger.exception("Pipeline failed for run %s (agent %s)", run_id, agent_num)
             if run:
                 run.status = ValidationStatus.FAILED
                 run.error = str(e)
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
-            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, str(e)))
+            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, "Processing failed. Please try again."))
 
         finally:
             pubsub.publish(run_id, None)  # Signal stream end

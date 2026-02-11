@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from maverick.agents import InsufficientDataError
 from maverick.agents.base import BaseAgent
 from maverick.models.schemas import (
     PainDiscoveryInput,
@@ -95,7 +96,14 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
                     seen_urls.add(r.url)
                     all_snippets.append(r.to_dict())
 
-        logger.info(f"Collected {len(all_snippets)} unique snippets")
+        failed_count = sum(1 for r in results_lists if isinstance(r, Exception))
+        logger.info(f"Collected {len(all_snippets)} unique snippets ({failed_count}/{len(search_tasks)} searches failed)")
+
+        if failed_count > len(search_tasks) * 0.5:
+            raise InsufficientDataError(
+                f"Too many search failures ({failed_count}/{len(search_tasks)}). "
+                "Cannot produce reliable pain discovery results."
+            )
 
         # Step 3: Feed all snippets to Claude for extraction
         snippets_text = "\n\n".join(

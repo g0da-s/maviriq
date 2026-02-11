@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createValidation } from "@/lib/api";
+import { createValidation, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const BLOCKED_WORDS = new Set([
@@ -73,11 +73,10 @@ export function IdeaForm() {
       const res = await createValidation(idea.trim());
       router.push(`/validations/${res.id}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "something went wrong";
-      if (msg.includes("Insufficient credits") || msg.includes("402")) {
+      if (err instanceof ApiError && err.status === 402) {
         setNeedsCredits(true);
       } else {
-        setError(msg);
+        setError(err instanceof Error ? err.message : "something went wrong");
       }
       setLoading(false);
     }
@@ -103,10 +102,10 @@ export function IdeaForm() {
         </span>
       </div>
 
-      {error && <p className="mt-3 text-sm text-skip">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-skip">{error}</p>}
 
       {needsCredits && (
-        <div className="mt-3 rounded-xl border border-maybe/30 bg-maybe/5 px-4 py-3 text-sm text-maybe">
+        <div role="alert" className="mt-3 rounded-xl border border-maybe/30 bg-maybe/5 px-4 py-3 text-sm text-maybe">
           you&apos;re out of credits.{" "}
           <Link href="/credits" className="underline hover:text-foreground">
             buy more credits

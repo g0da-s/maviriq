@@ -95,7 +95,7 @@ export default function RegisterPage() {
             className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
           />
 
-          {error && <p className="text-sm text-skip">{error}</p>}
+          {error && <p role="alert" className="text-sm text-skip">{error}</p>}
 
           <button
             type="submit"

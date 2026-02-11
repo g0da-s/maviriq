@@ -3,10 +3,11 @@ import json
 import logging
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from maverick.api.dependencies import get_current_user, get_pipeline_runner, get_validation_repo
+from maverick.api.stream_tokens import stream_token_store
 from maverick.models.schemas import (
     CreateValidationRequest,
     CreateValidationResponse,
@@ -18,7 +19,6 @@ from maverick.pipeline import pubsub
 from maverick.pipeline.runner import PipelineGraph
 from maverick.storage.credit_repository import CreditTransactionRepository
 from maverick.storage.repository import ValidationRepository
-from maverick.storage.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,17 @@ async def create_validation(
     user: dict = Depends(get_current_user),
     runner: PipelineGraph = Depends(get_pipeline_runner),
 ) -> CreateValidationResponse:
+    from maverick.api.rate_limit import rate_limit_validation
+    from maverick.services.input_validation import validate_idea_input
+
+    rate_limit_validation(user["id"])
+
+    # Fast regex pre-filter — catches profanity and gibberish before LLM call
+    input_error = validate_idea_input(request.idea)
+    if input_error:
+        logger.info("Input validation rejected idea from user %s: %s", user["id"], input_error)
+        raise HTTPException(status_code=422, detail=input_error)
+
     # LLM coherence check — runs before credit deduction
     from maverick.services.llm import LLMService
     from pydantic import BaseModel as _BM
@@ -60,20 +71,22 @@ async def create_validation(
             use_cheap_model=True,
         )
         if not check.is_valid:
+            logger.info("LLM coherence check rejected idea from user %s", user["id"])
             raise HTTPException(status_code=422, detail=check.reason)
     except HTTPException:
         raise
     except Exception:
-        # If the LLM check fails, let the request through rather than blocking
-        logger.warning("LLM idea check failed — allowing request through")
+        logger.warning("LLM idea check failed — rejecting to protect API costs", exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail="Validation service temporarily unavailable. Please try again in a moment.",
+        )
 
-    # Deduct credit
-    user_repo = UserRepository()
-    if not await user_repo.deduct_credit(user["id"]):
-        raise HTTPException(status_code=402, detail="Insufficient credits")
-
+    # Atomically deduct credit + record transaction in a single DB call
     txn_repo = CreditTransactionRepository()
-    await txn_repo.record(user["id"], -1, "validation")
+    if not await txn_repo.deduct_credit_with_txn(user["id"], "validation"):
+        logger.info("Insufficient credits for user %s", user["id"])
+        raise HTTPException(status_code=402, detail="Insufficient credits")
 
     run_id = f"val_{uuid4().hex[:12]}"
 
@@ -92,33 +105,39 @@ async def create_validation(
     )
 
 
+@router.post("/validations/{run_id}/stream-token")
+async def create_stream_token(
+    run_id: str,
+    user: dict = Depends(get_current_user),
+    repo: ValidationRepository = Depends(get_validation_repo),
+) -> dict:
+    """Issue a short-lived, single-use token for connecting to an SSE stream."""
+    run = await repo.get_for_user(run_id, user["id"])
+    if not run:
+        raise HTTPException(status_code=404, detail="Validation not found")
+    token = stream_token_store.create(user["id"], run_id)
+    return {"token": token}
+
+
 @router.get("/validations/{run_id}/stream")
 async def stream_validation(
     run_id: str,
     token: str = "",
     repo: ValidationRepository = Depends(get_validation_repo),
 ):
-    # EventSource can't send Authorization headers, so accept token as query param
-    from maverick.api.dependencies import decode_supabase_jwt
-
-    token_user_id = None
-    if token:
-        try:
-            payload = decode_supabase_jwt(token)
-            token_user_id = payload.get("sub")
-        except Exception:
-            pass
+    # Validate one-time stream token (not a JWT — short-lived, single-use)
+    token_user_id = stream_token_store.consume(token, run_id) if token else None
     if not token_user_id:
         async def auth_error():
-            yield {"event": "error", "data": json.dumps({"error": "Not authenticated"})}
+            yield {"event": "pipeline_error", "data": json.dumps({"error": "Not authenticated"})}
         return EventSourceResponse(auth_error())
 
     async def event_generator():
-        # Check if validation exists and belongs to user
-        run = await repo.get(run_id)
-        if not run or run.user_id != token_user_id:
+        # Check if validation exists and belongs to user (ownership at DB level)
+        run = await repo.get_for_user(run_id, token_user_id)
+        if not run:
             yield {
-                "event": "error",
+                "event": "pipeline_error",
                 "data": json.dumps({"error": "Validation not found"}),
             }
             return
@@ -135,14 +154,14 @@ async def stream_validation(
             # Replay agents that completed before we subscribed
             sent_agents: set[int] = set()
             agent_outputs = [
-                (1, "Pain & User Discovery", lambda r: r.pain_discovery),
-                (2, "Competitor Research", lambda r: r.competitor_research),
-                (3, "Viability Analysis", lambda r: r.viability),
-                (4, "Synthesis & Verdict", lambda r: r.synthesis),
+                (1, lambda r: r.pain_discovery),
+                (2, lambda r: r.competitor_research),
+                (3, lambda r: r.viability),
+                (4, lambda r: r.synthesis),
             ]
-            run = await repo.get(run_id)
+            run = await repo.get_for_user(run_id, token_user_id)
             if run:
-                for agent_num, agent_name, get_output in agent_outputs:
+                for agent_num, get_output in agent_outputs:
                     output = get_output(run)
                     if output is not None:
                         sent_agents.add(agent_num)
@@ -150,7 +169,6 @@ async def stream_validation(
                             "event": "agent_completed",
                             "data": json.dumps({
                                 "agent": agent_num,
-                                "name": agent_name,
                                 "output": output.model_dump(),
                             }),
                         }
@@ -181,16 +199,16 @@ async def get_validation(
     user: dict = Depends(get_current_user),
     repo: ValidationRepository = Depends(get_validation_repo),
 ) -> ValidationRun:
-    run = await repo.get(run_id)
-    if not run or run.user_id != user["id"]:
+    run = await repo.get_for_user(run_id, user["id"])
+    if not run:
         raise HTTPException(status_code=404, detail="Validation not found")
     return run
 
 
 @router.get("/validations", response_model=ValidationListResponse)
 async def list_validations(
-    page: int = 1,
-    per_page: int = 20,
+    page: int = Query(default=1, gt=0),
+    per_page: int = Query(default=20, gt=0, le=100),
     user: dict = Depends(get_current_user),
     repo: ValidationRepository = Depends(get_validation_repo),
 ) -> ValidationListResponse:
@@ -204,34 +222,33 @@ async def delete_validation(
     user: dict = Depends(get_current_user),
     repo: ValidationRepository = Depends(get_validation_repo),
 ) -> dict:
-    # Verify ownership
-    run = await repo.get(run_id)
-    if not run or run.user_id != user["id"]:
+    # Verify ownership at the DB level
+    run = await repo.get_for_user(run_id, user["id"])
+    if not run:
         raise HTTPException(status_code=404, detail="Validation not found")
 
     # Cancel running pipeline if still active
     task = _running_pipelines.pop(run_id, None)
     if task and not task.done():
         task.cancel()
-    await repo.delete(run_id)
+    await repo.delete_for_user(run_id, user["id"])
     return {"status": "deleted"}
 
 
 async def _replay_from_db(run: ValidationRun):
     """Replay completed agent events from a finished run (for late-connecting clients)."""
     agent_outputs = [
-        (1, "Pain & User Discovery", run.pain_discovery),
-        (2, "Competitor Research", run.competitor_research),
-        (3, "Viability Analysis", run.viability),
-        (4, "Synthesis & Verdict", run.synthesis),
+        (1, run.pain_discovery),
+        (2, run.competitor_research),
+        (3, run.viability),
+        (4, run.synthesis),
     ]
-    for agent_num, agent_name, output in agent_outputs:
+    for agent_num, output in agent_outputs:
         if output is not None:
             yield {
                 "event": "agent_completed",
                 "data": json.dumps({
                     "agent": agent_num,
-                    "name": agent_name,
                     "output": output.model_dump(),
                 }),
             }
@@ -248,7 +265,7 @@ async def _replay_from_db(run: ValidationRun):
     elif run.status == ValidationStatus.FAILED:
         yield {
             "event": "pipeline_error",
-            "data": json.dumps({"error": run.error}),
+            "data": json.dumps({"error": "Processing failed. Please try again."}),
         }
 
 

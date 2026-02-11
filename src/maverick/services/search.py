@@ -2,12 +2,29 @@ import asyncio
 import logging
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import before_sleep_log, retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from maverick.config import settings
 from maverick.storage.repository import SearchCacheRepository
 
 logger = logging.getLogger(__name__)
+
+
+def _is_retryable(exc: BaseException) -> bool:
+    """Only retry on transient errors: timeouts, connection failures, 429, 5xx."""
+    if isinstance(exc, (httpx.ConnectError, httpx.TimeoutException)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in (429, 500, 502, 503, 504)
+    return False
+
+
+_RETRY_POLICY = dict(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(min=1, max=10),
+    retry=retry_if_exception(_is_retryable),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 
 
 class SearchResult:
@@ -33,7 +50,7 @@ class SerperService:
         self._semaphore = asyncio.Semaphore(settings.serper_max_concurrent)
         self.cache = SearchCacheRepository()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(**_RETRY_POLICY)
     async def search(self, query: str, num_results: int = 10) -> list[SearchResult]:
         # Check cache first
         cached = await self.cache.get(query, "serper")
@@ -135,7 +152,7 @@ class SerperService:
             r.source = "youtube"
         return results
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(**_RETRY_POLICY)
     async def search_news(self, query: str, num_results: int = 10) -> list[SearchResult]:
         """Search Google News via Serper /news endpoint."""
         cached = await self.cache.get(query, "serper_news")

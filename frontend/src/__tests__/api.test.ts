@@ -178,8 +178,16 @@ describe("deleteValidation", () => {
 
 describe("getStreamUrl", () => {
   it("returns the correct SSE URL with token", async () => {
+    const streamToken = "stream-test-token";
+    mockFetch.mockReturnValue(jsonResponse({ token: streamToken }));
+
     const url = await getStreamUrl("run-123");
-    expect(url).toBe(`http://localhost:8000/api/validations/run-123/stream?token=${encodeURIComponent(TEST_TOKEN)}`);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/validations/run-123/stream-token",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(url).toBe(`http://localhost:8000/api/validations/run-123/stream?token=${encodeURIComponent(streamToken)}`);
   });
 });
 

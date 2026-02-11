@@ -31,7 +31,8 @@ describe("PainPoints", () => {
 
   it("renders pain point sources", () => {
     render(<PainPoints data={mockPainDiscovery} />);
-    expect(screen.getByText("Reddit")).toBeInTheDocument();
+    const matches = screen.getAllByText("Reddit");
+    expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows pain points count", () => {

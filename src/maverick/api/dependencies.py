@@ -14,7 +14,11 @@ from maverick.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
-_jwks_client = PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
+_jwks_client = PyJWKClient(
+    f"{settings.supabase_url}/auth/v1/.well-known/jwks.json",
+    cache_jwk_set=True,
+    lifespan=3600,
+)
 
 _pipeline_runner: PipelineGraph | None = None
 _validation_repo: ValidationRepository | None = None
@@ -48,6 +52,11 @@ def decode_supabase_jwt(token: str) -> dict:
     """Decode and verify a Supabase JWT using the JWKS public key."""
     try:
         signing_key = _jwks_client.get_signing_key_from_jwt(token)
+    except Exception:
+        logger.exception("JWKS key fetch failed")
+        raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable")
+
+    try:
         payload = pyjwt.decode(
             token,
             signing_key.key,
@@ -56,8 +65,8 @@ def decode_supabase_jwt(token: str) -> dict:
             leeway=10,
         )
         return payload
-    except pyjwt.PyJWTError as e:
-        logger.error("JWT decode failed: %s", e)
+    except pyjwt.PyJWTError:
+        logger.warning("JWT decode failed for token")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 

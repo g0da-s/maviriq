@@ -18,13 +18,16 @@ class Settings(BaseSettings):
     serper_base_url: str = "https://google.serper.dev"
     serper_max_concurrent: int = 10
 
-    # CORS (comma-separated origins, e.g. "http://localhost:3000,https://myapp.com")
-    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:3002"
+    # CORS (required — comma-separated origins, e.g. "http://localhost:3000,https://myapp.com")
+    cors_origins: str
 
-    # Supabase
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""
-    supabase_jwt_secret: str = ""
+    # Redis (optional — falls back to in-memory rate limiting if not set)
+    redis_url: str = ""
+
+    # Supabase (required — app will fail to start if missing)
+    supabase_url: str
+    supabase_service_role_key: str
+    supabase_jwt_secret: str
 
     # Search cache TTL (seconds)
     search_cache_ttl: int = 86400  # 24 hours
@@ -41,12 +44,12 @@ class Settings(BaseSettings):
     langsmith_project: str = "maverick"
     langsmith_endpoint: str = "https://eu.api.smith.langchain.com"
 
-    # Stripe
-    stripe_secret_key: str = ""
-    stripe_webhook_secret: str = ""
-    stripe_price_5: str = ""
-    stripe_price_20: str = ""
-    stripe_price_50: str = ""
+    # Stripe (required — app will fail to start if missing)
+    stripe_secret_key: str
+    stripe_webhook_secret: str
+    stripe_price_5: str
+    stripe_price_20: str
+    stripe_price_50: str
     frontend_url: str = "http://localhost:3000"
 
 

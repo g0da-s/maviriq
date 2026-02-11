@@ -4,6 +4,7 @@ import logging
 import httpx
 from bs4 import BeautifulSoup
 
+from maverick.agents import InsufficientDataError
 from maverick.agents.base import BaseAgent
 from maverick.models.schemas import (
     CompetitorResearchInput,
@@ -106,7 +107,14 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
                     seen_urls.add(r.url)
                     all_results.append(r.to_dict())
 
-        logger.info(f"Found {len(all_results)} unique results")
+        failed_count = sum(1 for r in results_lists if isinstance(r, Exception))
+        logger.info(f"Found {len(all_results)} unique results ({failed_count}/{len(search_tasks)} searches failed)")
+
+        if failed_count > len(search_tasks) * 0.5:
+            raise InsufficientDataError(
+                f"Too many search failures ({failed_count}/{len(search_tasks)}). "
+                "Cannot produce reliable competitor research results."
+            )
 
         # Step 3: For top 10 competitors, try to scrape pricing pages
         pricing_data = await self._scrape_pricing_pages(all_results[:10])

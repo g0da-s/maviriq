@@ -3,11 +3,30 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from maverick.api.auth_routes import router as auth_router
 from maverick.api.routes import router
 from maverick.api.stripe_routes import router as stripe_router
 from maverick.config import settings
+from maverick.storage import DatabaseError
+
+_MAX_BODY_SIZE = 1_048_576  # 1 MB
+
+
+class LimitRequestBodyMiddleware(BaseHTTPMiddleware):
+    """Reject requests whose Content-Length exceeds _MAX_BODY_SIZE."""
+
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > _MAX_BODY_SIZE:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large"},
+            )
+        return await call_next(request)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,13 +54,25 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+# Reject oversized request bodies (runs before route handlers)
+app.add_middleware(LimitRequestBodyMiddleware)
 
 app.include_router(router)
 app.include_router(auth_router)
 app.include_router(stripe_router)
+
+
+@app.exception_handler(DatabaseError)
+async def database_error_handler(request: Request, exc: DatabaseError):
+    logger.error("Database error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable"},
+    )
 
 
 if __name__ == "__main__":

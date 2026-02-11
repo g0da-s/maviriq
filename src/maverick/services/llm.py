@@ -1,16 +1,29 @@
 import logging
 from typing import TypeVar
 
+from anthropic import (
+    APIConnectionError,
+    APITimeoutError,
+    InternalServerError,
+    RateLimitError,
+)
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import before_sleep_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from maverick.config import settings
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
+
+_RETRY_POLICY = dict(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(min=1, max=10),
+    retry=retry_if_exception_type((APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 
 
 class LLMService:
@@ -27,7 +40,7 @@ class LLMService:
     def _get_model(self, use_cheap_model: bool = False) -> ChatAnthropic:
         return self.cheap_model if use_cheap_model else self.model
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(**_RETRY_POLICY)
     async def generate_structured(
         self,
         system_prompt: str,
@@ -45,7 +58,7 @@ class LLMService:
 
         return result
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(**_RETRY_POLICY)
     async def generate_text(
         self,
         system_prompt: str,
@@ -61,7 +74,7 @@ class LLMService:
 
         return response.content
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    @retry(**_RETRY_POLICY)
     async def generate_list(
         self,
         system_prompt: str,

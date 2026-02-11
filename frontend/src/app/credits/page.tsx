@@ -29,6 +29,7 @@ function CreditsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  const [lastAttemptedPack, setLastAttemptedPack] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -50,6 +51,7 @@ function CreditsContent() {
   async function handleBuy(pack: number) {
     if (!session) return;
     setPurchasing(pack);
+    setLastAttemptedPack(pack);
     setError("");
 
     try {
@@ -95,8 +97,14 @@ function CreditsContent() {
       )}
 
       {error && (
-        <div className="mt-6 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-center text-sm text-skip">
-          {error}
+        <div role="alert" className="mt-6 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-sm text-skip flex items-center justify-center gap-3">
+          <span>{error}</span>
+          <button
+            onClick={() => lastAttemptedPack && handleBuy(lastAttemptedPack)}
+            className="shrink-0 rounded-lg border border-skip/30 px-3 py-1 text-xs transition-colors hover:bg-skip/10"
+          >
+            retry
+          </button>
         </div>
       )}
 

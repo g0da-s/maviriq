@@ -1,5 +1,14 @@
 import type { PainDiscoveryOutput } from "@/lib/types";
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const sourceLabels: Record<string, { label: string; color: string }> = {
   reddit: { label: "Reddit", color: "border-orange-500/30 text-orange-400" },
   hackernews: { label: "Hacker News", color: "border-amber-500/30 text-amber-400" },
@@ -64,7 +73,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-muted/60">
-                {pp.source_url ? (
+                {pp.source_url && isSafeUrl(pp.source_url) ? (
                   <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
                     <SourceBadge source={pp.source} />
                   </a>

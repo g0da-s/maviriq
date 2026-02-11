@@ -33,6 +33,9 @@ vi.mock("next/link", () => ({
 // Mock API
 vi.mock("@/lib/api", () => ({
   createValidation: vi.fn(),
+  ApiError: class ApiError extends Error {
+    constructor(public status: number, message: string) { super(message); }
+  },
 }));
 
 import { createValidation } from "@/lib/api";
@@ -71,11 +74,11 @@ describe("IdeaForm", () => {
     expect(screen.getByRole("button", { name: "validate" })).toBeDisabled();
   });
 
-  it("enables button when idea has >= 3 characters", async () => {
+  it("enables button when idea has >= 10 characters", async () => {
     const user = userEvent.setup();
     render(<IdeaForm />);
 
-    await user.type(screen.getByPlaceholderText("describe your startup idea..."), "abc");
+    await user.type(screen.getByPlaceholderText("describe your startup idea..."), "a]real idea");
     expect(screen.getByRole("button", { name: "validate" })).toBeEnabled();
   });
 

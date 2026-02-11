@@ -9,11 +9,13 @@ _BLOCKED_WORDS = {
     "retard", "retarded",
 }
 
-# 4+ consecutive consonants (no vowel) — catches keyboard mash like "wfkpsdf"
-_CONSONANT_MASH = re.compile(r"[^aeiou\s\d\W]{5,}", re.IGNORECASE)
+# 5+ consecutive consonants — catches keyboard mash like "wfkpsdf", "bcdfgh"
+_CONSONANT_MASH = re.compile(r"[bcdfghjklmnpqrstvwxyz]{5,}", re.IGNORECASE)
 
 # Same character repeated 3+ times — catches "aaaaaaa", "lllll"
 _REPEATED_CHARS = re.compile(r"(.)\1{2,}")
+
+_VOWELS = set("aeiouAEIOU")
 
 
 def check_profanity(text: str) -> str | None:
@@ -42,6 +44,14 @@ def check_gibberish(text: str) -> str | None:
         # Check for repeated characters
         elif _REPEATED_CHARS.search(word):
             gibberish_count += 1
+        # Check vowel ratio — real English words have ~35%+ vowels.
+        # Catches separator tricks like "b_c_d_f_g" that dodge consonant regex.
+        else:
+            letters = [c for c in word if c.isalpha()]
+            if len(letters) >= 5:
+                vowel_ratio = sum(1 for c in letters if c in _VOWELS) / len(letters)
+                if vowel_ratio < 0.15:
+                    gibberish_count += 1
 
     # If more than half of substantial words look like gibberish, reject
     substantial_words = [w for w in words if len(w) > 3]

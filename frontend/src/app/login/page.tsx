@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -10,8 +10,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [waitingForAuth, setWaitingForAuth] = useState(false);
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  // Redirect when user is set after successful login
+  useEffect(() => {
+    if (waitingForAuth && user) {
+      router.push("/");
+    }
+  }, [waitingForAuth, user, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +32,9 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.push("/");
+
+    // Set flag to wait for user to be populated by auth state change
+    setWaitingForAuth(true);
   }
 
   return (
@@ -57,7 +67,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-sm text-skip">{error}</p>}
+          {error && <p role="alert" className="text-sm text-skip">{error}</p>}
 
           <button
             type="submit"

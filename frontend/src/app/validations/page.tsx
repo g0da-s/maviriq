@@ -105,12 +105,18 @@ function HistoryContent() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-sm text-skip">
-          {error}
+        <div role="alert" className="mb-4 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-sm text-skip flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => load(page)}
+            className="ml-4 shrink-0 rounded-lg border border-skip/30 px-3 py-1 text-xs transition-colors hover:bg-skip/10"
+          >
+            retry
+          </button>
         </div>
       )}
 
-      {loading && !data ? (
+      {loading && !error ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 rounded-2xl border border-card-border bg-card p-5">

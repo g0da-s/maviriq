@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { OfflineBanner } from "@/components/offline-banner";
 import { Providers } from "@/components/providers";
 
 const inter = Inter({
@@ -21,17 +23,21 @@ export const metadata: Metadata = {
     "4 ai agents research your startup idea and deliver a build or skip verdict",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") ?? "";
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-background text-foreground`}
       >
         <Providers>
+          <OfflineBanner />
           <Nav />
           <main className="min-h-screen">
             <ErrorBoundary>{children}</ErrorBoundary>

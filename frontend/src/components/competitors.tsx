@@ -1,5 +1,14 @@
 import type { CompetitorResearchOutput } from "@/lib/types";
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const sentimentColor = {
   positive: "text-build",
   mixed: "text-maybe",
@@ -61,7 +70,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
             <div key={i} className="rounded-xl border border-card-border bg-white/[0.02] p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  {comp.url ? (
+                  {comp.url && isSafeUrl(comp.url) ? (
                     <a href={comp.url} target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
                       {comp.name}
                       <span className="ml-1 text-muted/40 text-xs">↗</span>

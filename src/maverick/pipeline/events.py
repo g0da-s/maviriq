@@ -13,8 +13,8 @@ class AgentStartedEvent(SSEEvent):
     event: str = "agent_started"
 
     @classmethod
-    def create(cls, agent_num: int, name: str) -> "AgentStartedEvent":
-        return cls(data={"agent": agent_num, "name": name, "timestamp": datetime.now(timezone.utc).isoformat()})
+    def create(cls, agent_num: int) -> "AgentStartedEvent":
+        return cls(data={"agent": agent_num, "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
 class AgentProgressEvent(SSEEvent):
@@ -29,8 +29,8 @@ class AgentCompletedEvent(SSEEvent):
     event: str = "agent_completed"
 
     @classmethod
-    def create(cls, agent_num: int, name: str, output: dict) -> "AgentCompletedEvent":
-        return cls(data={"agent": agent_num, "name": name, "output": output, "timestamp": datetime.now(timezone.utc).isoformat()})
+    def create(cls, agent_num: int, output: dict) -> "AgentCompletedEvent":
+        return cls(data={"agent": agent_num, "output": output, "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
 class PipelineCompletedEvent(SSEEvent):
