@@ -4,9 +4,9 @@ import logging
 import httpx
 from bs4 import BeautifulSoup
 
-from maverick.agents import InsufficientDataError
-from maverick.agents.base import BaseAgent
-from maverick.models.schemas import (
+from maviriq.agents import InsufficientDataError
+from maviriq.agents.base import BaseAgent
+from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
 )
@@ -169,7 +169,7 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
                 async with httpx.AsyncClient(
                     timeout=10.0,
                     follow_redirects=True,
-                    headers={"User-Agent": "Mozilla/5.0 (compatible; Maverick/1.0)"},
+                    headers={"User-Agent": "Mozilla/5.0 (compatible; Maviriq/1.0)"},
                 ) as client:
                     response = await client.get(url)
                     response.raise_for_status()

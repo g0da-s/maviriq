@@ -1,5 +1,5 @@
 -- ============================================================
--- Maverick Supabase Schema
+-- Maviriq Supabase Schema
 -- Run this in the Supabase SQL Editor after creating your project.
 -- Prerequisites: Enable "Confirm email" in Authentication > Email settings.
 -- ============================================================

@@ -3,20 +3,20 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
 
-from maverick.models.schemas import (
+from maviriq.models.schemas import (
     CompetitorResearchOutput,
     PainDiscoveryOutput,
     SynthesisOutput,
     ValidationStatus,
     ViabilityOutput,
 )
-from maverick.pipeline.events import (
+from maviriq.pipeline.events import (
     AgentCompletedEvent,
     AgentStartedEvent,
     PipelineCompletedEvent,
     PipelineErrorEvent,
 )
-from maverick.pipeline.runner import PipelineRunner
+from maviriq.pipeline.runner import PipelineRunner
 
 
 class TestPipelineRunner:
@@ -29,8 +29,8 @@ class TestPipelineRunner:
         sample_synthesis,
     ):
         """Create a pipeline runner with all agents and repository mocked."""
-        with patch("maverick.pipeline.runner.LLMService"), \
-             patch("maverick.pipeline.runner.SerperService"):
+        with patch("maviriq.pipeline.runner.LLMService"), \
+             patch("maviriq.pipeline.runner.SerperService"):
             runner = PipelineRunner()
 
         runner.agent1.run = AsyncMock(return_value=sample_pain_discovery)

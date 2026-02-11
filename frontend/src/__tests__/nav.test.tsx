@@ -32,7 +32,7 @@ import { usePathname } from "next/navigation";
 describe("Nav", () => {
   it("renders the brand link", () => {
     render(<Nav />);
-    expect(screen.getByText("maverick")).toBeInTheDocument();
+    expect(screen.getByText("maviriq")).toBeInTheDocument();
   });
 
   it("renders history link", () => {
@@ -47,7 +47,7 @@ describe("Nav", () => {
 
   it("brand link points to home", () => {
     render(<Nav />);
-    const brand = screen.getByText("maverick");
+    const brand = screen.getByText("maviriq");
     expect(brand.closest("a")).toHaveAttribute("href", "/");
   });
 

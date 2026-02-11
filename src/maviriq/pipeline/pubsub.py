@@ -8,7 +8,7 @@ instantly via its own asyncio.Queue — no DB polling needed.
 import asyncio
 from collections import defaultdict
 
-from maverick.pipeline.events import SSEEvent
+from maviriq.pipeline.events import SSEEvent
 
 _subscribers: dict[str, list[asyncio.Queue[SSEEvent | None]]] = defaultdict(list)
 

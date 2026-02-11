@@ -7,7 +7,7 @@
 
 ## 1. Agent Design
 
-**Purpose**: Maverick is an AI-powered startup idea validator. Given a business idea, it autonomously runs a multi-agent pipeline that researches real pain points, analyzes competitors, evaluates market viability, and synthesizes a final verdict — automating hours of manual market research into minutes.
+**Purpose**: Maviriq is an AI-powered startup idea validator. Given a business idea, it autonomously runs a multi-agent pipeline that researches real pain points, analyzes competitors, evaluates market viability, and synthesizes a final verdict — automating hours of manual market research into minutes.
 
 **Capabilities**:
 - Autonomous web research (pain discovery, competitor analysis)
@@ -155,7 +155,7 @@
 **SCR outline**:
 - **Situation**: Aspiring founders spend days manually researching whether their idea is viable
 - **Complication**: Manual research is slow, biased, and often incomplete — people skip it and build the wrong thing
-- **Resolution**: Maverick automates this with a multi-agent AI pipeline that delivers structured market validation in minutes
+- **Resolution**: Maviriq automates this with a multi-agent AI pipeline that delivers structured market validation in minutes
 
 [TODO: Flesh out your presentation talking points]
 

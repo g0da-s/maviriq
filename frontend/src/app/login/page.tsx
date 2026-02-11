@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <h1 className="font-display text-3xl font-bold text-center">log in</h1>
         <p className="mt-2 text-center text-sm text-muted">
-          welcome back to maverick
+          welcome back to maviriq
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

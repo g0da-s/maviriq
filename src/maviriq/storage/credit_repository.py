@@ -1,8 +1,8 @@
 import logging
 from uuid import uuid4
 
-from maverick.storage import DatabaseError
-from maverick.supabase_client import get_supabase
+from maviriq.storage import DatabaseError
+from maviriq.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 

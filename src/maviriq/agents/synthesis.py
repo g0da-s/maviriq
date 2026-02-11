@@ -1,7 +1,7 @@
 import logging
 
-from maverick.agents.base import BaseAgent
-from maverick.models.schemas import (
+from maviriq.agents.base import BaseAgent
+from maviriq.models.schemas import (
     SynthesisInput,
     SynthesisOutput,
 )

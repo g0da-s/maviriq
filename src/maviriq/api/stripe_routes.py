@@ -3,10 +3,10 @@ import logging
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from maverick.api.dependencies import get_current_user
-from maverick.config import settings
-from maverick.models.auth import CheckoutRequest
-from maverick.storage.credit_repository import CreditTransactionRepository
+from maviriq.api.dependencies import get_current_user
+from maviriq.config import settings
+from maviriq.models.auth import CheckoutRequest
+from maviriq.storage.credit_repository import CreditTransactionRepository
 
 logger = logging.getLogger(__name__)
 

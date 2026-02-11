@@ -5,20 +5,27 @@ from jwt import PyJWKClient
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from maverick.config import settings
-from maverick.pipeline.runner import PipelineGraph
-from maverick.storage.credit_repository import CreditTransactionRepository
-from maverick.storage.repository import ValidationRepository
-from maverick.storage.user_repository import UserRepository
-from maverick.supabase_client import get_supabase
+from maviriq.config import settings
+from maviriq.pipeline.runner import PipelineGraph
+from maviriq.storage.credit_repository import CreditTransactionRepository
+from maviriq.storage.repository import ValidationRepository
+from maviriq.storage.user_repository import UserRepository
+from maviriq.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
-_jwks_client = PyJWKClient(
-    f"{settings.supabase_url}/auth/v1/.well-known/jwks.json",
-    cache_jwk_set=True,
-    lifespan=3600,
-)
+_jwks_client: PyJWKClient | None = None
+
+
+def _get_jwks_client() -> PyJWKClient:
+    global _jwks_client
+    if _jwks_client is None:
+        _jwks_client = PyJWKClient(
+            f"{settings.supabase_url}/auth/v1/.well-known/jwks.json",
+            cache_jwk_set=True,
+            lifespan=3600,
+        )
+    return _jwks_client
 
 _pipeline_runner: PipelineGraph | None = None
 _validation_repo: ValidationRepository | None = None
@@ -51,7 +58,7 @@ def get_user_repo() -> UserRepository:
 def decode_supabase_jwt(token: str) -> dict:
     """Decode and verify a Supabase JWT using the JWKS public key."""
     try:
-        signing_key = _jwks_client.get_signing_key_from_jwt(token)
+        signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
     except Exception:
         logger.exception("JWKS key fetch failed")
         raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable")

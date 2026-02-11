@@ -14,7 +14,7 @@ export function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
       <div className="flex items-center justify-between px-8 py-4">
         <Link href="/" className="font-display text-2xl font-bold tracking-tight">
-          maverick
+          maviriq
         </Link>
         <div className="flex items-center gap-1">
           {loading ? (

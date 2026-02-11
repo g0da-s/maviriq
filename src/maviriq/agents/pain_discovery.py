@@ -1,9 +1,9 @@
 import asyncio
 import logging
 
-from maverick.agents import InsufficientDataError
-from maverick.agents.base import BaseAgent
-from maverick.models.schemas import (
+from maviriq.agents import InsufficientDataError
+from maviriq.agents.base import BaseAgent
+from maviriq.models.schemas import (
     PainDiscoveryInput,
     PainDiscoveryOutput,
 )

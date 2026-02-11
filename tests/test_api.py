@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from maverick.main import app
-from maverick.api.dependencies import get_current_user
+from maviriq.main import app
+from maviriq.api.dependencies import get_current_user
 from tests.conftest import FAKE_USER
 
 
@@ -41,7 +41,7 @@ class TestCreateValidation:
         # Mock deduct_credit RPC to return True
         mock_supabase.execute = AsyncMock(return_value=_result(data=True))
 
-        with patch("maverick.api.routes._run_pipeline_background", new_callable=AsyncMock):
+        with patch("maviriq.api.routes._run_pipeline_background", new_callable=AsyncMock):
             response = client.post(
                 "/api/validations",
                 json={"idea": "AI pitch deck generator"},

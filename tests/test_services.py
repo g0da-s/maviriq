@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pydantic import BaseModel
 
-from maverick.services.llm import LLMService
-from maverick.services.search import SearchResult, SerperService
+from maviriq.services.llm import LLMService
+from maviriq.services.search import SearchResult, SerperService
 
 
 # ──────────────────────────────────────────────
@@ -15,7 +15,7 @@ from maverick.services.search import SearchResult, SerperService
 class TestLLMService:
     @pytest.fixture
     def llm(self):
-        with patch("maverick.services.llm.settings") as mock_settings:
+        with patch("maviriq.services.llm.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
             mock_settings.reasoning_model = "claude-sonnet-4-5-20250929"
             mock_settings.cheap_model = "claude-haiku-4-5-20251001"
@@ -151,7 +151,7 @@ class TestSearchResult:
 class TestSerperService:
     @pytest.fixture
     def serper(self):
-        with patch("maverick.services.search.settings") as mock_settings:
+        with patch("maviriq.services.search.settings") as mock_settings:
             mock_settings.serper_api_key = "test-key"
             mock_settings.serper_base_url = "https://google.serper.dev"
             mock_settings.serper_max_concurrent = 10

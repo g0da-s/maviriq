@@ -281,7 +281,7 @@ class CreateValidationRequest(BaseModel):
         words = v.strip().split()
         if len(words) < 3:
             raise ValueError("please describe your idea in at least a few words")
-        from maverick.services.input_validation import validate_idea_input
+        from maviriq.services.input_validation import validate_idea_input
         error = validate_idea_input(v)
         if error:
             raise ValueError(error)

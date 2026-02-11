@@ -2,8 +2,8 @@ import logging
 
 from supabase import acreate_client, AsyncClient
 
-from maverick.config import settings
-from maverick.storage import DatabaseError
+from maviriq.config import settings
+from maviriq.storage import DatabaseError
 
 logger = logging.getLogger(__name__)
 

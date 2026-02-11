@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # LangSmith
     langsmith_tracing: str = "true"
     langsmith_api_key: str = ""
-    langsmith_project: str = "maverick"
+    langsmith_project: str = "maviriq"
     langsmith_endpoint: str = "https://eu.api.smith.langchain.com"
 
     # Stripe (required — app will fail to start if missing)

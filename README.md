@@ -1,16 +1,16 @@
-# Maverick
+# Maviriq
 
 **AI-powered startup idea validator** — a multi-agent research system that tells you whether your idea is worth building before you write a single line of code.
 
-Maverick takes a business idea (e.g., "AI-powered pitch deck generator"), runs 4 specialized AI agents that search the real web for evidence, and delivers a BUILD / SKIP / MAYBE verdict backed by data — pain points from Reddit and HN, competitor analysis from G2 and Capterra, viability signals, and a final synthesis with confidence scoring.
+Maviriq takes a business idea (e.g., "AI-powered pitch deck generator"), runs 4 specialized AI agents that search the real web for evidence, and delivers a BUILD / SKIP / MAYBE verdict backed by data — pain points from Reddit and HN, competitor analysis from G2 and Capterra, viability signals, and a final synthesis with confidence scoring.
 
-**The problem it solves:** Founders spend weeks or months researching an idea manually. Maverick does this in under 2 minutes, surfacing real complaints, real competitors, and real market gaps — so you can make an informed decision fast.
+**The problem it solves:** Founders spend weeks or months researching an idea manually. Maviriq does this in under 2 minutes, surfacing real complaints, real competitors, and real market gaps — so you can make an informed decision fast.
 
 ---
 
 ## How It Works
 
-Maverick orchestrates 4 AI agents via LangGraph:
+Maviriq orchestrates 4 AI agents via LangGraph:
 
 ```
 START --> [Agent 1 + Agent 2] (parallel) --> Agent 3 --> Agent 4 --> END
@@ -67,7 +67,7 @@ Agents 1 and 2 run **in parallel** (saving ~15-20 seconds), then results feed in
 ### 1. Install
 
 ```bash
-cd maverick
+cd maviriq
 
 # Backend
 uv sync
@@ -87,7 +87,7 @@ cp .env.example .env
 
 ```bash
 # Backend (terminal 1)
-uv run uvicorn maverick.main:app --reload --app-dir src
+uv run uvicorn maviriq.main:app --reload --app-dir src
 
 # Frontend (terminal 2)
 cd frontend && npm run dev
@@ -100,7 +100,7 @@ Backend: `http://localhost:8000` | Frontend: `http://localhost:3000`
 ## Project Structure
 
 ```
-src/maverick/
+src/maviriq/
   main.py                       # FastAPI entry point + CORS
   config.py                     # pydantic-settings config + LangSmith env propagation
   supabase_client.py            # Async Supabase client

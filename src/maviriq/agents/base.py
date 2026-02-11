@@ -3,8 +3,8 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
-from maverick.services.llm import LLMService
-from maverick.services.search import SerperService
+from maviriq.services.llm import LLMService
+from maviriq.services.search import SerperService
 
 TInput = TypeVar("TInput", bound=BaseModel)
 TOutput = TypeVar("TOutput", bound=BaseModel)

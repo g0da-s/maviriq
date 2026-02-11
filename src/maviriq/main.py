@@ -7,11 +7,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from maverick.api.auth_routes import router as auth_router
-from maverick.api.routes import router
-from maverick.api.stripe_routes import router as stripe_router
-from maverick.config import settings
-from maverick.storage import DatabaseError
+from maviriq.api.auth_routes import router as auth_router
+from maviriq.api.routes import router
+from maviriq.api.stripe_routes import router as stripe_router
+from maviriq.config import settings
+from maviriq.storage import DatabaseError
 
 _MAX_BODY_SIZE = 1_048_576  # 1 MB
 
@@ -37,13 +37,13 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Maverick backend starting...")
+    logger.info("Maviriq backend starting...")
     yield
     logger.info("Shutting down...")
 
 
 app = FastAPI(
-    title="Maverick API",
+    title="Maviriq API",
     description="Idea validation pipeline — 4-agent research system",
     version="0.1.0",
     lifespan=lifespan,
@@ -78,4 +78,4 @@ async def database_error_handler(request: Request, exc: DatabaseError):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("maverick.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("maviriq.main:app", host="0.0.0.0", port=8000, reload=True)

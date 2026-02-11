@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, Depends
 
-from maverick.api.dependencies import get_current_user
-from maverick.models.auth import UserResponse
+from maviriq.api.dependencies import get_current_user
+from maviriq.models.auth import UserResponse
 
 logger = logging.getLogger(__name__)
 

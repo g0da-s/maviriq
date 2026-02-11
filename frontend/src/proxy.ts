@@ -4,8 +4,9 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
 
-  const apiUrl =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const apiUrl = new URL(
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+  ).origin;
 
   const cspHeader = [
     "default-src 'self'",

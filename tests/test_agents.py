@@ -2,11 +2,11 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from maverick.agents.pain_discovery import PainDiscoveryAgent
-from maverick.agents.competitor_research import CompetitorResearchAgent
-from maverick.agents.viability_analysis import ViabilityAnalysisAgent
-from maverick.agents.synthesis import SynthesisAgent
-from maverick.models.schemas import (
+from maviriq.agents.pain_discovery import PainDiscoveryAgent
+from maviriq.agents.competitor_research import CompetitorResearchAgent
+from maviriq.agents.viability_analysis import ViabilityAnalysisAgent
+from maviriq.agents.synthesis import SynthesisAgent
+from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
     PainDiscoveryInput,
@@ -16,7 +16,7 @@ from maverick.models.schemas import (
     ViabilityInput,
     ViabilityOutput,
 )
-from maverick.services.search import SearchResult
+from maviriq.services.search import SearchResult
 
 
 def make_mock_services(

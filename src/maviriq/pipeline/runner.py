@@ -7,18 +7,18 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from maverick.agents.competitor_research import (
+from maviriq.agents.competitor_research import (
     RETRY_COMPETITOR_QUERIES_PROMPT,
     CompetitorResearchAgent,
 )
-from maverick.agents.pain_discovery import (
+from maviriq.agents.pain_discovery import (
     RETRY_QUERY_GENERATION_PROMPT,
     PainDiscoveryAgent,
 )
-from maverick.agents.synthesis import SynthesisAgent
-from maverick.agents.viability_analysis import ViabilityAnalysisAgent
-from maverick.config import settings
-from maverick.models.schemas import (
+from maviriq.agents.synthesis import SynthesisAgent
+from maviriq.agents.viability_analysis import ViabilityAnalysisAgent
+from maviriq.config import settings
+from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
     PainDiscoveryInput,
@@ -29,17 +29,17 @@ from maverick.models.schemas import (
     ViabilityInput,
     ViabilityOutput,
 )
-from maverick.pipeline.events import (
+from maviriq.pipeline.events import (
     AgentCompletedEvent,
     AgentStartedEvent,
     PipelineCompletedEvent,
     PipelineErrorEvent,
     SSEEvent,
 )
-from maverick.pipeline import pubsub
-from maverick.services.llm import LLMService
-from maverick.services.search import SerperService
-from maverick.storage.repository import ValidationRepository
+from maviriq.pipeline import pubsub
+from maviriq.services.llm import LLMService
+from maviriq.services.search import SerperService
+from maviriq.storage.repository import ValidationRepository
 
 logger = logging.getLogger(__name__)
 

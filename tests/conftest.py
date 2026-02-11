@@ -4,14 +4,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Set env vars before any maverick imports
+# Set env vars before any maviriq imports
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("SERPER_API_KEY", "test-key")
 os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
 os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
 os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
 
-from maverick.models.schemas import (
+from maviriq.models.schemas import (
     Competitor,
     CompetitorPricing,
     CompetitorResearchOutput,
@@ -57,10 +57,10 @@ def mock_supabase():
     mock_client = _make_chain_mock()
     mock_fn = AsyncMock(return_value=mock_client)
     with (
-        patch("maverick.supabase_client.get_supabase", mock_fn),
-        patch("maverick.storage.repository.get_supabase", mock_fn),
-        patch("maverick.storage.user_repository.get_supabase", mock_fn),
-        patch("maverick.storage.credit_repository.get_supabase", mock_fn),
+        patch("maviriq.supabase_client.get_supabase", mock_fn),
+        patch("maviriq.storage.repository.get_supabase", mock_fn),
+        patch("maviriq.storage.user_repository.get_supabase", mock_fn),
+        patch("maviriq.storage.credit_repository.get_supabase", mock_fn),
     ):
         yield mock_client
 

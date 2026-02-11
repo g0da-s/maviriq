@@ -4,8 +4,8 @@ import logging
 import httpx
 from tenacity import before_sleep_log, retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from maverick.config import settings
-from maverick.storage.repository import SearchCacheRepository
+from maviriq.config import settings
+from maviriq.storage.repository import SearchCacheRepository
 
 logger = logging.getLogger(__name__)
 

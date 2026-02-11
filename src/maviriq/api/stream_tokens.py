@@ -88,7 +88,7 @@ class _RedisTokenStore:
 # ---------------------------------------------------------------------------
 
 def _create_store() -> _InMemoryTokenStore | _RedisTokenStore:
-    from maverick.config import settings
+    from maviriq.config import settings
 
     if settings.redis_url:
         try:

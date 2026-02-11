@@ -2,7 +2,7 @@
 import pytest
 from pydantic import ValidationError
 
-from maverick.models.schemas import (
+from maviriq.models.schemas import (
     CreateValidationRequest,
     PainDiscoveryOutput,
     PainPoint,

@@ -82,7 +82,7 @@ class _RedisLimiter:
 # ---------------------------------------------------------------------------
 
 def _create_limiter() -> _InMemoryLimiter | _RedisLimiter:
-    from maverick.config import settings
+    from maviriq.config import settings
 
     if settings.redis_url:
         try:

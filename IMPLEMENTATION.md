@@ -1,4 +1,4 @@
-# Maverick Implementation Summary
+# Maviriq Implementation Summary
 
 ## What Was Built
 
@@ -9,32 +9,32 @@ A fully functional **idea validation backend** that runs 4 sequential AI agents 
 ## Files Created (23 Python files + config)
 
 ### Core Application
-- `src/maverick/main.py` — FastAPI entry point
-- `src/maverick/config.py` — Configuration with pydantic-settings
-- `src/maverick/models/schemas.py` — All Pydantic data contracts
+- `src/maviriq/main.py` — FastAPI entry point
+- `src/maviriq/config.py` — Configuration with pydantic-settings
+- `src/maviriq/models/schemas.py` — All Pydantic data contracts
 
 ### Agents (Sequential Research Pipeline)
-- `src/maverick/agents/base.py` — BaseAgent abstract class
-- `src/maverick/agents/pain_discovery.py` — Agent 1: Pain & User Discovery
-- `src/maverick/agents/competitor_research.py` — Agent 2: Competitor Research
-- `src/maverick/agents/viability_analysis.py` — Agent 3: Viability Analysis
-- `src/maverick/agents/synthesis.py` — Agent 4: Synthesis & Verdict
+- `src/maviriq/agents/base.py` — BaseAgent abstract class
+- `src/maviriq/agents/pain_discovery.py` — Agent 1: Pain & User Discovery
+- `src/maviriq/agents/competitor_research.py` — Agent 2: Competitor Research
+- `src/maviriq/agents/viability_analysis.py` — Agent 3: Viability Analysis
+- `src/maviriq/agents/synthesis.py` — Agent 4: Synthesis & Verdict
 
 ### Services (External APIs)
-- `src/maverick/services/llm.py` — Claude API wrapper (Sonnet 4 + Haiku 4.5)
-- `src/maverick/services/search.py` — Serper wrapper (Google, Reddit, HN, G2, Capterra)
+- `src/maviriq/services/llm.py` — Claude API wrapper (Sonnet 4 + Haiku 4.5)
+- `src/maviriq/services/search.py` — Serper wrapper (Google, Reddit, HN, G2, Capterra)
 
 ### Pipeline (Orchestration)
-- `src/maverick/pipeline/runner.py` — Sequential agent orchestrator with checkpointing
-- `src/maverick/pipeline/events.py` — SSE event types
+- `src/maviriq/pipeline/runner.py` — Sequential agent orchestrator with checkpointing
+- `src/maviriq/pipeline/events.py` — SSE event types
 
 ### Storage (SQLite)
-- `src/maverick/storage/database.py` — Schema and connection
-- `src/maverick/storage/repository.py` — CRUD operations + search caching
+- `src/maviriq/storage/database.py` — Schema and connection
+- `src/maviriq/storage/repository.py` — CRUD operations + search caching
 
 ### API (FastAPI)
-- `src/maverick/api/routes.py` — All endpoints (POST, GET, DELETE, SSE stream)
-- `src/maverick/api/dependencies.py` — Dependency injection
+- `src/maviriq/api/routes.py` — All endpoints (POST, GET, DELETE, SSE stream)
+- `src/maviriq/api/dependencies.py` — Dependency injection
 
 ### Configuration & Docs
 - `.env.example` — API key template
@@ -153,7 +153,7 @@ source .venv/bin/activate
 ### 2. Start the server
 
 ```bash
-python -m maverick.main
+python -m maviriq.main
 ```
 
 Server runs at `http://localhost:8000`

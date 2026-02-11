@@ -6,8 +6,8 @@ from types import SimpleNamespace
 import pytest
 from unittest.mock import AsyncMock
 
-from maverick.models.schemas import ValidationRun, ValidationStatus
-from maverick.storage.repository import SearchCacheRepository, ValidationRepository
+from maviriq.models.schemas import ValidationRun, ValidationStatus
+from maviriq.storage.repository import SearchCacheRepository, ValidationRepository
 
 
 def _result(data=None, count=None):

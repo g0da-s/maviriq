@@ -6,19 +6,19 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
-from maverick.api.dependencies import get_current_user, get_pipeline_runner, get_validation_repo
-from maverick.api.stream_tokens import stream_token_store
-from maverick.models.schemas import (
+from maviriq.api.dependencies import get_current_user, get_pipeline_runner, get_validation_repo
+from maviriq.api.stream_tokens import stream_token_store
+from maviriq.models.schemas import (
     CreateValidationRequest,
     CreateValidationResponse,
     ValidationListResponse,
     ValidationRun,
     ValidationStatus,
 )
-from maverick.pipeline import pubsub
-from maverick.pipeline.runner import PipelineGraph
-from maverick.storage.credit_repository import CreditTransactionRepository
-from maverick.storage.repository import ValidationRepository
+from maviriq.pipeline import pubsub
+from maviriq.pipeline.runner import PipelineGraph
+from maviriq.storage.credit_repository import CreditTransactionRepository
+from maviriq.storage.repository import ValidationRepository
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,8 @@ async def create_validation(
     user: dict = Depends(get_current_user),
     runner: PipelineGraph = Depends(get_pipeline_runner),
 ) -> CreateValidationResponse:
-    from maverick.api.rate_limit import rate_limit_validation
-    from maverick.services.input_validation import validate_idea_input
+    from maviriq.api.rate_limit import rate_limit_validation
+    from maviriq.services.input_validation import validate_idea_input
 
     rate_limit_validation(user["id"])
 
@@ -51,7 +51,7 @@ async def create_validation(
         raise HTTPException(status_code=422, detail=input_error)
 
     # LLM coherence check — runs before credit deduction
-    from maverick.services.llm import LLMService
+    from maviriq.services.llm import LLMService
     from pydantic import BaseModel as _BM
 
     class _IdeaCheck(_BM):
