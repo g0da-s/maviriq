@@ -55,7 +55,7 @@ class PainDiscoveryOutput(BaseModel):
     user_segments: list[UserSegment]
     primary_target_user: UserSegment
     pain_summary: str
-    search_queries_used: list[str]
+    search_queries_used: list[str] = []
     data_quality: str = "full"  # "full" or "partial"
 
 
@@ -180,7 +180,7 @@ class MarketIntelligenceOutput(BaseModel):
     tam_reasoning: str
     distribution_channels: list[DistributionChannel]
     monetization_signals: list[MonetizationSignal]
-    search_queries_used: list[str]
+    search_queries_used: list[str] = []
     data_quality: str = "full"
 
     @field_validator("growth_direction", mode="before")
@@ -264,7 +264,7 @@ class GraveyardResearchOutput(BaseModel):
     lessons_learned: str
     churn_signals: list[ChurnSignal]
     competitor_health_signals: list[CompetitorHealthSignal]
-    search_queries_used: list[str]
+    search_queries_used: list[str] = []
     data_quality: str = "full"
 
 

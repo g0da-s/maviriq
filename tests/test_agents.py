@@ -1,11 +1,12 @@
 """Tests for all 5 pipeline agents with mocked LLM and Search."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from maviriq.agents.pain_discovery import PainDiscoveryAgent
-from maviriq.agents.competitor_research import CompetitorResearchAgent
-from maviriq.agents.market_intelligence import MarketIntelligenceAgent
-from maviriq.agents.graveyard_research import GraveyardResearchAgent
+from maviriq.agents.pain_discovery import PainDiscoveryAgent, TOOL_NAMES as PAIN_TOOLS
+from maviriq.agents.competitor_research import CompetitorResearchAgent, TOOL_NAMES as COMP_TOOLS
+from maviriq.agents.market_intelligence import MarketIntelligenceAgent, TOOL_NAMES as MARKET_TOOLS
+from maviriq.agents.graveyard_research import GraveyardResearchAgent, TOOL_NAMES as GRAVE_TOOLS
 from maviriq.agents.synthesis import SynthesisAgent
 from maviriq.models.schemas import (
     CompetitorResearchInput,
@@ -23,20 +24,20 @@ from maviriq.services.search import SearchResult
 
 
 def make_mock_services(
+    run_tool_loop_return=None,
     llm_structured_return=None,
-    llm_list_return=None,
-    search_results=None,
 ):
-    """Create mock LLM and Search services."""
+    """Create mock LLM and Search services for the new agentic architecture."""
     llm = MagicMock()
     search = MagicMock()
 
+    if run_tool_loop_return is not None:
+        llm.run_tool_loop = AsyncMock(return_value=run_tool_loop_return)
     if llm_structured_return is not None:
         llm.generate_structured = AsyncMock(return_value=llm_structured_return)
-    if llm_list_return is not None:
-        llm.generate_list = AsyncMock(return_value=llm_list_return)
 
-    default_results = search_results or [
+    # Mock all search methods so build_tools_for_agent can reference them
+    default_results = [
         SearchResult(
             title="Test result",
             url="https://example.com/1",
@@ -65,10 +66,7 @@ def make_mock_services(
 class TestPainDiscoveryAgent:
     @pytest.mark.asyncio
     async def test_runs_successfully(self, sample_pain_discovery):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_pain_discovery,
-            llm_list_return=["query1", "query2", "query3"],
-        )
+        llm, search = make_mock_services(run_tool_loop_return=sample_pain_discovery)
 
         agent = PainDiscoveryAgent(llm, search)
         result = await agent.run(PainDiscoveryInput(idea="AI pitch deck generator"))
@@ -79,45 +77,41 @@ class TestPainDiscoveryAgent:
         assert result.primary_target_user is not None
 
     @pytest.mark.asyncio
-    async def test_generates_search_queries_first(self, sample_pain_discovery):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_pain_discovery,
-            llm_list_return=["pitch deck complaints", "pitch deck hard reddit"],
-        )
-
-        agent = PainDiscoveryAgent(llm, search)
-        await agent.run(PainDiscoveryInput(idea="pitch deck generator"))
-
-        # Should have called generate_list for query generation
-        llm.generate_list.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_searches_multiple_sources(self, sample_pain_discovery):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_pain_discovery,
-            llm_list_return=["q1", "q2", "q3"],
-        )
+    async def test_passes_correct_tools(self, sample_pain_discovery):
+        llm, search = make_mock_services(run_tool_loop_return=sample_pain_discovery)
 
         agent = PainDiscoveryAgent(llm, search)
         await agent.run(PainDiscoveryInput(idea="test idea"))
 
-        # Should search Reddit, HN, and broad
-        assert search.search_reddit.call_count > 0
-        assert search.search_hackernews.call_count > 0
-        assert search.search.call_count > 0
+        # run_tool_loop should have been called with the right tools
+        llm.run_tool_loop.assert_called_once()
+        call_kwargs = llm.run_tool_loop.call_args
+        tools = call_kwargs.kwargs.get("tools") or call_kwargs[1].get("tools") if call_kwargs[1] else None
+        if tools is None:
+            # positional args: system_prompt, user_prompt, tools, ...
+            tools = call_kwargs[0][2] if len(call_kwargs[0]) > 2 else llm.run_tool_loop.call_args.kwargs["tools"]
+        tool_names = [t["name"] for t in tools]
+        for expected in PAIN_TOOLS:
+            assert expected in tool_names
 
     @pytest.mark.asyncio
-    async def test_attaches_search_queries_to_output(self, sample_pain_discovery):
-        queries = ["q1", "q2", "q3"]
-        llm, search = make_mock_services(
-            llm_structured_return=sample_pain_discovery,
-            llm_list_return=queries,
-        )
+    async def test_passes_correct_output_schema(self, sample_pain_discovery):
+        llm, search = make_mock_services(run_tool_loop_return=sample_pain_discovery)
 
         agent = PainDiscoveryAgent(llm, search)
-        result = await agent.run(PainDiscoveryInput(idea="test idea"))
+        await agent.run(PainDiscoveryInput(idea="test idea"))
 
-        assert result.search_queries_used == queries
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        assert call_kwargs["output_schema"] is PainDiscoveryOutput
+
+    @pytest.mark.asyncio
+    async def test_post_process_sets_idea(self, sample_pain_discovery):
+        llm, search = make_mock_services(run_tool_loop_return=sample_pain_discovery)
+
+        agent = PainDiscoveryAgent(llm, search)
+        result = await agent.run(PainDiscoveryInput(idea="my specific idea"))
+
+        assert result.idea == "my specific idea"
 
 
 # ──────────────────────────────────────────────
@@ -127,10 +121,7 @@ class TestPainDiscoveryAgent:
 class TestCompetitorResearchAgent:
     @pytest.mark.asyncio
     async def test_runs_successfully(self, sample_user_segment, sample_competitor_research):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_competitor_research,
-            llm_list_return=["competitor query 1", "competitor query 2"],
-        )
+        llm, search = make_mock_services(run_tool_loop_return=sample_competitor_research)
 
         agent = CompetitorResearchAgent(llm, search)
         result = await agent.run(
@@ -142,19 +133,29 @@ class TestCompetitorResearchAgent:
         assert result.target_user.label == sample_user_segment.label
 
     @pytest.mark.asyncio
-    async def test_searches_g2_and_capterra(self, sample_user_segment, sample_competitor_research):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_competitor_research,
-            llm_list_return=["q1"],
-        )
+    async def test_passes_correct_tools(self, sample_user_segment, sample_competitor_research):
+        llm, search = make_mock_services(run_tool_loop_return=sample_competitor_research)
 
         agent = CompetitorResearchAgent(llm, search)
         await agent.run(
             CompetitorResearchInput(idea="test", target_user=sample_user_segment)
         )
 
-        search.search_g2.assert_called_once()
-        search.search_capterra.assert_called_once()
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        tool_names = [t["name"] for t in call_kwargs["tools"]]
+        for expected in COMP_TOOLS:
+            assert expected in tool_names
+
+    @pytest.mark.asyncio
+    async def test_post_process_sets_target_user(self, sample_user_segment, sample_competitor_research):
+        llm, search = make_mock_services(run_tool_loop_return=sample_competitor_research)
+
+        agent = CompetitorResearchAgent(llm, search)
+        result = await agent.run(
+            CompetitorResearchInput(idea="test", target_user=sample_user_segment)
+        )
+
+        assert result.target_user.label == sample_user_segment.label
 
 
 # ──────────────────────────────────────────────
@@ -164,10 +165,7 @@ class TestCompetitorResearchAgent:
 class TestMarketIntelligenceAgent:
     @pytest.mark.asyncio
     async def test_runs_successfully(self, sample_market_intelligence):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_market_intelligence,
-            llm_list_return=["market query 1", "market query 2"],
-        )
+        llm, search = make_mock_services(run_tool_loop_return=sample_market_intelligence)
 
         agent = MarketIntelligenceAgent(llm, search)
         result = await agent.run(MarketIntelligenceInput(idea="AI pitch deck generator"))
@@ -178,45 +176,26 @@ class TestMarketIntelligenceAgent:
         assert len(result.distribution_channels) > 0
 
     @pytest.mark.asyncio
-    async def test_generates_search_queries_first(self, sample_market_intelligence):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_market_intelligence,
-            llm_list_return=["market size query", "monetization query"],
-        )
+    async def test_passes_correct_tools(self, sample_market_intelligence):
+        llm, search = make_mock_services(run_tool_loop_return=sample_market_intelligence)
 
         agent = MarketIntelligenceAgent(llm, search)
         await agent.run(MarketIntelligenceInput(idea="test idea"))
 
-        llm.generate_list.assert_called_once()
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        tool_names = [t["name"] for t in call_kwargs["tools"]]
+        for expected in MARKET_TOOLS:
+            assert expected in tool_names
 
     @pytest.mark.asyncio
-    async def test_searches_multiple_sources(self, sample_market_intelligence):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_market_intelligence,
-            llm_list_return=["q1", "q2", "q3"],
-        )
+    async def test_passes_correct_output_schema(self, sample_market_intelligence):
+        llm, search = make_mock_services(run_tool_loop_return=sample_market_intelligence)
 
         agent = MarketIntelligenceAgent(llm, search)
         await agent.run(MarketIntelligenceInput(idea="test idea"))
 
-        # Should search broad, news, producthunt, crunchbase
-        assert search.search.call_count > 0
-        assert search.search_news.call_count > 0
-        search.search_producthunt.assert_called_once()
-        search.search_crunchbase.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_attaches_search_queries_to_output(self, sample_market_intelligence):
-        queries = ["q1", "q2", "q3"]
-        llm, search = make_mock_services(
-            llm_structured_return=sample_market_intelligence,
-            llm_list_return=queries,
-        )
-
-        agent = MarketIntelligenceAgent(llm, search)
-        result = await agent.run(MarketIntelligenceInput(idea="test idea"))
-
-        assert result.search_queries_used == queries
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        assert call_kwargs["output_schema"] is MarketIntelligenceOutput
 
 
 # ──────────────────────────────────────────────
@@ -226,10 +205,7 @@ class TestMarketIntelligenceAgent:
 class TestGraveyardResearchAgent:
     @pytest.mark.asyncio
     async def test_runs_successfully(self, sample_graveyard_research):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_graveyard_research,
-            llm_list_return=["failure query 1", "failure query 2"],
-        )
+        llm, search = make_mock_services(run_tool_loop_return=sample_graveyard_research)
 
         agent = GraveyardResearchAgent(llm, search)
         result = await agent.run(GraveyardResearchInput(idea="AI pitch deck generator"))
@@ -240,45 +216,26 @@ class TestGraveyardResearchAgent:
         assert result.lessons_learned is not None
 
     @pytest.mark.asyncio
-    async def test_generates_search_queries_first(self, sample_graveyard_research):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_graveyard_research,
-            llm_list_return=["startup failed", "post-mortem"],
-        )
+    async def test_passes_correct_tools(self, sample_graveyard_research):
+        llm, search = make_mock_services(run_tool_loop_return=sample_graveyard_research)
 
         agent = GraveyardResearchAgent(llm, search)
         await agent.run(GraveyardResearchInput(idea="test idea"))
 
-        llm.generate_list.assert_called_once()
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        tool_names = [t["name"] for t in call_kwargs["tools"]]
+        for expected in GRAVE_TOOLS:
+            assert expected in tool_names
 
     @pytest.mark.asyncio
-    async def test_searches_multiple_sources(self, sample_graveyard_research):
-        llm, search = make_mock_services(
-            llm_structured_return=sample_graveyard_research,
-            llm_list_return=["q1", "q2", "q3"],
-        )
+    async def test_passes_correct_output_schema(self, sample_graveyard_research):
+        llm, search = make_mock_services(run_tool_loop_return=sample_graveyard_research)
 
         agent = GraveyardResearchAgent(llm, search)
         await agent.run(GraveyardResearchInput(idea="test idea"))
 
-        # Should search broad, news, reddit, hackernews
-        assert search.search.call_count > 0
-        assert search.search_news.call_count > 0
-        assert search.search_reddit.call_count > 0
-        assert search.search_hackernews.call_count > 0
-
-    @pytest.mark.asyncio
-    async def test_attaches_search_queries_to_output(self, sample_graveyard_research):
-        queries = ["q1", "q2", "q3"]
-        llm, search = make_mock_services(
-            llm_structured_return=sample_graveyard_research,
-            llm_list_return=queries,
-        )
-
-        agent = GraveyardResearchAgent(llm, search)
-        result = await agent.run(GraveyardResearchInput(idea="test idea"))
-
-        assert result.search_queries_used == queries
+        call_kwargs = llm.run_tool_loop.call_args.kwargs
+        assert call_kwargs["output_schema"] is GraveyardResearchOutput
 
 
 # ──────────────────────────────────────────────

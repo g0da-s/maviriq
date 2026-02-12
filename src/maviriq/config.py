@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     max_pain_points: int = 15
     max_competitors: int = 10
     agent_timeout: int = 120  # seconds per agent before giving up
-    agent_max_retries: int = 1  # max self-retries per agent when data_quality is partial
+    agent_max_iterations: int = 10  # max tool-use loop iterations per agent
 
     # LangSmith
     langsmith_tracing: str = "true"

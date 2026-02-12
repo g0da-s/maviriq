@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+from typing import Any, Awaitable, Callable
 
 from maviriq.agents.base import BaseAgent
 from maviriq.models.schemas import (
@@ -69,6 +72,20 @@ If the data is insufficient or contradictory, lower your confidence and say so."
 class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     name = "Synthesis & Verdict"
     description = "Combines all research and delivers a BUILD/SKIP/MAYBE verdict"
+    output_schema = SynthesisOutput
+
+    # Synthesis doesn't use tools — these are stubs to satisfy the ABC.
+    def get_system_prompt(self, input_data: SynthesisInput) -> str:
+        return SYNTHESIS_PROMPT
+
+    def get_user_prompt(self, input_data: SynthesisInput) -> str:
+        return ""
+
+    def get_tools(self) -> list[dict[str, Any]]:
+        return []
+
+    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
+        return {}
 
     async def run(self, input_data: SynthesisInput) -> SynthesisOutput:
         idea = input_data.idea
