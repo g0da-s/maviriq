@@ -81,14 +81,10 @@ export default function ValidationPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
-        {/* back link */}
+      <div className="mx-auto max-w-4xl px-6 pt-28 pb-16">
         <div className="h-4 w-28 animate-pulse rounded bg-white/5" />
-
-        {/* title */}
         <div className="mt-6 space-y-2">
           <div className="h-8 w-2/3 animate-pulse rounded bg-white/5" />
-          {/* verdict card */}
           <div className="mt-5 flex items-start gap-5 rounded-2xl border border-card-border bg-card px-6 py-5">
             <div className="flex flex-col items-center shrink-0 gap-3">
               <div className="h-12 w-16 animate-pulse rounded bg-white/5" />
@@ -100,18 +96,14 @@ export default function ValidationPage() {
             </div>
           </div>
         </div>
-
-        {/* metrics */}
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-card-border bg-card p-4 text-center space-y-2">
               <div className="mx-auto h-3 w-16 animate-pulse rounded bg-white/5" />
               <div className="mx-auto h-7 w-12 animate-pulse rounded bg-white/5" />
             </div>
           ))}
         </div>
-
-        {/* strengths / risks */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="rounded-2xl border border-card-border bg-card p-5 space-y-3">
@@ -179,7 +171,7 @@ export default function ValidationPage() {
     : 0;
 
   return (
-    <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
+    <div className="mx-auto max-w-4xl px-6 pt-28 pb-16">
       {/* back link + date */}
       <div className="flex items-center justify-between">
         <Link href="/validations" className="text-sm text-muted hover:text-foreground transition-colors">
@@ -192,11 +184,10 @@ export default function ValidationPage() {
         )}
       </div>
 
-      {/* ═══ HERO: IDEA + VERDICT ═══ */}
+      {/* ═══ 1. VERDICT HERO ═══ */}
       <div className="mt-6">
         <h1 className="font-display text-3xl font-bold leading-tight">{run.idea}</h1>
 
-        {/* verdict card */}
         {s && (
           <div className="mt-5 flex items-start gap-5 rounded-2xl border border-card-border bg-card px-6 py-5">
             <div className="flex flex-col items-center shrink-0">
@@ -226,8 +217,8 @@ export default function ValidationPage() {
         )}
       </div>
 
-      {/* ═══ KEY METRICS ═══ */}
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* ═══ 2. KEY METRICS ═══ */}
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-xs text-muted/60">pain severity</p>
@@ -276,11 +267,90 @@ export default function ValidationPage() {
             })()}
           </div>
         )}
+        {mktIntel && (
+          <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+            <p className="text-xs text-muted/60">growth</p>
+            <p className={`mt-1 font-display text-2xl font-bold ${
+              mktIntel.growth_direction === "growing" ? "text-build" :
+              mktIntel.growth_direction === "stable" ? "text-maybe" :
+              mktIntel.growth_direction === "shrinking" ? "text-skip" : "text-muted"
+            }`}>
+              {mktIntel.growth_direction}
+            </p>
+          </div>
+        )}
+        {graveyard && (
+          <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+            <p className="text-xs text-muted/60">dead startups</p>
+            <p className={`mt-1 font-display text-2xl font-bold ${
+              graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
+            }`}>
+              {graveyard.previous_attempts.length}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* ═══ STRENGTHS vs RISKS ═══ */}
+      {/* ═══ 3. THE EVIDENCE ═══ */}
+      <div className="mt-14">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-6">
+          the evidence
+        </p>
+
+        {/* — The Pain — */}
+        {pain && (
+          <div className="mb-12">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
+              the pain
+            </h2>
+            <PainPoints data={pain} />
+          </div>
+        )}
+
+        {/* — The Competition — */}
+        {comp && (
+          <div className="mb-12">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
+              the competition
+            </h2>
+            <Competitors data={comp} />
+          </div>
+        )}
+
+        {/* — The Market — */}
+        {mktIntel && (
+          <div className="mb-12">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
+              the market
+            </h2>
+            <MarketIntelligence data={mktIntel} />
+          </div>
+        )}
+
+        {/* — The Graveyard — */}
+        {graveyard && graveyard.previous_attempts.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
+              the graveyard
+            </h2>
+            <GraveyardResearch data={graveyard} />
+          </div>
+        )}
+
+        {/* legacy viability for old runs without market intel */}
+        {!mktIntel && via && (
+          <div className="mb-12">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
+              viability analysis
+            </h2>
+            <Viability data={via} />
+          </div>
+        )}
+      </div>
+
+      {/* ═══ 4. STRENGTHS vs RISKS ═══ */}
       {s && (s.key_strengths.length > 0 || s.key_risks.length > 0) && (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="mt-2 grid gap-4 sm:grid-cols-2">
           {s.key_strengths.length > 0 && (
             <div className="rounded-2xl border border-build/20 bg-build/5 p-5">
               <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-3">
@@ -314,119 +384,96 @@ export default function ValidationPage() {
         </div>
       )}
 
-      {/* ═══ TARGET USER + MARKET SIZE ═══ */}
+      {/* ═══ 5. ACTION PLAN ═══ */}
       {s && (
-        <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-card-border bg-card p-4">
-            <p className="text-xs text-muted/60 mb-1">target user</p>
-            <p className="text-sm text-foreground/80">{s.target_user_summary}</p>
-          </div>
-          <div className="rounded-xl border border-card-border bg-card p-4">
-            <p className="text-xs text-muted/60 mb-1">market size</p>
-            <p className="text-sm text-foreground/80">{s.estimated_market_size}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ═══ DIFFERENTIATION STRATEGY ═══ */}
-      {s?.differentiation_strategy && (
-        <div className="mt-6 rounded-2xl border border-build/20 bg-build/5 p-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
-            differentiation strategy
+        <div className="mt-14">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-6">
+            action plan
           </p>
-          <p className="text-sm text-foreground/90 leading-relaxed">{s.differentiation_strategy}</p>
-        </div>
-      )}
 
-      {/* ═══ LESSONS FROM PAST FAILURES ═══ */}
-      {s?.lessons_from_failures && (
-        <div className="mt-4 rounded-2xl border border-skip/20 bg-skip/5 p-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-skip/70 mb-2">
-            lessons from past failures
-          </p>
-          <p className="text-sm text-foreground/90 leading-relaxed">{s.lessons_from_failures}</p>
-          {s.previous_attempts_summary && (
-            <div className="mt-3 pt-3 border-t border-skip/10">
-              <p className="text-xs text-muted/60 mb-1">previous attempts</p>
-              <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
+          {/* target user + market size */}
+          <div className="grid gap-3 sm:grid-cols-2 mb-4">
+            <div className="rounded-xl border border-card-border bg-card p-4">
+              <p className="text-xs text-muted/60 mb-1">target user</p>
+              <p className="text-sm text-foreground/80">{s.target_user_summary}</p>
+            </div>
+            <div className="rounded-xl border border-card-border bg-card p-4">
+              <p className="text-xs text-muted/60 mb-1">market size</p>
+              <p className="text-sm text-foreground/80">{s.estimated_market_size}</p>
+            </div>
+          </div>
+
+          {/* what to build first */}
+          {s.recommended_mvp && (
+            <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
+              <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
+                what to build first
+              </p>
+              <p className="text-sm text-foreground/90 leading-relaxed">{s.recommended_mvp}</p>
+            </div>
+          )}
+
+          {/* differentiation strategy */}
+          {s.differentiation_strategy && (
+            <div className="mb-4 rounded-2xl border border-build/20 bg-build/5 p-6">
+              <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
+                differentiation strategy
+              </p>
+              <p className="text-sm text-foreground/90 leading-relaxed">{s.differentiation_strategy}</p>
+            </div>
+          )}
+
+          {/* lessons from failures */}
+          {s.lessons_from_failures && (
+            <div className="mb-4 rounded-2xl border border-skip/20 bg-skip/5 p-6">
+              <p className="text-xs font-medium uppercase tracking-wider text-skip/70 mb-2">
+                lessons from past failures
+              </p>
+              <p className="text-sm text-foreground/90 leading-relaxed">{s.lessons_from_failures}</p>
+              {s.previous_attempts_summary && (
+                <div className="mt-3 pt-3 border-t border-skip/10">
+                  <p className="text-xs text-muted/60 mb-1">previous attempts</p>
+                  <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* next steps */}
+          {s.next_steps.length > 0 && (
+            <div className="rounded-2xl border border-card-border bg-card p-6">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
+                next steps
+              </p>
+              <ol className="space-y-2.5">
+                {s.next_steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
         </div>
       )}
 
-      {/* ═══ WHAT TO BUILD FIRST ═══ */}
-      {s?.recommended_mvp && (
-        <div className="mt-6 rounded-2xl border border-card-border bg-card p-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
-            what to build first
-          </p>
-          <p className="text-sm text-foreground/90 leading-relaxed">{s.recommended_mvp}</p>
+      {/* ═══ 6. FULL REASONING (collapsed) ═══ */}
+      {s && (
+        <div className="mt-14">
+          <DetailSection title="full reasoning">
+            <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
+            {s.recommended_positioning && (
+              <div className="mt-4 pt-4 border-t border-card-border">
+                <p className="text-xs text-muted/60 mb-1">recommended positioning</p>
+                <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
+              </div>
+            )}
+          </DetailSection>
         </div>
       )}
-
-      {/* ═══ NEXT STEPS ═══ */}
-      {s && s.next_steps.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-card-border bg-card p-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            next steps
-          </p>
-          <ol className="space-y-2.5">
-            {s.next_steps.map((step, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
-                  {i + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {/* ═══ DETAILED RESEARCH (collapsible) ═══ */}
-      <div className="mt-12">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-4">
-          detailed research
-        </p>
-        <div className="space-y-3">
-          {s && (
-            <DetailSection title="full reasoning">
-              <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
-              {s.recommended_positioning && (
-                <div className="mt-4 pt-4 border-t border-card-border">
-                  <p className="text-xs text-muted/60 mb-1">recommended positioning</p>
-                  <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
-                </div>
-              )}
-            </DetailSection>
-          )}
-          {pain && (
-            <DetailSection title="pain & user discovery">
-              <PainPoints data={pain} />
-            </DetailSection>
-          )}
-          {comp && (
-            <DetailSection title="competitor research">
-              <Competitors data={comp} />
-            </DetailSection>
-          )}
-          {mktIntel && (
-            <DetailSection title="market intelligence">
-              <MarketIntelligence data={mktIntel} />
-            </DetailSection>
-          )}
-          {graveyard && (
-            <DetailSection title="graveyard research">
-              <GraveyardResearch data={graveyard} />
-            </DetailSection>
-          )}
-          {!mktIntel && via && (
-            <DetailSection title="viability analysis">
-              <Viability data={via} />
-            </DetailSection>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
