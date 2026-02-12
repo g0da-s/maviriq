@@ -1,6 +1,6 @@
 """Tests for API endpoints with mocked Supabase auth."""
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,7 +41,14 @@ class TestCreateValidation:
         # Mock deduct_credit RPC to return True
         mock_supabase.execute = AsyncMock(return_value=_result(data=True))
 
-        with patch("maviriq.api.routes._run_pipeline_background", new_callable=AsyncMock):
+        # Mock the inline LLM coherence check
+        mock_llm = AsyncMock()
+        mock_llm.generate_structured = AsyncMock(
+            return_value=MagicMock(is_valid=True, reason="")
+        )
+
+        with patch("maviriq.services.llm.LLMService", return_value=mock_llm), \
+             patch("maviriq.api.routes._run_pipeline_background", new_callable=AsyncMock):
             response = client.post(
                 "/api/validations",
                 json={"idea": "AI pitch deck generator"},
@@ -70,10 +77,17 @@ class TestCreateValidation:
         # Mock deduct_credit RPC to return False (insufficient credits)
         mock_supabase.execute = AsyncMock(return_value=_result(data=False))
 
-        response = client.post(
-            "/api/validations",
-            json={"idea": "AI pitch deck generator"},
+        # Mock the inline LLM coherence check
+        mock_llm = AsyncMock()
+        mock_llm.generate_structured = AsyncMock(
+            return_value=MagicMock(is_valid=True, reason="")
         )
+
+        with patch("maviriq.services.llm.LLMService", return_value=mock_llm):
+            response = client.post(
+                "/api/validations",
+                json={"idea": "AI pitch deck generator"},
+            )
         assert response.status_code == 402
 
 
@@ -90,6 +104,8 @@ class TestGetValidation:
                 "error": None,
                 "pain_discovery_output": None,
                 "competitor_research_output": None,
+                "market_intelligence_output": None,
+                "graveyard_research_output": None,
                 "viability_output": None,
                 "synthesis_output": None,
                 "total_cost_cents": 0,
@@ -175,6 +191,8 @@ class TestDeleteValidation:
                     "error": None,
                     "pain_discovery_output": None,
                     "competitor_research_output": None,
+                    "market_intelligence_output": None,
+                    "graveyard_research_output": None,
                     "viability_output": None,
                     "synthesis_output": None,
                     "total_cost_cents": 0,

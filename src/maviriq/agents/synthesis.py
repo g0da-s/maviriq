@@ -14,7 +14,8 @@ You are a product strategist delivering a final BUILD/SKIP/MAYBE verdict on a bu
 You have access to:
 - Pain research (who suffers, how much, evidence)
 - Competitive analysis (what exists, gaps, pricing)
-- Viability assessment (do people pay, can we reach them, what's the opportunity)
+- Market intelligence (market size, distribution channels, monetization signals)
+- Graveyard research (failed startups, warning signs, lessons from failures)
 
 Your job: Synthesize ALL of this into a clear verdict.
 
@@ -22,6 +23,11 @@ Your job: Synthesize ALL of this into a clear verdict.
 - BUILD: Strong pain + viable market + reachable users + meaningful gap
 - SKIP: Weak pain OR saturated market OR unreachable users OR no gap
 - MAYBE: Viable BUT only under specific conditions (specify what those are)
+
+IMPORTANT — Bias toward skepticism:
+- Most ideas should get SKIP or MAYBE. BUILD requires STRONG evidence across ALL dimensions.
+- If prior startups failed at this exact idea, you need a CLEAR reason why this time is different.
+- Your job is to SAVE the founder from wasting 6 months. Be honest, not encouraging.
 
 **Confidence calibration (be precise, avoid defaulting to 0.60-0.65):**
 - 0.90+: Overwhelming evidence — strong pain, clear gap, easy reach, proven willingness to pay
@@ -43,6 +49,19 @@ Think carefully about where THIS SPECIFIC idea falls. Different ideas should get
 - Estimated market size (rough order of magnitude based on data)
 - Next steps (actionable items for the founder)
 
+You MUST also answer these viability questions:
+1. Do people pay for this? (bool + reasoning, based on competitor pricing and monetization signals)
+2. Can we reach the target users? ("easy"/"moderate"/"hard" + reasoning)
+3. What's the market gap? (description + size: "large"/"medium"/"small"/"none")
+4. Viability signals: observations with direction (positive/negative/neutral) and confidence
+5. Risk factors: specific things that could kill this idea
+6. Opportunity score: 0.0-1.0 holistic assessment
+
+Additionally provide:
+- Differentiation strategy: what SPECIFIC angle should this product take?
+- Previous attempts summary: what was tried before and what happened?
+- Lessons from failures: what must the founder do differently?
+
 Be critical. Don't oversell weak ideas. This is NOT a pitch deck — it's an honest assessment.
 If the data is insufficient or contradictory, lower your confidence and say so."""
 
@@ -55,7 +74,8 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         idea = input_data.idea
         pain = input_data.pain_discovery
         competitors = input_data.competitor_research
-        viability = input_data.viability
+        market_intel = input_data.market_intelligence
+        graveyard = input_data.graveyard_research
 
         avg_severity = (
             f"{sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5"
@@ -90,18 +110,40 @@ Common complaints:
 
 Underserved needs:
 {chr(10).join(f'- {n}' for n in competitors.underserved_needs) or "None found"}
+"""
 
-═══ VIABILITY ANALYSIS ═══
-People pay: {viability.people_pay} - {viability.people_pay_reasoning}
-Reachability: {viability.reachability} - {viability.reachability_reasoning}
-Market gap: {viability.gap_size} - {viability.market_gap}
-Opportunity score: {viability.opportunity_score:.0%}
+        # Conditionally add market intelligence context
+        if market_intel:
+            context += f"""
+═══ MARKET INTELLIGENCE ═══
+Market size estimate: {market_intel.market_size_estimate}
+Growth direction: {market_intel.growth_direction}
+TAM reasoning: {market_intel.tam_reasoning}
 
-Key signals:
-{chr(10).join(f'- [{s.direction.upper()}] {s.signal} (confidence: {s.confidence:.0%})' for s in viability.signals[:5]) or "None"}
+Distribution channels:
+{chr(10).join(f'- {ch.channel} (reach: {ch.reach_estimate}, effort: {ch.effort})' for ch in market_intel.distribution_channels) or "None found"}
 
-Risk factors:
-{chr(10).join(f'- {r}' for r in viability.risk_factors) or "None"}
+Monetization signals:
+{chr(10).join(f'- [{sig.strength.upper()}] {sig.signal} (source: {sig.source})' for sig in market_intel.monetization_signals) or "None found"}
+"""
+
+        # Conditionally add graveyard research context
+        if graveyard:
+            context += f"""
+═══ GRAVEYARD RESEARCH ═══
+Previous attempts:
+{chr(10).join(f'- {a.name}: {a.what_they_did} → Shut down because: {a.shutdown_reason} ({a.year or "unknown year"})' for a in graveyard.previous_attempts) or "No previous attempts found"}
+
+Common failure reasons:
+{chr(10).join(f'- {r}' for r in graveyard.failure_reasons) or "None identified"}
+
+Lessons learned: {graveyard.lessons_learned}
+
+Churn signals:
+{chr(10).join(f'- [{sig.severity.upper()}] {sig.signal} (source: {sig.source})' for sig in graveyard.churn_signals) or "None found"}
+
+Competitor health signals:
+{chr(10).join(f'- {sig.company}: [{sig.direction.upper()}] {sig.signal} (source: {sig.source})' for sig in graveyard.competitor_health_signals) or "None found"}
 """
 
         result = await self.llm.generate_structured(

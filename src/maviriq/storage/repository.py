@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 from maviriq.models.schemas import (
     CompetitorResearchOutput,
+    GraveyardResearchOutput,
+    MarketIntelligenceOutput,
     PainDiscoveryOutput,
     SynthesisOutput,
     ValidationListItem,
@@ -54,6 +56,8 @@ class ValidationRepository:
                         "error": run.error,
                         "pain_discovery_output": run.pain_discovery.model_dump() if run.pain_discovery else None,
                         "competitor_research_output": run.competitor_research.model_dump() if run.competitor_research else None,
+                        "market_intelligence_output": run.market_intelligence.model_dump() if run.market_intelligence else None,
+                        "graveyard_research_output": run.graveyard_research.model_dump() if run.graveyard_research else None,
                         "viability_output": run.viability.model_dump() if run.viability else None,
                         "synthesis_output": run.synthesis.model_dump() if run.synthesis else None,
                         "total_cost_cents": run.total_cost_cents,
@@ -170,6 +174,8 @@ class ValidationRepository:
             error=row.get("error"),
             pain_discovery=PainDiscoveryOutput.model_validate(row["pain_discovery_output"]) if row.get("pain_discovery_output") else None,
             competitor_research=CompetitorResearchOutput.model_validate(row["competitor_research_output"]) if row.get("competitor_research_output") else None,
+            market_intelligence=MarketIntelligenceOutput.model_validate(row["market_intelligence_output"]) if row.get("market_intelligence_output") else None,
+            graveyard_research=GraveyardResearchOutput.model_validate(row["graveyard_research_output"]) if row.get("graveyard_research_output") else None,
             viability=ViabilityOutput.model_validate(row["viability_output"]) if row.get("viability_output") else None,
             synthesis=SynthesisOutput.model_validate(row["synthesis_output"]) if row.get("synthesis_output") else None,
             total_cost_cents=row.get("total_cost_cents", 0),

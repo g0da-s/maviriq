@@ -12,11 +12,18 @@ os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
 os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
 
 from maviriq.models.schemas import (
+    ChurnSignal,
     Competitor,
+    CompetitorHealthSignal,
     CompetitorPricing,
     CompetitorResearchOutput,
+    DistributionChannel,
+    GraveyardResearchOutput,
+    MarketIntelligenceOutput,
+    MonetizationSignal,
     PainDiscoveryOutput,
     PainPoint,
+    PreviousAttempt,
     SynthesisOutput,
     UserSegment,
     Verdict,
@@ -203,6 +210,53 @@ def sample_viability() -> ViabilityOutput:
 
 
 @pytest.fixture
+def sample_market_intelligence() -> MarketIntelligenceOutput:
+    return MarketIntelligenceOutput(
+        market_size_estimate="$2B global presentation software market",
+        growth_direction="growing",
+        tam_reasoning="The presentation software market is growing at 8% CAGR driven by remote work and AI adoption.",
+        distribution_channels=[
+            DistributionChannel(channel="Product Hunt", reach_estimate="50k+ makers", effort="low"),
+            DistributionChannel(channel="r/startups", reach_estimate="3M+ members", effort="low"),
+            DistributionChannel(channel="YC community", reach_estimate="10k+ founders", effort="medium"),
+        ],
+        monetization_signals=[
+            MonetizationSignal(signal="Slidebean charges $29-49/mo with 50k+ users", source="competitor_pricing", strength="strong"),
+            MonetizationSignal(signal="Founders on Indie Hackers report paying for deck tools", source="indiehackers.com", strength="moderate"),
+        ],
+        search_queries_used=["pitch deck market size", "presentation software TAM"],
+        data_quality="full",
+    )
+
+
+@pytest.fixture
+def sample_graveyard_research() -> GraveyardResearchOutput:
+    return GraveyardResearchOutput(
+        previous_attempts=[
+            PreviousAttempt(
+                name="DeckBot",
+                url="https://deckbot.io",
+                what_they_did="AI pitch deck generator targeting YC founders",
+                shutdown_reason="Couldn't differentiate from Slidebean; ran out of funding",
+                year="2022",
+                source="failory.com",
+            ),
+        ],
+        failure_reasons=["Insufficient differentiation from incumbents", "High CAC for startup-focused tools"],
+        lessons_learned="Previous attempts failed by being too generic. A data-first approach targeting technical founders specifically could differentiate.",
+        churn_signals=[
+            ChurnSignal(signal="Slidebean users complain about generic templates on Reddit", source="r/startups", severity="medium"),
+        ],
+        competitor_health_signals=[
+            CompetitorHealthSignal(company="Beautiful.ai", signal="Raised $11M Series A", direction="positive", source="crunchbase"),
+            CompetitorHealthSignal(company="Slidebean", signal="Pivoted to financial modeling", direction="negative", source="techcrunch"),
+        ],
+        search_queries_used=["pitch deck startup failed", "slidebean alternatives"],
+        data_quality="full",
+    )
+
+
+@pytest.fixture
 def sample_synthesis() -> SynthesisOutput:
     return SynthesisOutput(
         verdict=Verdict.BUILD,
@@ -216,4 +270,21 @@ def sample_synthesis() -> SynthesisOutput:
         target_user_summary="Early-stage technical founders (engineers) at pre-seed/seed stage",
         estimated_market_size="$500M-1B (presentation software market segment)",
         next_steps=["Build MVP with 3 templates", "Launch on Indie Hackers", "Get 10 beta users"],
+        # Absorbed viability fields
+        people_pay=True,
+        people_pay_reasoning="Slidebean has 50k+ users at $29-49/mo. Clear willingness to pay.",
+        reachability="easy",
+        reachability_reasoning="Target users are active on r/startups, Indie Hackers, and YC communities",
+        market_gap="No tool specifically builds data-focused pitch decks for technical founders",
+        gap_size="medium",
+        opportunity_score=0.72,
+        signals=[
+            ViabilitySignal(signal="Multiple competitors with paying users", direction="positive", confidence=0.9, source="competitor_pricing"),
+            ViabilitySignal(signal="Active online communities for target user", direction="positive", confidence=0.85, source="pain_discovery"),
+        ],
+        risk_factors=["Established competitors with funding", "AI commoditization could erode moat"],
+        # New fields
+        differentiation_strategy="Focus on data-driven decks that auto-pull metrics from Stripe, Mixpanel, and Google Analytics",
+        previous_attempts_summary="DeckBot (2022) tried a similar approach but was too generic and couldn't differentiate from Slidebean",
+        lessons_from_failures="Must be laser-focused on technical founders and integrate with their existing data tools",
     )

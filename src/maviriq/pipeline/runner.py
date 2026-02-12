@@ -7,27 +7,24 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from maviriq.agents.competitor_research import (
-    RETRY_COMPETITOR_QUERIES_PROMPT,
-    CompetitorResearchAgent,
-)
-from maviriq.agents.pain_discovery import (
-    RETRY_QUERY_GENERATION_PROMPT,
-    PainDiscoveryAgent,
-)
+from maviriq.agents.competitor_research import CompetitorResearchAgent
+from maviriq.agents.graveyard_research import GraveyardResearchAgent
+from maviriq.agents.market_intelligence import MarketIntelligenceAgent
+from maviriq.agents.pain_discovery import PainDiscoveryAgent
 from maviriq.agents.synthesis import SynthesisAgent
-from maviriq.agents.viability_analysis import ViabilityAnalysisAgent
 from maviriq.config import settings
 from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
+    GraveyardResearchInput,
+    GraveyardResearchOutput,
+    MarketIntelligenceInput,
+    MarketIntelligenceOutput,
     PainDiscoveryInput,
     PainDiscoveryOutput,
     SynthesisInput,
     ValidationRun,
     ValidationStatus,
-    ViabilityInput,
-    ViabilityOutput,
 )
 from maviriq.pipeline.events import (
     AgentCompletedEvent,
@@ -54,10 +51,9 @@ class PipelineState(TypedDict):
     run_id: str
     pain_discovery: PainDiscoveryOutput | None
     competitor_research: CompetitorResearchOutput | None
-    viability: ViabilityOutput | None
+    market_intelligence: MarketIntelligenceOutput | None
+    graveyard_research: GraveyardResearchOutput | None
     synthesis: None  # Always None in state; final result goes to run
-    agent1_attempts: int
-    agent2_attempts: int
 
 
 # ──────────────────────────────────────────────
@@ -73,8 +69,9 @@ class PipelineGraph:
         # Initialize agents
         self.agent1 = PainDiscoveryAgent(self.llm, self.search)
         self.agent2 = CompetitorResearchAgent(self.llm, self.search)
-        self.agent3 = ViabilityAnalysisAgent(self.llm, self.search)
-        self.agent4 = SynthesisAgent(self.llm, self.search)
+        self.agent3 = MarketIntelligenceAgent(self.llm, self.search)
+        self.agent4 = GraveyardResearchAgent(self.llm, self.search)
+        self.agent5 = SynthesisAgent(self.llm, self.search)
 
         self.graph = self._build_graph()
 
@@ -83,63 +80,27 @@ class PipelineGraph:
 
         # Add nodes
         builder.add_node("pain_discovery", self._pain_discovery_node)
-        builder.add_node("pain_discovery_retry", self._pain_retry_node)
         builder.add_node("competitor_research", self._competitor_node)
-        builder.add_node("competitor_research_retry", self._competitor_retry_node)
-        builder.add_node("viability", self._viability_node)
+        builder.add_node("market_intelligence", self._market_intelligence_node)
+        builder.add_node("graveyard_research", self._graveyard_research_node)
         builder.add_node("synthesis", self._synthesis_node)
 
-        # START → parallel fan-out to both agents
+        # START → parallel fan-out to all 4 research agents
         builder.add_edge(START, "pain_discovery")
         builder.add_edge(START, "competitor_research")
+        builder.add_edge(START, "market_intelligence")
+        builder.add_edge(START, "graveyard_research")
 
-        # pain_discovery → retry or viability
-        builder.add_conditional_edges(
-            "pain_discovery",
-            self._should_retry_pain,
-            {"retry": "pain_discovery_retry", "continue": "viability"},
-        )
-        builder.add_edge("pain_discovery_retry", "viability")
+        # All 4 research agents → synthesis (fan-in)
+        builder.add_edge("pain_discovery", "synthesis")
+        builder.add_edge("competitor_research", "synthesis")
+        builder.add_edge("market_intelligence", "synthesis")
+        builder.add_edge("graveyard_research", "synthesis")
 
-        # competitor_research → retry or viability
-        builder.add_conditional_edges(
-            "competitor_research",
-            self._should_retry_competitor,
-            {"retry": "competitor_research_retry", "continue": "viability"},
-        )
-        builder.add_edge("competitor_research_retry", "viability")
-
-        # viability → synthesis → END
-        builder.add_edge("viability", "synthesis")
+        # synthesis → END
         builder.add_edge("synthesis", END)
 
         return builder.compile()
-
-    # ──────────────────────────────────────────
-    # Routing functions
-    # ──────────────────────────────────────────
-
-    def _should_retry_pain(self, state: PipelineState) -> str:
-        pain = state["pain_discovery"]
-        if (
-            pain is not None
-            and pain.data_quality == "partial"
-            and state["agent1_attempts"] < 2
-        ):
-            logger.info("Pain discovery returned partial data — retrying with broader queries")
-            return "retry"
-        return "continue"
-
-    def _should_retry_competitor(self, state: PipelineState) -> str:
-        comp = state["competitor_research"]
-        if (
-            comp is not None
-            and comp.data_quality == "partial"
-            and state["agent2_attempts"] < 2
-        ):
-            logger.info("Competitor research returned partial data — retrying with broader queries")
-            return "retry"
-        return "continue"
 
     # ──────────────────────────────────────────
     # Node functions
@@ -155,7 +116,7 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentStartedEvent.create(1).model_dump())
 
-        # Run agent
+        # Run agent (retries are handled internally)
         result = await asyncio.wait_for(
             self.agent1.run(PainDiscoveryInput(idea=state["idea"])),
             timeout=settings.agent_timeout,
@@ -167,53 +128,7 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentCompletedEvent.create(1, result.model_dump()).model_dump())
 
-        return {
-            "pain_discovery": result,
-            "agent1_attempts": state["agent1_attempts"] + 1,
-        }
-
-    async def _pain_retry_node(self, state: PipelineState) -> dict:
-        writer = get_stream_writer()
-        run_id = state["run_id"]
-        previous = state["pain_discovery"]
-
-        # Emit agent_started for retry
-        run = await self.repository.get(run_id)
-        run.current_agent = 1
-        await self.repository.update(run)
-        writer(AgentStartedEvent.create(1).model_dump())
-
-        # Generate broader retry queries
-        retry_queries = await self.llm.generate_list(
-            system_prompt=RETRY_QUERY_GENERATION_PROMPT,
-            user_prompt=(
-                f"Idea: {state['idea']}\n"
-                f"Previous queries (do NOT repeat): {previous.search_queries_used}\n"
-                f"Pain summary so far: {previous.pain_summary}"
-            ),
-            use_cheap_model=True,
-        )
-
-        # Run agent with retry inputs
-        result = await asyncio.wait_for(
-            self.agent1.run(PainDiscoveryInput(
-                idea=state["idea"],
-                retry_queries=retry_queries,
-                previous_result=previous,
-            )),
-            timeout=settings.agent_timeout,
-        )
-
-        # Persist
-        run = await self.repository.get(run_id)
-        run.pain_discovery = result
-        await self.repository.update(run)
-        writer(AgentCompletedEvent.create(1, result.model_dump()).model_dump())
-
-        return {
-            "pain_discovery": result,
-            "agent1_attempts": state["agent1_attempts"] + 1,
-        }
+        return {"pain_discovery": result}
 
     async def _competitor_node(self, state: PipelineState) -> dict:
         writer = get_stream_writer()
@@ -225,7 +140,7 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentStartedEvent.create(2).model_dump())
 
-        # First attempt runs without target_user (parallel with pain discovery)
+        # Run agent (retries are handled internally)
         result = await asyncio.wait_for(
             self.agent2.run(CompetitorResearchInput(idea=state["idea"])),
             timeout=settings.agent_timeout,
@@ -237,61 +152,57 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentCompletedEvent.create(2, result.model_dump()).model_dump())
 
-        return {
-            "competitor_research": result,
-            "agent2_attempts": state["agent2_attempts"] + 1,
-        }
+        return {"competitor_research": result}
 
-    async def _competitor_retry_node(self, state: PipelineState) -> dict:
+    async def _market_intelligence_node(self, state: PipelineState) -> dict:
         writer = get_stream_writer()
         run_id = state["run_id"]
-        pain = state["pain_discovery"]
-        previous = state["competitor_research"]
 
-        # Retry has access to pain discovery results (parallel phase is done)
-        target_user = pain.primary_target_user if pain else None
-
-        # Emit agent_started for retry
+        # Emit agent_started
         run = await self.repository.get(run_id)
-        run.current_agent = 2
+        run.current_agent = 3
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(2).model_dump())
+        writer(AgentStartedEvent.create(3).model_dump())
 
-        # Generate broader retry queries
-        target_label = target_user.label if target_user else "general users"
-        retry_queries = await self.llm.generate_list(
-            system_prompt=RETRY_COMPETITOR_QUERIES_PROMPT,
-            user_prompt=(
-                f"Idea: {state['idea']}\n"
-                f"Target user: {target_label}\n"
-                f"Previously found {len(previous.competitors)} competitors. Need more."
-            ),
-            use_cheap_model=True,
-        )
-
-        # Run agent with retry inputs (now with target_user from pain discovery)
+        # Run agent (retries are handled internally)
         result = await asyncio.wait_for(
-            self.agent2.run(CompetitorResearchInput(
-                idea=state["idea"],
-                target_user=target_user,
-                retry_queries=retry_queries,
-                previous_result=previous,
-            )),
+            self.agent3.run(MarketIntelligenceInput(idea=state["idea"])),
             timeout=settings.agent_timeout,
         )
 
-        # Persist
+        # Persist result to DB
         run = await self.repository.get(run_id)
-        run.competitor_research = result
+        run.market_intelligence = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(2, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(3, result.model_dump()).model_dump())
 
-        return {
-            "competitor_research": result,
-            "agent2_attempts": state["agent2_attempts"] + 1,
-        }
+        return {"market_intelligence": result}
 
-    async def _viability_node(self, state: PipelineState) -> dict:
+    async def _graveyard_research_node(self, state: PipelineState) -> dict:
+        writer = get_stream_writer()
+        run_id = state["run_id"]
+
+        # Emit agent_started
+        run = await self.repository.get(run_id)
+        run.current_agent = 4
+        await self.repository.update(run)
+        writer(AgentStartedEvent.create(4).model_dump())
+
+        # Run agent (retries are handled internally)
+        result = await asyncio.wait_for(
+            self.agent4.run(GraveyardResearchInput(idea=state["idea"])),
+            timeout=settings.agent_timeout,
+        )
+
+        # Persist result to DB
+        run = await self.repository.get(run_id)
+        run.graveyard_research = result
+        await self.repository.update(run)
+        writer(AgentCompletedEvent.create(4, result.model_dump()).model_dump())
+
+        return {"graveyard_research": result}
+
+    async def _synthesis_node(self, state: PipelineState) -> dict:
         writer = get_stream_writer()
         run_id = state["run_id"]
         pain = state["pain_discovery"]
@@ -303,51 +214,23 @@ class PipelineGraph:
 
         # Emit agent_started
         run = await self.repository.get(run_id)
-        run.current_agent = 3
-        # Ensure both results are persisted (in case of parallel write timing)
+        run.current_agent = 5
+        # Ensure all results are persisted
         run.pain_discovery = pain
         run.competitor_research = competitor
+        run.market_intelligence = state["market_intelligence"]
+        run.graveyard_research = state["graveyard_research"]
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(3).model_dump())
+        writer(AgentStartedEvent.create(5).model_dump())
 
         # Run agent
         result = await asyncio.wait_for(
-            self.agent3.run(ViabilityInput(
-                idea=state["idea"],
-                pain_discovery=pain,
-                competitor_research=competitor,
-            )),
-            timeout=settings.agent_timeout,
-        )
-
-        # Persist
-        run = await self.repository.get(run_id)
-        run.viability = result
-        await self.repository.update(run)
-        writer(AgentCompletedEvent.create(3, result.model_dump()).model_dump())
-
-        return {
-            "viability": result,
-            "competitor_research": competitor,  # persist backfilled target_user
-        }
-
-    async def _synthesis_node(self, state: PipelineState) -> dict:
-        writer = get_stream_writer()
-        run_id = state["run_id"]
-
-        # Emit agent_started
-        run = await self.repository.get(run_id)
-        run.current_agent = 4
-        await self.repository.update(run)
-        writer(AgentStartedEvent.create(4).model_dump())
-
-        # Run agent
-        result = await asyncio.wait_for(
-            self.agent4.run(SynthesisInput(
+            self.agent5.run(SynthesisInput(
                 idea=state["idea"],
                 pain_discovery=state["pain_discovery"],
                 competitor_research=state["competitor_research"],
-                viability=state["viability"],
+                market_intelligence=state["market_intelligence"],
+                graveyard_research=state["graveyard_research"],
             )),
             timeout=settings.agent_timeout,
         )
@@ -356,9 +239,9 @@ class PipelineGraph:
         run = await self.repository.get(run_id)
         run.synthesis = result
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(4, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(5, result.model_dump()).model_dump())
 
-        return {}
+        return {"competitor_research": competitor}
 
     # ──────────────────────────────────────────
     # Public interface
@@ -376,10 +259,9 @@ class PipelineGraph:
             "run_id": run_id,
             "pain_discovery": None,
             "competitor_research": None,
-            "viability": None,
+            "market_intelligence": None,
+            "graveyard_research": None,
             "synthesis": None,
-            "agent1_attempts": 0,
-            "agent2_attempts": 0,
         }
 
         try:

@@ -4,6 +4,8 @@ from pydantic import ValidationError
 
 from maviriq.models.schemas import (
     CreateValidationRequest,
+    GraveyardResearchOutput,
+    MarketIntelligenceOutput,
     PainDiscoveryOutput,
     PainPoint,
     UserSegment,
@@ -75,6 +77,8 @@ class TestValidationRun:
         run = ValidationRun(idea="test idea")
         assert run.pain_discovery is None
         assert run.competitor_research is None
+        assert run.market_intelligence is None
+        assert run.graveyard_research is None
         assert run.viability is None
         assert run.synthesis is None
 
@@ -107,3 +111,23 @@ class TestPainDiscoveryOutputSerialization:
         assert restored.idea == sample_pain_discovery.idea
         assert len(restored.pain_points) == len(sample_pain_discovery.pain_points)
         assert restored.primary_target_user.label == sample_pain_discovery.primary_target_user.label
+
+
+class TestMarketIntelligenceOutputSerialization:
+    def test_roundtrip_json(self, sample_market_intelligence):
+        json_str = sample_market_intelligence.model_dump_json()
+        restored = MarketIntelligenceOutput.model_validate_json(json_str)
+        assert restored.market_size_estimate == sample_market_intelligence.market_size_estimate
+        assert restored.growth_direction == sample_market_intelligence.growth_direction
+        assert len(restored.distribution_channels) == len(sample_market_intelligence.distribution_channels)
+        assert len(restored.monetization_signals) == len(sample_market_intelligence.monetization_signals)
+
+
+class TestGraveyardResearchOutputSerialization:
+    def test_roundtrip_json(self, sample_graveyard_research):
+        json_str = sample_graveyard_research.model_dump_json()
+        restored = GraveyardResearchOutput.model_validate_json(json_str)
+        assert len(restored.previous_attempts) == len(sample_graveyard_research.previous_attempts)
+        assert restored.lessons_learned == sample_graveyard_research.lessons_learned
+        assert len(restored.churn_signals) == len(sample_graveyard_research.churn_signals)
+        assert len(restored.competitor_health_signals) == len(sample_graveyard_research.competitor_health_signals)

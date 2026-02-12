@@ -47,8 +47,6 @@ class UserSegment(BaseModel):
 
 class PainDiscoveryInput(BaseModel):
     idea: str
-    retry_queries: list[str] | None = None
-    previous_result: PainDiscoveryOutput | None = None
 
 
 class PainDiscoveryOutput(BaseModel):
@@ -100,8 +98,6 @@ class Competitor(BaseModel):
 class CompetitorResearchInput(BaseModel):
     idea: str
     target_user: UserSegment | None = None
-    retry_queries: list[str] | None = None
-    previous_result: CompetitorResearchOutput | None = None
 
 
 class CompetitorResearchOutput(BaseModel):
@@ -131,7 +127,149 @@ class CompetitorResearchOutput(BaseModel):
 
 
 # ──────────────────────────────────────────────
-# Agent 3: Viability Analysis
+# Agent 3: Market Intelligence (NEW)
+# ──────────────────────────────────────────────
+
+class MonetizationSignal(BaseModel):
+    signal: str
+    source: str
+    strength: Literal["strong", "moderate", "weak"]
+
+    @field_validator("strength", mode="before")
+    @classmethod
+    def normalize_strength(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("strong", "moderate", "weak"):
+            return v_lower
+        if "strong" in v_lower:
+            return "strong"
+        if "weak" in v_lower:
+            return "weak"
+        return "moderate"
+
+
+class DistributionChannel(BaseModel):
+    channel: str
+    reach_estimate: str
+    effort: Literal["low", "medium", "high"]
+
+    @field_validator("effort", mode="before")
+    @classmethod
+    def normalize_effort(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("low", "medium", "high"):
+            return v_lower
+        if "high" in v_lower:
+            return "high"
+        if "low" in v_lower:
+            return "low"
+        return "medium"
+
+
+class MarketIntelligenceInput(BaseModel):
+    idea: str
+
+
+class MarketIntelligenceOutput(BaseModel):
+    market_size_estimate: str
+    growth_direction: Literal["growing", "stable", "shrinking", "unknown"]
+    tam_reasoning: str
+    distribution_channels: list[DistributionChannel]
+    monetization_signals: list[MonetizationSignal]
+    search_queries_used: list[str]
+    data_quality: str = "full"
+
+    @field_validator("growth_direction", mode="before")
+    @classmethod
+    def normalize_growth_direction(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("growing", "stable", "shrinking", "unknown"):
+            return v_lower
+        if "growing" in v_lower or "growth" in v_lower:
+            return "growing"
+        if "shrinking" in v_lower or "declining" in v_lower:
+            return "shrinking"
+        if "stable" in v_lower:
+            return "stable"
+        return "unknown"
+
+
+# ──────────────────────────────────────────────
+# Agent 4: Graveyard Research (NEW)
+# ──────────────────────────────────────────────
+
+class PreviousAttempt(BaseModel):
+    name: str
+    url: str | None = None
+    what_they_did: str
+    shutdown_reason: str
+    year: str | None = None
+    source: str
+
+
+class ChurnSignal(BaseModel):
+    signal: str
+    source: str
+    severity: Literal["high", "medium", "low"]
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def normalize_severity(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("high", "medium", "low"):
+            return v_lower
+        if "high" in v_lower:
+            return "high"
+        if "low" in v_lower:
+            return "low"
+        return "medium"
+
+
+class CompetitorHealthSignal(BaseModel):
+    company: str
+    signal: str
+    direction: Literal["positive", "negative", "neutral"]
+    source: str
+
+    @field_validator("direction", mode="before")
+    @classmethod
+    def normalize_direction(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("positive", "negative", "neutral"):
+            return v_lower
+        if "positive" in v_lower:
+            return "positive"
+        if "negative" in v_lower:
+            return "negative"
+        return "neutral"
+
+
+class GraveyardResearchInput(BaseModel):
+    idea: str
+
+
+class GraveyardResearchOutput(BaseModel):
+    previous_attempts: list[PreviousAttempt]
+    failure_reasons: list[str]
+    lessons_learned: str
+    churn_signals: list[ChurnSignal]
+    competitor_health_signals: list[CompetitorHealthSignal]
+    search_queries_used: list[str]
+    data_quality: str = "full"
+
+
+# ──────────────────────────────────────────────
+# Viability (kept for backward compat with old DB rows)
 # ──────────────────────────────────────────────
 
 class ViabilitySignal(BaseModel):
@@ -153,12 +291,6 @@ class ViabilitySignal(BaseModel):
         if "negative" in v_lower:
             return "negative"
         return "neutral"
-
-
-class ViabilityInput(BaseModel):
-    idea: str
-    pain_discovery: PainDiscoveryOutput
-    competitor_research: CompetitorResearchOutput
 
 
 class ViabilityOutput(BaseModel):
@@ -204,7 +336,7 @@ class ViabilityOutput(BaseModel):
 
 
 # ──────────────────────────────────────────────
-# Agent 4: Synthesis & Verdict
+# Agent 5: Synthesis & Verdict
 # ──────────────────────────────────────────────
 
 class Verdict(str, Enum):
@@ -217,7 +349,8 @@ class SynthesisInput(BaseModel):
     idea: str
     pain_discovery: PainDiscoveryOutput
     competitor_research: CompetitorResearchOutput
-    viability: ViabilityOutput
+    market_intelligence: MarketIntelligenceOutput | None = None
+    graveyard_research: GraveyardResearchOutput | None = None
 
 
 class SynthesisOutput(BaseModel):
@@ -240,6 +373,52 @@ class SynthesisOutput(BaseModel):
     estimated_market_size: str
     next_steps: list[str]
 
+    # Absorbed from old Viability agent
+    people_pay: bool
+    people_pay_reasoning: str
+    reachability: Literal["easy", "moderate", "hard"]
+    reachability_reasoning: str
+    market_gap: str
+    gap_size: Literal["large", "medium", "small", "none"]
+    opportunity_score: float = Field(ge=0.0, le=1.0)
+    signals: list[ViabilitySignal]
+    risk_factors: list[str]
+
+    # New fields from new agents
+    differentiation_strategy: str | None = None
+    previous_attempts_summary: str | None = None
+    lessons_from_failures: str | None = None
+
+    @field_validator("reachability", mode="before")
+    @classmethod
+    def normalize_reachability(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("easy", "moderate", "hard"):
+            return v_lower
+        if "easy" in v_lower:
+            return "easy"
+        if "hard" in v_lower:
+            return "hard"
+        return "moderate"
+
+    @field_validator("gap_size", mode="before")
+    @classmethod
+    def normalize_gap_size(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("large", "medium", "small", "none"):
+            return v_lower
+        if "large" in v_lower:
+            return "large"
+        if "small" in v_lower:
+            return "small"
+        if "none" in v_lower:
+            return "none"
+        return "medium"
+
 
 # ──────────────────────────────────────────────
 # Pipeline State
@@ -261,7 +440,9 @@ class ValidationRun(BaseModel):
     completed_at: datetime | None = None
     pain_discovery: PainDiscoveryOutput | None = None
     competitor_research: CompetitorResearchOutput | None = None
-    viability: ViabilityOutput | None = None
+    market_intelligence: MarketIntelligenceOutput | None = None
+    graveyard_research: GraveyardResearchOutput | None = None
+    viability: ViabilityOutput | None = None  # kept for old DB rows
     synthesis: SynthesisOutput | None = None
     error: str | None = None
     total_cost_cents: int = 0

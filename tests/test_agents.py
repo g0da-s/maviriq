@@ -1,20 +1,23 @@
-"""Tests for all 4 pipeline agents with mocked LLM and Search."""
+"""Tests for all 5 pipeline agents with mocked LLM and Search."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from maviriq.agents.pain_discovery import PainDiscoveryAgent
 from maviriq.agents.competitor_research import CompetitorResearchAgent
-from maviriq.agents.viability_analysis import ViabilityAnalysisAgent
+from maviriq.agents.market_intelligence import MarketIntelligenceAgent
+from maviriq.agents.graveyard_research import GraveyardResearchAgent
 from maviriq.agents.synthesis import SynthesisAgent
 from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
+    GraveyardResearchInput,
+    GraveyardResearchOutput,
+    MarketIntelligenceInput,
+    MarketIntelligenceOutput,
     PainDiscoveryInput,
     PainDiscoveryOutput,
     SynthesisInput,
     SynthesisOutput,
-    ViabilityInput,
-    ViabilityOutput,
 )
 from maviriq.services.search import SearchResult
 
@@ -45,6 +48,12 @@ def make_mock_services(
     search.search_hackernews = AsyncMock(return_value=default_results)
     search.search_g2 = AsyncMock(return_value=default_results)
     search.search_capterra = AsyncMock(return_value=default_results)
+    search.search_news = AsyncMock(return_value=default_results)
+    search.search_producthunt = AsyncMock(return_value=default_results)
+    search.search_crunchbase = AsyncMock(return_value=default_results)
+    search.search_twitter = AsyncMock(return_value=default_results)
+    search.search_youtube = AsyncMock(return_value=default_results)
+    search.search_linkedin_jobs = AsyncMock(return_value=default_results)
 
     return llm, search
 
@@ -149,59 +158,138 @@ class TestCompetitorResearchAgent:
 
 
 # ──────────────────────────────────────────────
-# Agent 3: Viability Analysis
+# Agent 3: Market Intelligence
 # ──────────────────────────────────────────────
 
-class TestViabilityAnalysisAgent:
+class TestMarketIntelligenceAgent:
     @pytest.mark.asyncio
-    async def test_runs_successfully(
-        self, sample_pain_discovery, sample_competitor_research, sample_viability
-    ):
-        llm, search = make_mock_services(llm_structured_return=sample_viability)
-
-        agent = ViabilityAnalysisAgent(llm, search)
-        result = await agent.run(
-            ViabilityInput(
-                idea="pitch deck generator",
-                pain_discovery=sample_pain_discovery,
-                competitor_research=sample_competitor_research,
-            )
+    async def test_runs_successfully(self, sample_market_intelligence):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_market_intelligence,
+            llm_list_return=["market query 1", "market query 2"],
         )
 
-        assert isinstance(result, ViabilityOutput)
-        assert isinstance(result.people_pay, bool)
-        assert 0 <= result.opportunity_score <= 1
+        agent = MarketIntelligenceAgent(llm, search)
+        result = await agent.run(MarketIntelligenceInput(idea="AI pitch deck generator"))
+
+        assert isinstance(result, MarketIntelligenceOutput)
+        assert result.market_size_estimate is not None
+        assert result.growth_direction in ("growing", "stable", "shrinking", "unknown")
+        assert len(result.distribution_channels) > 0
 
     @pytest.mark.asyncio
-    async def test_no_search_calls(
-        self, sample_pain_discovery, sample_competitor_research, sample_viability
-    ):
-        """Viability agent should be pure LLM, no search calls."""
-        llm, search = make_mock_services(llm_structured_return=sample_viability)
-
-        agent = ViabilityAnalysisAgent(llm, search)
-        await agent.run(
-            ViabilityInput(
-                idea="test",
-                pain_discovery=sample_pain_discovery,
-                competitor_research=sample_competitor_research,
-            )
+    async def test_generates_search_queries_first(self, sample_market_intelligence):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_market_intelligence,
+            llm_list_return=["market size query", "monetization query"],
         )
 
-        # Should only call LLM, not search
-        llm.generate_structured.assert_called_once()
-        search.search.assert_not_called()
-        search.search_reddit.assert_not_called()
+        agent = MarketIntelligenceAgent(llm, search)
+        await agent.run(MarketIntelligenceInput(idea="test idea"))
+
+        llm.generate_list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_searches_multiple_sources(self, sample_market_intelligence):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_market_intelligence,
+            llm_list_return=["q1", "q2", "q3"],
+        )
+
+        agent = MarketIntelligenceAgent(llm, search)
+        await agent.run(MarketIntelligenceInput(idea="test idea"))
+
+        # Should search broad, news, producthunt, crunchbase
+        assert search.search.call_count > 0
+        assert search.search_news.call_count > 0
+        search.search_producthunt.assert_called_once()
+        search.search_crunchbase.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_attaches_search_queries_to_output(self, sample_market_intelligence):
+        queries = ["q1", "q2", "q3"]
+        llm, search = make_mock_services(
+            llm_structured_return=sample_market_intelligence,
+            llm_list_return=queries,
+        )
+
+        agent = MarketIntelligenceAgent(llm, search)
+        result = await agent.run(MarketIntelligenceInput(idea="test idea"))
+
+        assert result.search_queries_used == queries
 
 
 # ──────────────────────────────────────────────
-# Agent 4: Synthesis & Verdict
+# Agent 4: Graveyard Research
+# ──────────────────────────────────────────────
+
+class TestGraveyardResearchAgent:
+    @pytest.mark.asyncio
+    async def test_runs_successfully(self, sample_graveyard_research):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_graveyard_research,
+            llm_list_return=["failure query 1", "failure query 2"],
+        )
+
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(GraveyardResearchInput(idea="AI pitch deck generator"))
+
+        assert isinstance(result, GraveyardResearchOutput)
+        assert len(result.previous_attempts) > 0
+        assert len(result.failure_reasons) > 0
+        assert result.lessons_learned is not None
+
+    @pytest.mark.asyncio
+    async def test_generates_search_queries_first(self, sample_graveyard_research):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_graveyard_research,
+            llm_list_return=["startup failed", "post-mortem"],
+        )
+
+        agent = GraveyardResearchAgent(llm, search)
+        await agent.run(GraveyardResearchInput(idea="test idea"))
+
+        llm.generate_list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_searches_multiple_sources(self, sample_graveyard_research):
+        llm, search = make_mock_services(
+            llm_structured_return=sample_graveyard_research,
+            llm_list_return=["q1", "q2", "q3"],
+        )
+
+        agent = GraveyardResearchAgent(llm, search)
+        await agent.run(GraveyardResearchInput(idea="test idea"))
+
+        # Should search broad, news, reddit, hackernews
+        assert search.search.call_count > 0
+        assert search.search_news.call_count > 0
+        assert search.search_reddit.call_count > 0
+        assert search.search_hackernews.call_count > 0
+
+    @pytest.mark.asyncio
+    async def test_attaches_search_queries_to_output(self, sample_graveyard_research):
+        queries = ["q1", "q2", "q3"]
+        llm, search = make_mock_services(
+            llm_structured_return=sample_graveyard_research,
+            llm_list_return=queries,
+        )
+
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(GraveyardResearchInput(idea="test idea"))
+
+        assert result.search_queries_used == queries
+
+
+# ──────────────────────────────────────────────
+# Agent 5: Synthesis & Verdict
 # ──────────────────────────────────────────────
 
 class TestSynthesisAgent:
     @pytest.mark.asyncio
     async def test_runs_successfully(
-        self, sample_pain_discovery, sample_competitor_research, sample_viability, sample_synthesis
+        self, sample_pain_discovery, sample_competitor_research,
+        sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
         llm, search = make_mock_services(llm_structured_return=sample_synthesis)
 
@@ -211,7 +299,8 @@ class TestSynthesisAgent:
                 idea="pitch deck generator",
                 pain_discovery=sample_pain_discovery,
                 competitor_research=sample_competitor_research,
-                viability=sample_viability,
+                market_intelligence=sample_market_intelligence,
+                graveyard_research=sample_graveyard_research,
             )
         )
 
@@ -222,7 +311,8 @@ class TestSynthesisAgent:
 
     @pytest.mark.asyncio
     async def test_no_search_calls(
-        self, sample_pain_discovery, sample_competitor_research, sample_viability, sample_synthesis
+        self, sample_pain_discovery, sample_competitor_research,
+        sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
         """Synthesis agent should be pure LLM, no search calls."""
         llm, search = make_mock_services(llm_structured_return=sample_synthesis)
@@ -233,16 +323,19 @@ class TestSynthesisAgent:
                 idea="test",
                 pain_discovery=sample_pain_discovery,
                 competitor_research=sample_competitor_research,
-                viability=sample_viability,
+                market_intelligence=sample_market_intelligence,
+                graveyard_research=sample_graveyard_research,
             )
         )
 
         llm.generate_structured.assert_called_once()
         search.search.assert_not_called()
+        search.search_reddit.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_build_verdict_includes_mvp(
-        self, sample_pain_discovery, sample_competitor_research, sample_viability, sample_synthesis
+        self, sample_pain_discovery, sample_competitor_research,
+        sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
         """When verdict is BUILD, recommended_mvp should be populated."""
         llm, search = make_mock_services(llm_structured_return=sample_synthesis)
@@ -253,9 +346,29 @@ class TestSynthesisAgent:
                 idea="test",
                 pain_discovery=sample_pain_discovery,
                 competitor_research=sample_competitor_research,
-                viability=sample_viability,
+                market_intelligence=sample_market_intelligence,
+                graveyard_research=sample_graveyard_research,
             )
         )
 
         assert result.verdict == "BUILD"
         assert result.recommended_mvp is not None
+
+    @pytest.mark.asyncio
+    async def test_works_without_optional_agents(
+        self, sample_pain_discovery, sample_competitor_research, sample_synthesis,
+    ):
+        """Synthesis should still work if market_intelligence and graveyard_research are None."""
+        llm, search = make_mock_services(llm_structured_return=sample_synthesis)
+
+        agent = SynthesisAgent(llm, search)
+        result = await agent.run(
+            SynthesisInput(
+                idea="test",
+                pain_discovery=sample_pain_discovery,
+                competitor_research=sample_competitor_research,
+            )
+        )
+
+        assert isinstance(result, SynthesisOutput)
+        llm.generate_structured.assert_called_once()

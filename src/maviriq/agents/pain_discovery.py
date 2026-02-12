@@ -3,6 +3,7 @@ import logging
 
 from maviriq.agents import InsufficientDataError
 from maviriq.agents.base import BaseAgent
+from maviriq.config import settings
 from maviriq.models.schemas import (
     PainDiscoveryInput,
     PainDiscoveryOutput,
@@ -49,13 +50,38 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
 
     async def run(self, input_data: PainDiscoveryInput) -> PainDiscoveryOutput:
         idea = input_data.idea
-        is_retry = input_data.retry_queries is not None
+        result = await self._search_and_extract(idea, queries=None, previous=None)
 
-        # Step 1: Get queries (either generated or from retry)
-        if is_retry:
-            queries = input_data.retry_queries
-            logger.info(f"Using {len(queries)} retry queries for '{idea}'")
-        else:
+        for attempt in range(settings.agent_max_retries):
+            if result.data_quality != "partial":
+                break
+            logger.info(
+                "Pain discovery returned partial data (attempt %d) — retrying with broader queries",
+                attempt + 1,
+            )
+            retry_queries = await self.llm.generate_list(
+                system_prompt=RETRY_QUERY_GENERATION_PROMPT,
+                user_prompt=(
+                    f"Idea: {idea}\n"
+                    f"Previous queries (do NOT repeat): {result.search_queries_used}\n"
+                    f"Pain summary so far: {result.pain_summary}"
+                ),
+                use_cheap_model=True,
+            )
+            result = await self._search_and_extract(idea, queries=retry_queries, previous=result)
+
+        return result
+
+    async def _search_and_extract(
+        self,
+        idea: str,
+        queries: list[str] | None,
+        previous: PainDiscoveryOutput | None,
+    ) -> PainDiscoveryOutput:
+        is_retry = queries is not None
+
+        # Step 1: Get queries (either generated or provided for retry)
+        if queries is None:
             queries = await self.llm.generate_list(
                 system_prompt=QUERY_GENERATION_PROMPT,
                 user_prompt=f"Generate search queries for this idea: {idea}",
@@ -65,7 +91,6 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
 
         # Step 2: Run searches with source mix based on attempt
         if is_retry:
-            # Retry: use alternative sources (Twitter, YouTube, News, broad)
             search_tasks = [
                 *[self.search.search_twitter(q) for q in queries[:3]],
                 *[self.search.search_youtube(q) for q in queries[:2]],
@@ -73,7 +98,6 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
                 *[self.search.search(q) for q in queries],
             ]
         else:
-            # First attempt: standard sources + Twitter/YouTube
             search_tasks = [
                 *[self.search.search_reddit(q) for q in queries[:3]],
                 *[self.search.search_hackernews(q) for q in queries[:2]],
@@ -87,14 +111,14 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
         # Deduplicate and collect all snippets
         seen_urls: set[str] = set()
         all_snippets: list[dict] = []
-        for result in results_lists:
-            if isinstance(result, Exception):
-                logger.warning(f"Search failed: {result}")
+        for r in results_lists:
+            if isinstance(r, Exception):
+                logger.warning(f"Search failed: {r}")
                 continue
-            for r in result:
-                if r.url not in seen_urls:
-                    seen_urls.add(r.url)
-                    all_snippets.append(r.to_dict())
+            for item in r:
+                if item.url not in seen_urls:
+                    seen_urls.add(item.url)
+                    all_snippets.append(item.to_dict())
 
         failed_count = sum(1 for r in results_lists if isinstance(r, Exception))
         logger.info(f"Collected {len(all_snippets)} unique snippets ({failed_count}/{len(search_tasks)} searches failed)")
@@ -108,15 +132,14 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
         # Step 3: Feed all snippets to Claude for extraction
         snippets_text = "\n\n".join(
             f"[{s['source']}] {s['title']}\n{s['url']}\n{s['snippet']}"
-            for s in all_snippets[:50]  # Cap at 50 to stay within token limits
+            for s in all_snippets[:50]
         )
 
         # If retry, include previous pain points so the LLM can merge
-        if is_retry and input_data.previous_result:
-            prev = input_data.previous_result
+        if previous is not None:
             previous_points = "\n".join(
                 f'- "{p.quote}" (source: {p.source}, severity: {p.pain_severity})'
-                for p in prev.pain_points
+                for p in previous.pain_points
             )
             user_prompt = (
                 f"Idea: {idea}\n\n"
@@ -133,8 +156,6 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
             output_schema=PainDiscoveryOutput,
         )
 
-        # Attach metadata
         result.idea = idea
         result.search_queries_used = queries
-
         return result

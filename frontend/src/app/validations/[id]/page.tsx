@@ -11,6 +11,8 @@ import { VerdictBadge } from "@/components/verdict-badge";
 import { DetailSection } from "@/components/detail-section";
 import { PainPoints } from "@/components/pain-points";
 import { Competitors } from "@/components/competitors";
+import { MarketIntelligence } from "@/components/market-intelligence";
+import { GraveyardResearch } from "@/components/graveyard-research";
 import { Viability } from "@/components/viability";
 
 export default function ValidationPage() {
@@ -168,7 +170,9 @@ export default function ValidationPage() {
   const s = run.synthesis;
   const pain = run.pain_discovery;
   const comp = run.competitor_research;
-  const via = run.viability;
+  const mktIntel = run.market_intelligence;
+  const graveyard = run.graveyard_research;
+  const via = run.viability;  // old runs only
 
   const avgSeverity = pain && pain.pain_points.length > 0
     ? (pain.pain_points.reduce((sum, p) => sum + p.pain_severity, 0) / pain.pain_points.length)
@@ -247,24 +251,29 @@ export default function ValidationPage() {
             </p>
           </div>
         )}
-        {via && (
+        {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-xs text-muted/60">will pay?</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${via.people_pay ? "text-build" : "text-skip"}`}>
-              {via.people_pay ? "yes" : "no"}
+            <p className={`mt-1 font-display text-2xl font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
+              {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
           </div>
         )}
-        {via && (
+        {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-xs text-muted/60">market gap</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${
-              via.gap_size === "large" ? "text-build" :
-              via.gap_size === "medium" ? "text-maybe" :
-              via.gap_size === "small" ? "text-muted" : "text-skip"
-            }`}>
-              {via.gap_size}
-            </p>
+            {(() => {
+              const gapSize = s?.gap_size ?? via?.gap_size;
+              return (
+                <p className={`mt-1 font-display text-2xl font-bold ${
+                  gapSize === "large" ? "text-build" :
+                  gapSize === "medium" ? "text-maybe" :
+                  gapSize === "small" ? "text-muted" : "text-skip"
+                }`}>
+                  {gapSize}
+                </p>
+              );
+            })()}
           </div>
         )}
       </div>
@@ -316,6 +325,32 @@ export default function ValidationPage() {
             <p className="text-xs text-muted/60 mb-1">market size</p>
             <p className="text-sm text-foreground/80">{s.estimated_market_size}</p>
           </div>
+        </div>
+      )}
+
+      {/* ═══ DIFFERENTIATION STRATEGY ═══ */}
+      {s?.differentiation_strategy && (
+        <div className="mt-6 rounded-2xl border border-build/20 bg-build/5 p-6">
+          <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
+            differentiation strategy
+          </p>
+          <p className="text-sm text-foreground/90 leading-relaxed">{s.differentiation_strategy}</p>
+        </div>
+      )}
+
+      {/* ═══ LESSONS FROM PAST FAILURES ═══ */}
+      {s?.lessons_from_failures && (
+        <div className="mt-4 rounded-2xl border border-skip/20 bg-skip/5 p-6">
+          <p className="text-xs font-medium uppercase tracking-wider text-skip/70 mb-2">
+            lessons from past failures
+          </p>
+          <p className="text-sm text-foreground/90 leading-relaxed">{s.lessons_from_failures}</p>
+          {s.previous_attempts_summary && (
+            <div className="mt-3 pt-3 border-t border-skip/10">
+              <p className="text-xs text-muted/60 mb-1">previous attempts</p>
+              <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -375,7 +410,17 @@ export default function ValidationPage() {
               <Competitors data={comp} />
             </DetailSection>
           )}
-          {via && (
+          {mktIntel && (
+            <DetailSection title="market intelligence">
+              <MarketIntelligence data={mktIntel} />
+            </DetailSection>
+          )}
+          {graveyard && (
+            <DetailSection title="graveyard research">
+              <GraveyardResearch data={graveyard} />
+            </DetailSection>
+          )}
+          {!mktIntel && via && (
             <DetailSection title="viability analysis">
               <Viability data={via} />
             </DetailSection>

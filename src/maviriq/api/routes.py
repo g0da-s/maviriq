@@ -156,8 +156,9 @@ async def stream_validation(
             agent_outputs = [
                 (1, lambda r: r.pain_discovery),
                 (2, lambda r: r.competitor_research),
-                (3, lambda r: r.viability),
-                (4, lambda r: r.synthesis),
+                (3, lambda r: r.market_intelligence),
+                (4, lambda r: r.graveyard_research),
+                (5, lambda r: r.synthesis),
             ]
             run = await repo.get_for_user(run_id, token_user_id)
             if run:
@@ -240,8 +241,9 @@ async def _replay_from_db(run: ValidationRun):
     agent_outputs = [
         (1, run.pain_discovery),
         (2, run.competitor_research),
-        (3, run.viability),
-        (4, run.synthesis),
+        (3, run.market_intelligence),
+        (4, run.graveyard_research),
+        (5, run.synthesis),
     ]
     for agent_num, output in agent_outputs:
         if output is not None:

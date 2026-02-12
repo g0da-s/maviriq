@@ -86,7 +86,80 @@ export type CompetitorPricing = z.infer<typeof CompetitorPricingSchema>;
 export type Competitor = z.infer<typeof CompetitorSchema>;
 export type CompetitorResearchOutput = z.infer<typeof CompetitorResearchOutputSchema>;
 
-// ── Viability ──
+// ── Market Intelligence (NEW) ──
+
+const MonetizationStrengthSchema = z.enum(["strong", "moderate", "weak"]);
+const EffortSchema = z.enum(["low", "medium", "high"]);
+const GrowthDirectionSchema = z.enum(["growing", "stable", "shrinking", "unknown"]);
+const ChurnSeveritySchema = z.enum(["high", "medium", "low"]);
+
+const MonetizationSignalSchema = z.object({
+  signal: z.string(),
+  source: z.string(),
+  strength: MonetizationStrengthSchema,
+});
+
+const DistributionChannelSchema = z.object({
+  channel: z.string(),
+  reach_estimate: z.string(),
+  effort: EffortSchema,
+});
+
+const MarketIntelligenceOutputSchema = z.object({
+  market_size_estimate: z.string(),
+  growth_direction: GrowthDirectionSchema,
+  tam_reasoning: z.string(),
+  distribution_channels: z.array(DistributionChannelSchema),
+  monetization_signals: z.array(MonetizationSignalSchema),
+  search_queries_used: z.array(z.string()),
+  data_quality: z.enum(["full", "partial"]),
+});
+
+export type MonetizationSignal = z.infer<typeof MonetizationSignalSchema>;
+export type DistributionChannel = z.infer<typeof DistributionChannelSchema>;
+export type GrowthDirection = z.infer<typeof GrowthDirectionSchema>;
+export type MarketIntelligenceOutput = z.infer<typeof MarketIntelligenceOutputSchema>;
+
+// ── Graveyard Research (NEW) ──
+
+const PreviousAttemptSchema = z.object({
+  name: z.string(),
+  url: z.string().nullable(),
+  what_they_did: z.string(),
+  shutdown_reason: z.string(),
+  year: z.string().nullable(),
+  source: z.string(),
+});
+
+const ChurnSignalSchema = z.object({
+  signal: z.string(),
+  source: z.string(),
+  severity: ChurnSeveritySchema,
+});
+
+const CompetitorHealthSignalSchema = z.object({
+  company: z.string(),
+  signal: z.string(),
+  direction: SignalDirectionSchema,
+  source: z.string(),
+});
+
+const GraveyardResearchOutputSchema = z.object({
+  previous_attempts: z.array(PreviousAttemptSchema),
+  failure_reasons: z.array(z.string()),
+  lessons_learned: z.string(),
+  churn_signals: z.array(ChurnSignalSchema),
+  competitor_health_signals: z.array(CompetitorHealthSignalSchema),
+  search_queries_used: z.array(z.string()),
+  data_quality: z.enum(["full", "partial"]),
+});
+
+export type PreviousAttempt = z.infer<typeof PreviousAttemptSchema>;
+export type ChurnSignal = z.infer<typeof ChurnSignalSchema>;
+export type CompetitorHealthSignal = z.infer<typeof CompetitorHealthSignalSchema>;
+export type GraveyardResearchOutput = z.infer<typeof GraveyardResearchOutputSchema>;
+
+// ── Viability (kept for old runs) ──
 
 const ViabilitySignalSchema = z.object({
   signal: z.string(),
@@ -124,6 +197,20 @@ const SynthesisOutputSchema = z.object({
   target_user_summary: z.string(),
   estimated_market_size: z.string(),
   next_steps: z.array(z.string()),
+  // Absorbed from old Viability agent
+  people_pay: z.boolean(),
+  people_pay_reasoning: z.string(),
+  reachability: ReachabilitySchema,
+  reachability_reasoning: z.string(),
+  market_gap: z.string(),
+  gap_size: GapSizeSchema,
+  opportunity_score: z.number(),
+  signals: z.array(ViabilitySignalSchema),
+  risk_factors: z.array(z.string()),
+  // New fields from new agents
+  differentiation_strategy: z.string().nullable().optional(),
+  previous_attempts_summary: z.string().nullable().optional(),
+  lessons_from_failures: z.string().nullable().optional(),
 });
 
 export type SynthesisOutput = z.infer<typeof SynthesisOutputSchema>;
@@ -139,7 +226,9 @@ export const ValidationRunSchema = z.object({
   completed_at: z.string().nullable(),
   pain_discovery: PainDiscoveryOutputSchema.nullable(),
   competitor_research: CompetitorResearchOutputSchema.nullable(),
-  viability: ViabilityOutputSchema.nullable(),
+  market_intelligence: MarketIntelligenceOutputSchema.nullable(),
+  graveyard_research: GraveyardResearchOutputSchema.nullable(),
+  viability: ViabilityOutputSchema.nullable(),  // kept for old runs
   synthesis: SynthesisOutputSchema.nullable(),
   error: z.string().nullable(),
   total_cost_cents: z.number(),

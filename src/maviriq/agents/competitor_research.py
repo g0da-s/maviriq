@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from maviriq.agents import InsufficientDataError
 from maviriq.agents.base import BaseAgent
+from maviriq.config import settings
 from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
@@ -58,14 +59,43 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
     async def run(self, input_data: CompetitorResearchInput) -> CompetitorResearchOutput:
         idea = input_data.idea
         target_user = input_data.target_user
-        is_retry = input_data.retry_queries is not None
         target_label = target_user.label if target_user else "general users"
 
-        # Step 1: Get queries (either generated or from retry)
-        if is_retry:
-            queries = input_data.retry_queries
-            logger.info(f"Using {len(queries)} retry queries for competitor research")
-        else:
+        result = await self._search_and_extract(idea, target_label, queries=None, previous=None)
+
+        for attempt in range(settings.agent_max_retries):
+            if result.data_quality != "partial":
+                break
+            logger.info(
+                "Competitor research returned partial data (attempt %d) — retrying with broader queries",
+                attempt + 1,
+            )
+            retry_queries = await self.llm.generate_list(
+                system_prompt=RETRY_COMPETITOR_QUERIES_PROMPT,
+                user_prompt=(
+                    f"Idea: {idea}\n"
+                    f"Target user: {target_label}\n"
+                    f"Previously found {len(result.competitors)} competitors. Need more."
+                ),
+                use_cheap_model=True,
+            )
+            result = await self._search_and_extract(idea, target_label, queries=retry_queries, previous=result)
+
+        if target_user is not None:
+            result.target_user = target_user
+        return result
+
+    async def _search_and_extract(
+        self,
+        idea: str,
+        target_label: str,
+        queries: list[str] | None,
+        previous: CompetitorResearchOutput | None,
+    ) -> CompetitorResearchOutput:
+        is_retry = queries is not None
+
+        # Step 1: Get queries (either generated or provided for retry)
+        if queries is None:
             queries = await self.llm.generate_list(
                 system_prompt=COMPETITOR_SEARCH_QUERIES_PROMPT,
                 user_prompt=f"Idea: {idea}\nTarget user: {target_label}",
@@ -75,7 +105,6 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
 
         # Step 2: Run searches with source mix based on attempt
         if is_retry:
-            # Retry: alternative sources (News, YouTube reviews, broad, ProductHunt)
             search_tasks = [
                 *[self.search.search_news(q) for q in queries[:2]],
                 self.search.search_youtube(f"{idea} review"),
@@ -83,7 +112,6 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
                 self.search.search_producthunt(idea),
             ]
         else:
-            # First attempt: standard + new sources
             search_tasks = [
                 *[self.search.search(q) for q in queries],
                 self.search.search_g2(idea),
@@ -98,14 +126,14 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
         # Collect unique results
         seen_urls: set[str] = set()
         all_results: list[dict] = []
-        for result in results_lists:
-            if isinstance(result, Exception):
-                logger.warning(f"Search failed: {result}")
+        for r in results_lists:
+            if isinstance(r, Exception):
+                logger.warning(f"Search failed: {r}")
                 continue
-            for r in result:
-                if r.url not in seen_urls:
-                    seen_urls.add(r.url)
-                    all_results.append(r.to_dict())
+            for item in r:
+                if item.url not in seen_urls:
+                    seen_urls.add(item.url)
+                    all_results.append(item.to_dict())
 
         failed_count = sum(1 for r in results_lists if isinstance(r, Exception))
         logger.info(f"Found {len(all_results)} unique results ({failed_count}/{len(search_tasks)} searches failed)")
@@ -130,11 +158,10 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
         )
 
         # If retry, include previously found competitors so the LLM can merge
-        if is_retry and input_data.previous_result:
-            prev = input_data.previous_result
+        if previous is not None:
             previous_competitors = "\n".join(
                 f"- {c.name}: {c.one_liner} ({c.url})"
-                for c in prev.competitors
+                for c in previous.competitors
             )
             user_prompt = (
                 f"Idea: {idea}\nTarget user: {target_label}\n\n"
@@ -156,8 +183,6 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
             output_schema=CompetitorResearchOutput,
         )
 
-        if target_user is not None:
-            result.target_user = target_user
         return result
 
     async def _scrape_pricing_pages(self, results: list[dict]) -> dict[str, str]:
@@ -174,17 +199,15 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
                     response = await client.get(url)
                     response.raise_for_status()
 
-                    # Simple extraction: get text from HTML
                     soup = BeautifulSoup(response.text, "html.parser")
 
-                    # Look for pricing-related keywords
                     for tag in soup.find_all(["div", "section", "table"]):
                         text = tag.get_text(separator=" ", strip=True)
                         if any(
                             keyword in text.lower()
                             for keyword in ["pricing", "price", "$", "plan", "free", "trial"]
                         ):
-                            if len(text) < 2000:  # Keep it short
+                            if len(text) < 2000:
                                 return url, text[:1000]
                     return url, None
             except Exception as e:

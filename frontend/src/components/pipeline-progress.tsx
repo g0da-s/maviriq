@@ -8,12 +8,13 @@ import type { ValidationRun, Verdict } from "@/lib/types";
 const AGENTS = [
   { num: 1, name: "pain & user discovery", desc: "searching reddit, hn, forums for real pain points" },
   { num: 2, name: "competitor research", desc: "mapping competitors, pricing, reviews on g2 & capterra" },
-  { num: 3, name: "viability analysis", desc: "analyzing willingness to pay, reachability, market gaps" },
-  { num: 4, name: "synthesis & verdict", desc: "combining all research into a final build/skip verdict" },
+  { num: 3, name: "market intelligence", desc: "researching market size, distribution channels, monetization" },
+  { num: 4, name: "graveyard research", desc: "finding failed startups and warning signs in this space" },
+  { num: 5, name: "synthesis & verdict", desc: "combining all research into a final build/skip verdict" },
 ];
 
-// Agents 1 & 2 run in parallel, then 3 & 4 run sequentially
-const PARALLEL_AGENTS = new Set([1, 2]);
+// Agents 1-4 run in parallel, then agent 5 runs after all complete
+const PARALLEL_AGENTS = new Set([1, 2, 3, 4]);
 
 type Status = "waiting" | "running" | "done";
 
@@ -44,8 +45,8 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     async function connect() {
       if (doneRef.current) return;
 
-      // Agents 1 & 2 start in parallel immediately
-      setRunningAgents(new Set([1, 2]));
+      // Agents 1-4 start in parallel immediately
+      setRunningAgents(new Set([1, 2, 3, 4]));
 
       const url = await getStreamUrl(runId);
       const es = new EventSource(url);
@@ -61,15 +62,12 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         setCompletedAgents((prev) => {
           const next = new Set([...prev, agentNum]);
 
-          // When both parallel agents (1 & 2) are done, start agent 3
+          // When all 4 parallel agents are done, start agent 5
           if (PARALLEL_AGENTS.has(agentNum)) {
-            const bothDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
-            if (bothDone) {
-              setRunningAgents(new Set([3]));
+            const allDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
+            if (allDone) {
+              setRunningAgents(new Set([5]));
             }
-          } else if (agentNum < 4) {
-            // Sequential agents (3 → 4)
-            setRunningAgents(new Set([agentNum + 1]));
           }
 
           return next;
@@ -85,7 +83,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           return;
         }
         setVerdict({ verdict: data.verdict as Verdict, confidence: data.confidence as number });
-        setCompletedAgents(new Set([1, 2, 3, 4]));
+        setCompletedAgents(new Set([1, 2, 3, 4, 5]));
         setRunningAgents(new Set());
         es.close();
 

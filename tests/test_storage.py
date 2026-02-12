@@ -51,6 +51,8 @@ class TestValidationRepository:
                 "error": None,
                 "pain_discovery_output": None,
                 "competitor_research_output": None,
+                "market_intelligence_output": None,
+                "graveyard_research_output": None,
                 "viability_output": None,
                 "synthesis_output": None,
                 "total_cost_cents": 0,
@@ -79,7 +81,7 @@ class TestValidationRepository:
             status=ValidationStatus.COMPLETED,
             started_at=datetime.now(timezone.utc),
             completed_at=datetime.now(timezone.utc),
-            current_agent=4,
+            current_agent=5,
         )
         await repo.update(run)
 
@@ -87,7 +89,7 @@ class TestValidationRepository:
         mock_supabase.update.assert_called_once()
         update_arg = mock_supabase.update.call_args[0][0]
         assert update_arg["status"] == "completed"
-        assert update_arg["current_agent"] == 4
+        assert update_arg["current_agent"] == 5
         assert update_arg["completed_at"] is not None
 
     @pytest.mark.asyncio

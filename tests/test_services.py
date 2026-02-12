@@ -15,13 +15,14 @@ from maviriq.services.search import SearchResult, SerperService
 class TestLLMService:
     @pytest.fixture
     def llm(self):
-        with patch("maviriq.services.llm.settings") as mock_settings:
-            mock_settings.anthropic_api_key = "test-key"
-            mock_settings.reasoning_model = "claude-sonnet-4-5-20250929"
-            mock_settings.cheap_model = "claude-haiku-4-5-20251001"
-            service = LLMService()
-            service.client = MagicMock()
-            return service
+        mock_model = MagicMock(name="model")
+        mock_cheap = MagicMock(name="cheap_model")
+        with patch("maviriq.services.llm.ChatAnthropic", side_effect=[mock_model, mock_cheap]):
+            with patch("maviriq.services.llm.settings") as mock_settings:
+                mock_settings.reasoning_model = "claude-sonnet-4-5-20250929"
+                mock_settings.cheap_model = "claude-haiku-4-5-20251001"
+                service = LLMService()
+        return service
 
     @pytest.mark.asyncio
     async def test_generate_structured_returns_typed_output(self, llm):
@@ -29,15 +30,12 @@ class TestLLMService:
             name: str
             score: int
 
-        # Mock the Claude API response
-        mock_block = MagicMock()
-        mock_block.type = "tool_use"
-        mock_block.input = {"name": "test", "score": 42}
+        expected = TestOutput(name="test", score=42)
 
-        mock_response = MagicMock()
-        mock_response.content = [mock_block]
-
-        llm.client.messages.create = AsyncMock(return_value=mock_response)
+        # LangChain: model.with_structured_output(schema).ainvoke(messages)
+        mock_structured = MagicMock()
+        mock_structured.ainvoke = AsyncMock(return_value=expected)
+        llm.model.with_structured_output = MagicMock(return_value=mock_structured)
 
         result = await llm.generate_structured(
             system_prompt="test",
@@ -48,19 +46,17 @@ class TestLLMService:
         assert isinstance(result, TestOutput)
         assert result.name == "test"
         assert result.score == 42
+        llm.model.with_structured_output.assert_called_once_with(TestOutput)
 
     @pytest.mark.asyncio
     async def test_generate_structured_uses_cheap_model_when_requested(self, llm):
         class TestOutput(BaseModel):
             value: str
 
-        mock_block = MagicMock()
-        mock_block.type = "tool_use"
-        mock_block.input = {"value": "cheap"}
-
-        mock_response = MagicMock()
-        mock_response.content = [mock_block]
-        llm.client.messages.create = AsyncMock(return_value=mock_response)
+        expected = TestOutput(value="cheap")
+        mock_structured = MagicMock()
+        mock_structured.ainvoke = AsyncMock(return_value=expected)
+        llm.cheap_model.with_structured_output = MagicMock(return_value=mock_structured)
 
         await llm.generate_structured(
             system_prompt="test",
@@ -69,24 +65,24 @@ class TestLLMService:
             use_cheap_model=True,
         )
 
-        call_kwargs = llm.client.messages.create.call_args[1]
-        assert call_kwargs["model"] == "claude-haiku-4-5-20251001"
+        # Should have used cheap_model, not model
+        llm.cheap_model.with_structured_output.assert_called_once_with(TestOutput)
+        llm.model.with_structured_output.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_generate_structured_raises_on_no_tool_use(self, llm):
+    async def test_generate_structured_retries_on_api_error(self, llm):
         from tenacity import RetryError
-
-        mock_block = MagicMock()
-        mock_block.type = "text"  # Not tool_use
-
-        mock_response = MagicMock()
-        mock_response.content = [mock_block]
-        llm.client.messages.create = AsyncMock(return_value=mock_response)
+        from anthropic import APIConnectionError
 
         class TestOutput(BaseModel):
             value: str
 
-        # tenacity wraps the ValueError after 3 retries
+        mock_structured = MagicMock()
+        mock_structured.ainvoke = AsyncMock(
+            side_effect=APIConnectionError(request=MagicMock())
+        )
+        llm.model.with_structured_output = MagicMock(return_value=mock_structured)
+
         with pytest.raises(RetryError):
             await llm.generate_structured(
                 system_prompt="test",
@@ -94,14 +90,14 @@ class TestLLMService:
                 output_schema=TestOutput,
             )
 
+        # Should have retried 3 times
+        assert mock_structured.ainvoke.call_count == 3
+
     @pytest.mark.asyncio
     async def test_generate_text(self, llm):
-        mock_block = MagicMock()
-        mock_block.text = "Hello world"
-
         mock_response = MagicMock()
-        mock_response.content = [mock_block]
-        llm.client.messages.create = AsyncMock(return_value=mock_response)
+        mock_response.content = "Hello world"
+        llm.model.ainvoke = AsyncMock(return_value=mock_response)
 
         result = await llm.generate_text(
             system_prompt="test",
@@ -112,13 +108,16 @@ class TestLLMService:
 
     @pytest.mark.asyncio
     async def test_generate_list(self, llm):
-        mock_block = MagicMock()
-        mock_block.type = "tool_use"
-        mock_block.input = {"items": ["query1", "query2", "query3"]}
+        # generate_list calls generate_structured internally with ListOutput schema
+        from pydantic import BaseModel as _BM
 
-        mock_response = MagicMock()
-        mock_response.content = [mock_block]
-        llm.client.messages.create = AsyncMock(return_value=mock_response)
+        class ListOutput(_BM):
+            items: list[str]
+
+        expected = ListOutput(items=["query1", "query2", "query3"])
+        mock_structured = MagicMock()
+        mock_structured.ainvoke = AsyncMock(return_value=expected)
+        llm.cheap_model.with_structured_output = MagicMock(return_value=mock_structured)
 
         result = await llm.generate_list(
             system_prompt="test",
