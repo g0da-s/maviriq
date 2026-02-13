@@ -138,6 +138,13 @@ class SerperService:
             r.source = "linkedin_jobs"
         return results
 
+    async def search_indiehackers(self, query: str, num_results: int = 10) -> list[SearchResult]:
+        """Search Indie Hackers via Serper site: query."""
+        results = await self.search(f"site:indiehackers.com {query}", num_results)
+        for r in results:
+            r.source = "indiehackers"
+        return results
+
     async def search_crunchbase(self, query: str, num_results: int = 5) -> list[SearchResult]:
         """Search Crunchbase via Serper site: query."""
         results = await self.search(f"site:crunchbase.com {query}", num_results)

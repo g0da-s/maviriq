@@ -17,7 +17,7 @@ You are a product strategist delivering a final BUILD/SKIP/MAYBE verdict on a bu
 You have access to:
 - Pain research (who suffers, how much, evidence)
 - Competitive analysis (what exists, gaps, pricing)
-- Market intelligence (market size, distribution channels, monetization signals)
+- Market intelligence (market size, distribution channels, funding activity)
 - Graveyard research (failed startups, warning signs, lessons from failures)
 
 Your job: Synthesize ALL of this into a clear verdict.
@@ -53,7 +53,7 @@ Think carefully about where THIS SPECIFIC idea falls. Different ideas should get
 - Next steps (actionable items for the founder)
 
 You MUST also answer these viability questions:
-1. Do people pay for this? (bool + reasoning, based on competitor pricing and monetization signals)
+1. Do people pay for this? (bool + reasoning, based on competitor pricing data)
 2. Can we reach the target users? ("easy"/"moderate"/"hard" + reasoning)
 3. What's the market gap? (description + size: "large"/"medium"/"small"/"none")
 4. Viability signals: observations with direction (positive/negative/neutral) and confidence
@@ -140,8 +140,8 @@ TAM reasoning: {market_intel.tam_reasoning}
 Distribution channels:
 {chr(10).join(f'- {ch.channel} (reach: {ch.reach_estimate}, effort: {ch.effort})' for ch in market_intel.distribution_channels) or "None found"}
 
-Monetization signals:
-{chr(10).join(f'- [{sig.strength.upper()}] {sig.signal} (source: {sig.source})' for sig in market_intel.monetization_signals) or "None found"}
+Funding signals:
+{chr(10).join(f'- {sig}' for sig in market_intel.funding_signals) or "None found"}
 """
 
         # Conditionally add graveyard research context

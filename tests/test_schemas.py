@@ -120,7 +120,7 @@ class TestMarketIntelligenceOutputSerialization:
         assert restored.market_size_estimate == sample_market_intelligence.market_size_estimate
         assert restored.growth_direction == sample_market_intelligence.growth_direction
         assert len(restored.distribution_channels) == len(sample_market_intelligence.distribution_channels)
-        assert len(restored.monetization_signals) == len(sample_market_intelligence.monetization_signals)
+        assert len(restored.funding_signals) == len(sample_market_intelligence.funding_signals)
 
 
 class TestGraveyardResearchOutputSerialization:

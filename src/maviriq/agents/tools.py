@@ -70,6 +70,11 @@ TOOL_CATALOG: list[tuple[str, str, str]] = [
         "search_linkedin_jobs",
     ),
     (
+        "search_indiehackers",
+        "Search Indie Hackers for founder stories, product launches, revenue reports, and startup discussions.",
+        "search_indiehackers",
+    ),
+    (
         "search_crunchbase",
         "Search Crunchbase for startup funding, company info, and market data.",
         "search_crunchbase",

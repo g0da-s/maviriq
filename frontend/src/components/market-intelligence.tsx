@@ -13,12 +13,6 @@ const effortColor = {
   high: "text-skip",
 };
 
-const strengthColor = {
-  strong: "text-build",
-  moderate: "text-maybe",
-  weak: "text-skip",
-};
-
 export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput }) {
   return (
     <div className="space-y-5">
@@ -64,22 +58,16 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
         </div>
       )}
 
-      {/* monetization signals */}
-      {data.monetization_signals.length > 0 && (
+      {/* funding signals */}
+      {data.funding_signals.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            monetization signals
+            funding signals
           </p>
           <div className="space-y-2">
-            {data.monetization_signals.map((sig, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
-                <span className={`font-mono text-xs font-bold ${strengthColor[sig.strength]}`}>
-                  {sig.strength === "strong" ? "+++" : sig.strength === "moderate" ? "++" : "+"}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm">{sig.signal}</p>
-                  <p className="mt-0.5 text-xs text-muted/50">{sig.source}</p>
-                </div>
+            {data.funding_signals.map((sig, i) => (
+              <div key={i} className="rounded-lg border border-card-border bg-white/[0.02] p-3">
+                <p className="text-sm">{sig}</p>
               </div>
             ))}
           </div>

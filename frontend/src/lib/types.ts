@@ -88,16 +88,9 @@ export type CompetitorResearchOutput = z.infer<typeof CompetitorResearchOutputSc
 
 // ── Market Intelligence (NEW) ──
 
-const MonetizationStrengthSchema = z.enum(["strong", "moderate", "weak"]);
 const EffortSchema = z.enum(["low", "medium", "high"]);
 const GrowthDirectionSchema = z.enum(["growing", "stable", "shrinking", "unknown"]);
 const ChurnSeveritySchema = z.enum(["high", "medium", "low"]);
-
-const MonetizationSignalSchema = z.object({
-  signal: z.string(),
-  source: z.string(),
-  strength: MonetizationStrengthSchema,
-});
 
 const DistributionChannelSchema = z.object({
   channel: z.string(),
@@ -110,12 +103,11 @@ const MarketIntelligenceOutputSchema = z.object({
   growth_direction: GrowthDirectionSchema,
   tam_reasoning: z.string(),
   distribution_channels: z.array(DistributionChannelSchema),
-  monetization_signals: z.array(MonetizationSignalSchema),
+  funding_signals: z.array(z.string()).default([]),
   search_queries_used: z.array(z.string()),
   data_quality: z.enum(["full", "partial"]),
 });
 
-export type MonetizationSignal = z.infer<typeof MonetizationSignalSchema>;
 export type DistributionChannel = z.infer<typeof DistributionChannelSchema>;
 export type GrowthDirection = z.infer<typeof GrowthDirectionSchema>;
 export type MarketIntelligenceOutput = z.infer<typeof MarketIntelligenceOutputSchema>;

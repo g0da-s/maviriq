@@ -20,7 +20,6 @@ from maviriq.models.schemas import (
     DistributionChannel,
     GraveyardResearchOutput,
     MarketIntelligenceOutput,
-    MonetizationSignal,
     PainDiscoveryOutput,
     PainPoint,
     PreviousAttempt,
@@ -158,6 +157,7 @@ def sample_competitor_research(sample_user_segment) -> CompetitorResearchOutput:
                 name="Slidebean",
                 url="https://slidebean.com",
                 one_liner="AI-powered pitch deck builder for startups",
+                competitor_type="direct",
                 pricing=[
                     CompetitorPricing(plan_name="Starter", price="$29/mo", features=["AI design", "Templates"]),
                     CompetitorPricing(plan_name="Premium", price="$49/mo", features=["AI design", "Analytics", "Custom branding"]),
@@ -172,6 +172,7 @@ def sample_competitor_research(sample_user_segment) -> CompetitorResearchOutput:
                 name="Beautiful.ai",
                 url="https://beautiful.ai",
                 one_liner="Smart presentation software with design rules",
+                competitor_type="indirect",
                 pricing=[
                     CompetitorPricing(plan_name="Pro", price="$12/mo", features=["Smart templates", "Export"]),
                 ],
@@ -220,9 +221,9 @@ def sample_market_intelligence() -> MarketIntelligenceOutput:
             DistributionChannel(channel="r/startups", reach_estimate="3M+ members", effort="low"),
             DistributionChannel(channel="YC community", reach_estimate="10k+ founders", effort="medium"),
         ],
-        monetization_signals=[
-            MonetizationSignal(signal="Slidebean charges $29-49/mo with 50k+ users", source="competitor_pricing", strength="strong"),
-            MonetizationSignal(signal="Founders on Indie Hackers report paying for deck tools", source="indiehackers.com", strength="moderate"),
+        funding_signals=[
+            "Beautiful.ai raised $11M Series A in 2023",
+            "Slidebean raised $4M seed, pivoted to financial modeling tools",
         ],
         search_queries_used=["pitch deck market size", "presentation software TAM"],
         data_quality="full",

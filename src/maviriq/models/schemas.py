@@ -73,12 +73,27 @@ class Competitor(BaseModel):
     name: str
     url: str
     one_liner: str
+    competitor_type: Literal["direct", "indirect", "potential"]
     pricing: list[CompetitorPricing]
     strengths: list[str]
     weaknesses: list[str]
     review_sentiment: Literal["positive", "mixed", "negative"]
     review_count: int | None = None
     source: str  # "google", "g2", "capterra"
+
+    @field_validator("competitor_type", mode="before")
+    @classmethod
+    def normalize_competitor_type(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v_lower = v.lower().strip()
+        if v_lower in ("direct", "indirect", "potential"):
+            return v_lower
+        if "direct" in v_lower:
+            return "direct"
+        if "indirect" in v_lower:
+            return "indirect"
+        return "potential"
 
     @field_validator("review_sentiment", mode="before")
     @classmethod
@@ -179,7 +194,7 @@ class MarketIntelligenceOutput(BaseModel):
     growth_direction: Literal["growing", "stable", "shrinking", "unknown"]
     tam_reasoning: str
     distribution_channels: list[DistributionChannel]
-    monetization_signals: list[MonetizationSignal]
+    funding_signals: list[str] = []
     search_queries_used: list[str] = []
     data_quality: str = "full"
 

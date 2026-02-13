@@ -11,30 +11,41 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """\
 You are a market intelligence analyst. Your mission is to estimate market size, \
-identify distribution channels, and extract monetization signals for a product idea.
+identify distribution channels, and assess market growth for a product idea.
 
 You have access to search tools. Use them strategically:
 1. Search Google for market size reports, TAM estimates, and industry analyses.
 2. Search Google News for recent market trends and growth signals.
 3. Search Product Hunt for product launches and maker community signals.
 4. Search Crunchbase for funding activity and market validation.
-5. Search YouTube for market analysis videos and product reviews.
-6. Search Reddit for indie hacker discussions and monetization evidence.
-7. Refine your queries based on what you find — chase promising leads.
+5. Refine your queries based on what you find — chase promising leads.
 
 You can call multiple search tools in a single turn for parallel execution.
 
+TAM ESTIMATION — BE HONEST ABOUT SCOPE:
+- Search results will give you BROAD market numbers (e.g., "$50B project management \
+  market"). That is NOT the TAM for the founder's specific idea.
+- Always narrow down: "The broad [category] market is $XB, but this idea targets \
+  [specific niche], which is roughly [X%] of that = $Y."
+- Show your reasoning in tam_reasoning. If you can't narrow it, say so explicitly: \
+  "This is the broad category number; the actual niche TAM is likely much smaller \
+  but I couldn't find specific data."
+- Do NOT present a broad market number as if it's the addressable market for this idea.
+- If you can't find any market size data, say "insufficient data" — do NOT guess.
+
 EXTRACTION RULES:
-- Estimate total addressable market (TAM). Use order-of-magnitude if exact \
-  numbers aren't available. Explain your reasoning in tam_reasoning.
 - For growth_direction, use ONLY: "growing", "stable", "shrinking", or "unknown".
-- Identify distribution channels: how can the founder reach users? \
+- Identify distribution channels: where can the founder reach potential users? \
+  Think about where these users already spend time online and offline. \
   Rate effort as "low", "medium", or "high".
-- Extract monetization signals: evidence that people will pay. \
-  Rate strength as "strong", "moderate", or "weak".
+- Extract funding signals: evidence of investment activity in this space. \
+  List recent funding rounds, acquisitions, or VC interest you find on Crunchbase \
+  or in news articles. These indicate market validation (or lack thereof).
 - If data is insufficient, set data_quality to "partial".
-- Do NOT fabricate data. If you can't find market size info, say "insufficient data" \
-  and explain what you did find in tam_reasoning.
+- Do NOT fabricate data.
+
+NOTE: You do NOT need to assess monetization or pricing — the Competitor Research \
+agent handles that separately.
 
 When you have gathered enough market intelligence, call submit_result with \
 your structured findings."""
@@ -44,14 +55,12 @@ TOOL_NAMES = [
     "search_news",
     "search_producthunt",
     "search_crunchbase",
-    "search_youtube",
-    "search_reddit",
 ]
 
 
 class MarketIntelligenceAgent(BaseAgent[MarketIntelligenceInput, MarketIntelligenceOutput]):
     name = "Market Intelligence"
-    description = "Researches market size, distribution channels, and monetization signals"
+    description = "Researches market size, growth trends, distribution channels, and funding activity"
     output_schema = MarketIntelligenceOutput
 
     def get_system_prompt(self, input_data: MarketIntelligenceInput) -> str:
@@ -61,9 +70,9 @@ class MarketIntelligenceAgent(BaseAgent[MarketIntelligenceInput, MarketIntellige
         return (
             f"Research the market opportunity for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n\n"
-            f"Estimate market size, identify distribution channels, and find "
-            f"evidence of monetization potential. Use multiple search tools "
-            f"and diverse queries."
+            f"Estimate market size (narrow to the specific niche), identify "
+            f"distribution channels, and find funding activity signals. "
+            f"Use multiple search tools and diverse queries."
         )
 
     def get_tools(self) -> list[dict[str, Any]]:

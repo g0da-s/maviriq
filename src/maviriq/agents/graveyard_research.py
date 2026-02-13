@@ -15,13 +15,21 @@ shuttered products, and warning signs in a given market. The goal is to learn \
 from past failures so the founder can avoid them.
 
 You have access to search tools. Use them strategically:
-1. Search Google for startup post-mortems, failures, and shutdowns in this space.
-2. Search Google News for recent shutdowns, pivots, and layoffs.
-3. Search Reddit for discussions about failed products and alternatives.
-4. Search Hacker News for technical discussions about startup failures.
-5. Search Twitter for real-time signals about company health.
+1. Search for post-mortems on failory.com — use queries like \
+   "site:failory.com [industry/category]" via search_web. Failory has hundreds \
+   of founder-written post-mortems with detailed failure reasons.
+2. Search Google for startup shutdowns, pivots, and "what happened to" threads.
+3. Search Google News for recent shutdowns, pivots, and layoffs.
+4. Search Reddit for discussions about failed products and alternatives.
+5. Search Hacker News for technical discussions about startup failures.
 6. Search Crunchbase for funding history and company status.
 7. Refine your queries based on what you find — chase failure stories.
+
+SEARCH TIPS:
+- Try "site:failory.com [keyword]" as one of your first searches.
+- Try "[category] startup failed", "[category] startup shutdown", "[category] post-mortem".
+- If you discover a failed company name in results, search deeper: "[name] shutdown", \
+  "[name] post-mortem", "what happened to [name]".
 
 You can call multiple search tools in a single turn for parallel execution.
 
@@ -46,7 +54,6 @@ TOOL_NAMES = [
     "search_news",
     "search_reddit",
     "search_hackernews",
-    "search_twitter",
     "search_crunchbase",
 ]
 
