@@ -20,7 +20,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "maviriq — validate your idea",
   description:
-    "4 ai agents research your startup idea and deliver a build or skip verdict",
+    "5 ai agents research your startup idea and deliver a build or skip verdict",
 };
 
 export default async function RootLayout({

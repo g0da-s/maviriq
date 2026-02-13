@@ -13,7 +13,7 @@ export default function Home() {
           </span>
         </h1>
         <p className="mt-6 text-lg text-muted">
-          4 agents research your startup idea and deliver a build or skip
+          5 agents research your startup idea and deliver a build or skip
           verdict in minutes
         </p>
 
