@@ -1,0 +1,308 @@
+# Golden test cases for Maviriq agent evaluation.
+#
+# Each case defines a business idea plus expected properties that graders
+# check against real agent output.  Start with ~25 cases spanning:
+#   - obviously_bad   : should get SKIP
+#   - saturated        : should get SKIP or MAYBE (crowded market)
+#   - niche_viable     : should get MAYBE or BUILD
+#   - obviously_good   : should get BUILD or MAYBE with high pain
+#   - already_failed   : should get SKIP, graveyard should find evidence
+#
+# Fields per case:
+#   id            – unique slug
+#   idea          – the business idea string (what the user types)
+#   category      – one of the five categories above
+#   expected_verdict – list of acceptable verdicts, first = most likely
+#   min_pain_points  – minimum pain points Pain Discovery should find
+#   min_competitors  – minimum competitors Competitor Research should find
+#   known_competitors – names that SHOULD appear (substring match)
+#   expected_saturation – expected market_saturation value(s)
+#   confidence_range   – [low, high] acceptable confidence window
+#   notes         – human rationale for the expectations
+
+cases:
+
+  # ────────────────── OBVIOUSLY BAD ──────────────────
+
+  - id: social-network-for-pets
+    idea: "A social network exclusively for pets where pets have their own profiles"
+    category: obviously_bad
+    expected_verdict: ["SKIP"]
+    min_pain_points: 0
+    min_competitors: 0
+    known_competitors: []
+    expected_saturation: ["low", "medium"]
+    confidence_range: [0.0, 0.45]
+    notes: "No real pain. Pets don't use apps. Novelty idea with no monetization path."
+
+  - id: blockchain-toothbrush
+    idea: "A blockchain-powered smart toothbrush that rewards you with crypto for brushing"
+    category: obviously_bad
+    expected_verdict: ["SKIP"]
+    min_pain_points: 0
+    min_competitors: 0
+    known_competitors: []
+    expected_saturation: ["low"]
+    confidence_range: [0.0, 0.40]
+    notes: "Solution looking for a problem. No one is asking for crypto toothbrushes."
+
+  - id: uber-for-haircuts
+    idea: "An on-demand mobile barber app where barbers come to your house"
+    category: obviously_bad
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 1
+    min_competitors: 1
+    known_competitors: []
+    expected_saturation: ["low", "medium"]
+    confidence_range: [0.0, 0.55]
+    notes: "Tried many times (Shortcut, Handsome, StyleSeat). Unit economics don't work for mobile services."
+
+  - id: ai-horoscope
+    idea: "An AI that generates personalized daily horoscopes based on your mood and activities"
+    category: obviously_bad
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 0
+    min_competitors: 2
+    known_competitors: ["Co-Star", "The Pattern"]
+    expected_saturation: ["medium", "high"]
+    confidence_range: [0.0, 0.50]
+    notes: "Crowded novelty space. Low willingness to pay. Existing apps have millions of users."
+
+  - id: nft-restaurant-reviews
+    idea: "A platform where restaurant reviews are minted as NFTs that reviewers can trade"
+    category: obviously_bad
+    expected_verdict: ["SKIP"]
+    min_pain_points: 0
+    min_competitors: 0
+    known_competitors: []
+    expected_saturation: ["low"]
+    confidence_range: [0.0, 0.35]
+    notes: "No one wants to buy restaurant review NFTs. Addresses no real problem."
+
+  # ────────────────── SATURATED MARKET ──────────────────
+
+  - id: project-management-tool
+    idea: "A project management tool for teams with kanban boards and sprint planning"
+    category: saturated
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 3
+    min_competitors: 5
+    known_competitors: ["Jira", "Asana", "Monday", "Trello", "Linear"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.50]
+    notes: "Extremely saturated. Entrenched players with massive moats."
+
+  - id: note-taking-app
+    idea: "A note-taking app with markdown support and folder organization"
+    category: saturated
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 3
+    min_competitors: 5
+    known_competitors: ["Notion", "Obsidian", "Evernote"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.50]
+    notes: "Massively crowded. Notion alone has 30M+ users."
+
+  - id: generic-crm
+    idea: "A CRM for small businesses to manage customer relationships and sales pipeline"
+    category: saturated
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 3
+    min_competitors: 5
+    known_competitors: ["Salesforce", "HubSpot", "Pipedrive"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.50]
+    notes: "One of the most competitive SaaS categories."
+
+  - id: social-media-scheduler
+    idea: "A tool to schedule and publish social media posts across multiple platforms"
+    category: saturated
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 2
+    min_competitors: 5
+    known_competitors: ["Buffer", "Hootsuite", "Later"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.50]
+    notes: "Dozens of established players. Buffer is free for basic use."
+
+  - id: email-marketing-platform
+    idea: "An email marketing platform for small businesses with templates and automation"
+    category: saturated
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 2
+    min_competitors: 5
+    known_competitors: ["Mailchimp", "ConvertKit", "SendGrid"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.50]
+    notes: "Mailchimp has 13M+ users. Extremely hard to differentiate."
+
+  # ────────────────── NICHE VIABLE ──────────────────
+
+  - id: ai-pitch-deck-generator
+    idea: "An AI-powered pitch deck generator specifically for technical founders that pulls metrics from Stripe and analytics tools"
+    category: niche_viable
+    expected_verdict: ["MAYBE", "BUILD"]
+    min_pain_points: 3
+    min_competitors: 2
+    known_competitors: ["Slidebean", "Beautiful.ai"]
+    expected_saturation: ["medium"]
+    confidence_range: [0.45, 0.85]
+    notes: "Real pain for technical founders. Existing tools are generic. Data integration is a clear differentiator."
+
+  - id: compliance-for-indie-hackers
+    idea: "Automated GDPR and privacy compliance tool specifically for solo developers and indie hackers"
+    category: niche_viable
+    expected_verdict: ["MAYBE", "BUILD"]
+    min_pain_points: 2
+    min_competitors: 2
+    known_competitors: ["Termly", "Iubenda"]
+    expected_saturation: ["medium"]
+    confidence_range: [0.40, 0.80]
+    notes: "Real pain - indie devs hate dealing with GDPR. Existing tools target enterprises."
+
+  - id: developer-portfolio-builder
+    idea: "A portfolio site builder for developers that automatically imports projects from GitHub and generates case studies"
+    category: niche_viable
+    expected_verdict: ["MAYBE", "BUILD"]
+    min_pain_points: 2
+    min_competitors: 2
+    known_competitors: []
+    expected_saturation: ["low", "medium"]
+    confidence_range: [0.40, 0.80]
+    notes: "Devs complain about portfolio building. GitHub integration is a clear hook."
+
+  - id: api-changelog-tool
+    idea: "A tool that auto-generates API changelogs and migration guides from git diffs and OpenAPI specs"
+    category: niche_viable
+    expected_verdict: ["MAYBE", "BUILD"]
+    min_pain_points: 2
+    min_competitors: 1
+    known_competitors: []
+    expected_saturation: ["low"]
+    confidence_range: [0.40, 0.80]
+    notes: "Real developer pain. Few dedicated solutions exist."
+
+  - id: ai-contract-review-freelancers
+    idea: "An AI contract review tool specifically for freelancers and contractors, not law firms"
+    category: niche_viable
+    expected_verdict: ["MAYBE", "BUILD"]
+    min_pain_points: 2
+    min_competitors: 1
+    known_competitors: []
+    expected_saturation: ["low", "medium"]
+    confidence_range: [0.40, 0.80]
+    notes: "Freelancers sign contracts constantly but can't afford lawyers. Clear underserved niche."
+
+  # ────────────────── OBVIOUSLY GOOD ──────────────────
+
+  - id: ai-code-review
+    idea: "An AI-powered code review tool that integrates with GitHub PRs and catches bugs, security issues, and style violations automatically"
+    category: obviously_good
+    expected_verdict: ["BUILD", "MAYBE"]
+    min_pain_points: 5
+    min_competitors: 3
+    known_competitors: ["CodeRabbit", "Sourcery", "Codacy"]
+    expected_saturation: ["medium"]
+    confidence_range: [0.55, 0.90]
+    notes: "Strong pain, growing market, proven willingness to pay. AI is a clear differentiator."
+
+  - id: ai-customer-support
+    idea: "An AI customer support agent that resolves L1 tickets automatically by learning from your knowledge base and past tickets"
+    category: obviously_good
+    expected_verdict: ["BUILD", "MAYBE"]
+    min_pain_points: 4
+    min_competitors: 3
+    known_competitors: ["Intercom", "Zendesk"]
+    expected_saturation: ["medium", "high"]
+    confidence_range: [0.50, 0.85]
+    notes: "Huge pain point. Companies spend millions on support. AI timing is right."
+
+  - id: saas-metrics-dashboard
+    idea: "A real-time SaaS metrics dashboard that connects to Stripe, Paddle, and billing tools to show MRR, churn, and LTV"
+    category: obviously_good
+    expected_verdict: ["BUILD", "MAYBE"]
+    min_pain_points: 3
+    min_competitors: 3
+    known_competitors: ["Baremetrics", "ChartMogul", "ProfitWell"]
+    expected_saturation: ["medium"]
+    confidence_range: [0.45, 0.80]
+    notes: "Proven category with paying customers. Every SaaS needs this."
+
+  - id: ai-sdr-outbound
+    idea: "An AI SDR tool that researches prospects, personalizes cold emails, and handles follow-ups automatically"
+    category: obviously_good
+    expected_verdict: ["BUILD", "MAYBE"]
+    min_pain_points: 4
+    min_competitors: 3
+    known_competitors: ["Apollo", "Outreach", "Instantly"]
+    expected_saturation: ["medium", "high"]
+    confidence_range: [0.50, 0.85]
+    notes: "Massive market. Strong pain. AI SDRs are the hottest category in B2B SaaS."
+
+  - id: ai-docs-from-code
+    idea: "An AI tool that generates and maintains API documentation automatically from source code and keeps it in sync"
+    category: obviously_good
+    expected_verdict: ["BUILD", "MAYBE"]
+    min_pain_points: 4
+    min_competitors: 2
+    known_competitors: ["Mintlify", "ReadMe"]
+    expected_saturation: ["medium"]
+    confidence_range: [0.50, 0.85]
+    notes: "Every developer hates writing docs. Strong pain, growing category."
+
+  # ────────────────── ALREADY FAILED ──────────────────
+
+  - id: quibi-mobile-video
+    idea: "A premium short-form video streaming platform with Hollywood-quality content designed exclusively for mobile viewing"
+    category: already_failed
+    expected_verdict: ["SKIP"]
+    min_pain_points: 0
+    min_competitors: 3
+    known_competitors: ["YouTube", "TikTok", "Netflix"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.40]
+    notes: "Quibi raised $1.75B and failed in 6 months. No one wants to pay for mobile-only video."
+
+  - id: juicero-smart-juicer
+    idea: "A smart countertop juicer with a subscription for pre-packaged juice pods delivered weekly"
+    category: already_failed
+    expected_verdict: ["SKIP"]
+    min_pain_points: 0
+    min_competitors: 0
+    known_competitors: []
+    expected_saturation: ["low"]
+    confidence_range: [0.0, 0.35]
+    notes: "Juicero raised $120M and became a cautionary tale. Pods could be squeezed by hand."
+
+  - id: google-plus-social
+    idea: "A new social network focused on interest-based circles where you share content with specific groups of friends"
+    category: already_failed
+    expected_verdict: ["SKIP"]
+    min_pain_points: 1
+    min_competitors: 5
+    known_competitors: ["Facebook", "Discord", "Reddit"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.40]
+    notes: "Google+ failed despite Google's resources. Network effects make this near-impossible."
+
+  - id: meal-kit-delivery
+    idea: "A meal kit delivery service with pre-portioned ingredients and step-by-step recipe cards"
+    category: already_failed
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 2
+    min_competitors: 3
+    known_competitors: ["HelloFresh", "Blue Apron"]
+    expected_saturation: ["high"]
+    confidence_range: [0.0, 0.45]
+    notes: "Blue Apron went from $3B to near-bankruptcy. High churn, brutal unit economics."
+
+  - id: office-space-marketplace
+    idea: "A marketplace for renting flexible office spaces and coworking desks by the hour or day"
+    category: already_failed
+    expected_verdict: ["SKIP", "MAYBE"]
+    min_pain_points: 2
+    min_competitors: 3
+    known_competitors: ["WeWork", "Regus"]
+    expected_saturation: ["medium", "high"]
+    confidence_range: [0.0, 0.50]
+    notes: "WeWork's implosion showed the economics are brutal. Many startups tried and failed."

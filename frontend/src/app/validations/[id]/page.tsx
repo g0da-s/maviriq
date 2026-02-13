@@ -223,19 +223,17 @@ export default function ValidationPage() {
         <h1 className="font-display text-3xl font-bold leading-tight">{run.idea}</h1>
 
         {s && (
-          <div className="mt-5 flex items-start gap-5 rounded-2xl border border-card-border bg-card px-6 py-5">
-            <div className="flex flex-col items-center shrink-0">
-              <span className={`font-display text-5xl font-bold ${
-                Math.round(s.confidence * 100) >= 70 ? "text-build" :
-                Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
-              }`}>
-                {Math.round(s.confidence * 100)}<span className="text-2xl">%</span>
-              </span>
-              <div className="mt-3">
-                <VerdictBadge verdict={s.verdict} size="md" />
-              </div>
+          <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-8 text-center">
+            <span className={`font-display text-6xl font-bold ${
+              Math.round(s.confidence * 100) >= 70 ? "text-build" :
+              Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
+            }`}>
+              {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
+            </span>
+            <div className="mt-3">
+              <VerdictBadge verdict={s.verdict} size="md" />
             </div>
-            <p className="mt-1 text-sm text-muted leading-relaxed">
+            <p className="mx-auto mt-5 max-w-2xl text-sm text-muted leading-relaxed">
               {s.one_line_summary}
             </p>
           </div>

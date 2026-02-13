@@ -54,3 +54,6 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Eval results (contain full LLM outputs, can be large)
+tests/evals/results/eval_*.json
