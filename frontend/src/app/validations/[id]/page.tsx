@@ -15,6 +15,40 @@ import { MarketIntelligence } from "@/components/market-intelligence";
 import { GraveyardResearch } from "@/components/graveyard-research";
 import { Viability } from "@/components/viability";
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const sourceLabels: Record<string, { label: string; color: string }> = {
+  reddit: { label: "Reddit", color: "border-orange-500/30 text-orange-400" },
+  hackernews: { label: "Hacker News", color: "border-amber-500/30 text-amber-400" },
+  twitter: { label: "X / Twitter", color: "border-sky-500/30 text-sky-400" },
+  youtube: { label: "YouTube", color: "border-red-500/30 text-red-400" },
+  google_news: { label: "News", color: "border-blue-500/30 text-blue-400" },
+  producthunt: { label: "Product Hunt", color: "border-orange-400/30 text-orange-300" },
+  google: { label: "Google", color: "border-blue-500/30 text-blue-400" },
+  g2: { label: "G2", color: "border-orange-500/30 text-orange-400" },
+  capterra: { label: "Capterra", color: "border-teal-500/30 text-teal-400" },
+  crunchbase: { label: "Crunchbase", color: "border-indigo-500/30 text-indigo-400" },
+};
+
+function SourceBadge({ source }: { source: string }) {
+  const key = source.toLowerCase().replace(/\s+/g, "");
+  const info = sourceLabels[key];
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${info?.color ?? "border-white/10 text-muted/60"}`}>
+      {info?.label ?? source}
+    </span>
+  );
+}
+
+const effortColor = { low: "text-build", medium: "text-maybe", high: "text-skip" };
+
 export default function ValidationPage() {
   const { id } = useParams<{ id: string }>();
   const [run, setRun] = useState<ValidationRun | null>(null);
@@ -164,7 +198,7 @@ export default function ValidationPage() {
   const comp = run.competitor_research;
   const mktIntel = run.market_intelligence;
   const graveyard = run.graveyard_research;
-  const via = run.viability;  // old runs only
+  const via = run.viability;
 
   const avgSeverity = pain && pain.pain_points.length > 0
     ? (pain.pain_points.reduce((sum, p) => sum + p.pain_severity, 0) / pain.pain_points.length)
@@ -291,66 +325,9 @@ export default function ValidationPage() {
         )}
       </div>
 
-      {/* ═══ 3. THE EVIDENCE ═══ */}
-      <div className="mt-14">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-6">
-          the evidence
-        </p>
-
-        {/* — The Pain — */}
-        {pain && (
-          <div className="mb-12">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
-              the pain
-            </h2>
-            <PainPoints data={pain} />
-          </div>
-        )}
-
-        {/* — The Competition — */}
-        {comp && (
-          <div className="mb-12">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
-              the competition
-            </h2>
-            <Competitors data={comp} />
-          </div>
-        )}
-
-        {/* — The Market — */}
-        {mktIntel && (
-          <div className="mb-12">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
-              the market
-            </h2>
-            <MarketIntelligence data={mktIntel} />
-          </div>
-        )}
-
-        {/* — The Graveyard — */}
-        {graveyard && graveyard.previous_attempts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
-              the graveyard
-            </h2>
-            <GraveyardResearch data={graveyard} />
-          </div>
-        )}
-
-        {/* legacy viability for old runs without market intel */}
-        {!mktIntel && via && (
-          <div className="mb-12">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-4">
-              viability analysis
-            </h2>
-            <Viability data={via} />
-          </div>
-        )}
-      </div>
-
-      {/* ═══ 4. STRENGTHS vs RISKS ═══ */}
+      {/* ═══ 3. STRENGTHS vs RISKS ═══ */}
       {s && (s.key_strengths.length > 0 || s.key_risks.length > 0) && (
-        <div className="mt-2 grid gap-4 sm:grid-cols-2">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {s.key_strengths.length > 0 && (
             <div className="rounded-2xl border border-build/20 bg-build/5 p-5">
               <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-3">
@@ -384,14 +361,208 @@ export default function ValidationPage() {
         </div>
       )}
 
+      {/* ═══ 4. THE RESEARCH — curated highlights ═══ */}
+      <div className="mt-14">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-6">
+          the research
+        </p>
+
+        {/* — The Pain — */}
+        {pain && (
+          <div className="mb-10">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-3">
+              the pain
+            </h2>
+            <p className="text-sm text-muted leading-relaxed mb-4">{pain.pain_summary}</p>
+            {pain.pain_points.length > 0 && (
+              <div className="space-y-2">
+                {pain.pain_points.slice(0, 3).map((pp, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
+                    <div className="flex shrink-0 items-center gap-0.5 mt-0.5">
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <div
+                          key={j}
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            j < pp.pain_severity ? "bg-skip" : "bg-white/10"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground/90 italic">&ldquo;{pp.quote}&rdquo;</p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted/50">
+                        {pp.source_url && isSafeUrl(pp.source_url) ? (
+                          <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
+                            <SourceBadge source={pp.source} />
+                          </a>
+                        ) : (
+                          <SourceBadge source={pp.source} />
+                        )}
+                        {pp.author_context && <span>{pp.author_context}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* — The Competition — */}
+        {comp && (
+          <div className="mb-10">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-3">
+              the competition
+            </h2>
+            {/* stat bar */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="rounded-xl border border-card-border bg-white/[0.02] p-3 text-center">
+                <p className="text-xs text-muted/60">saturation</p>
+                <p className={`mt-1 font-display font-bold ${
+                  comp.market_saturation === "high" ? "text-skip" :
+                  comp.market_saturation === "medium" ? "text-maybe" : "text-build"
+                }`}>
+                  {comp.market_saturation}
+                </p>
+              </div>
+              <div className="rounded-xl border border-card-border bg-white/[0.02] p-3 text-center">
+                <p className="text-xs text-muted/60">avg price</p>
+                <p className="mt-1 font-display font-bold">{comp.avg_price_point}</p>
+              </div>
+              <div className="rounded-xl border border-card-border bg-white/[0.02] p-3 text-center">
+                <p className="text-xs text-muted/60">competitors</p>
+                <p className="mt-1 font-display font-bold">{comp.competitors.length}</p>
+              </div>
+            </div>
+            {/* compact competitor list */}
+            {comp.competitors.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {comp.competitors.map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {c.url && isSafeUrl(c.url) ? (
+                          <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:underline truncate">
+                            {c.name}<span className="ml-1 text-muted/40 text-xs">↗</span>
+                          </a>
+                        ) : (
+                          <p className="text-sm font-medium truncate">{c.name}</p>
+                        )}
+                        <span className="text-xs text-muted/40 truncate hidden sm:inline">{c.one_liner}</span>
+                      </div>
+                    </div>
+                    {c.pricing.length > 0 && (
+                      <span className="shrink-0 text-xs text-muted/60">{c.pricing[0].price}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* underserved needs */}
+            {comp.underserved_needs.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs text-muted/40 self-center mr-1">gaps:</span>
+                {comp.underserved_needs.map((need, i) => (
+                  <span key={i} className="rounded-full border border-build/20 bg-build/5 px-3 py-1 text-xs text-build">
+                    {need}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* — The Market — */}
+        {mktIntel && (
+          <div className="mb-10">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-3">
+              the market
+            </h2>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="rounded-xl border border-card-border bg-white/[0.02] p-3">
+                <p className="text-xs text-muted/60 mb-1">market size</p>
+                <p className="font-display font-bold text-sm">{mktIntel.market_size_estimate}</p>
+              </div>
+              <div className="rounded-xl border border-card-border bg-white/[0.02] p-3">
+                <p className="text-xs text-muted/60 mb-1">growth</p>
+                <p className={`font-display font-bold ${
+                  mktIntel.growth_direction === "growing" ? "text-build" :
+                  mktIntel.growth_direction === "stable" ? "text-maybe" :
+                  mktIntel.growth_direction === "shrinking" ? "text-skip" : "text-muted"
+                }`}>
+                  {mktIntel.growth_direction}
+                </p>
+              </div>
+            </div>
+            {mktIntel.distribution_channels.length > 0 && (
+              <div className="space-y-2">
+                {mktIntel.distribution_channels.map((ch, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg border border-card-border bg-white/[0.02] p-3">
+                    <div>
+                      <p className="text-sm font-medium">{ch.channel}</p>
+                      <p className="text-xs text-muted/50">{ch.reach_estimate}</p>
+                    </div>
+                    <span className={`text-xs ${effortColor[ch.effort]}`}>
+                      {ch.effort} effort
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* — The Graveyard — */}
+        {graveyard && graveyard.previous_attempts.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-3">
+              the graveyard
+            </h2>
+            <div className="space-y-2 mb-4">
+              {graveyard.previous_attempts.map((attempt, i) => (
+                <div key={i} className="rounded-lg border border-card-border bg-white/[0.02] p-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{attempt.name}</p>
+                    {attempt.year && (
+                      <span className="text-xs text-muted/40">{attempt.year}</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted/60">{attempt.what_they_did}</p>
+                  <p className="mt-1 text-xs text-skip/80">Shut down: {attempt.shutdown_reason}</p>
+                </div>
+              ))}
+            </div>
+            {graveyard.failure_reasons.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs text-muted/40 self-center mr-1">why they failed:</span>
+                {graveyard.failure_reasons.map((reason, i) => (
+                  <span key={i} className="rounded-full border border-skip/20 bg-skip/5 px-3 py-1 text-xs text-skip/80">
+                    {reason}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* legacy viability for old runs */}
+        {!mktIntel && via && (
+          <div className="mb-10">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted/60 mb-3">
+              viability analysis
+            </h2>
+            <Viability data={via} />
+          </div>
+        )}
+      </div>
+
       {/* ═══ 5. ACTION PLAN ═══ */}
       {s && (
-        <div className="mt-14">
+        <div className="mt-4">
           <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-6">
             action plan
           </p>
 
-          {/* target user + market size */}
           <div className="grid gap-3 sm:grid-cols-2 mb-4">
             <div className="rounded-xl border border-card-border bg-card p-4">
               <p className="text-xs text-muted/60 mb-1">target user</p>
@@ -403,7 +574,6 @@ export default function ValidationPage() {
             </div>
           </div>
 
-          {/* what to build first */}
           {s.recommended_mvp && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
               <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
@@ -413,7 +583,6 @@ export default function ValidationPage() {
             </div>
           )}
 
-          {/* differentiation strategy */}
           {s.differentiation_strategy && (
             <div className="mb-4 rounded-2xl border border-build/20 bg-build/5 p-6">
               <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-2">
@@ -423,7 +592,6 @@ export default function ValidationPage() {
             </div>
           )}
 
-          {/* lessons from failures */}
           {s.lessons_from_failures && (
             <div className="mb-4 rounded-2xl border border-skip/20 bg-skip/5 p-6">
               <p className="text-xs font-medium uppercase tracking-wider text-skip/70 mb-2">
@@ -439,7 +607,6 @@ export default function ValidationPage() {
             </div>
           )}
 
-          {/* next steps */}
           {s.next_steps.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-6">
               <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
@@ -460,20 +627,45 @@ export default function ValidationPage() {
         </div>
       )}
 
-      {/* ═══ 6. FULL REASONING (collapsed) ═══ */}
-      {s && (
-        <div className="mt-14">
-          <DetailSection title="full reasoning">
-            <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
-            {s.recommended_positioning && (
-              <div className="mt-4 pt-4 border-t border-card-border">
-                <p className="text-xs text-muted/60 mb-1">recommended positioning</p>
-                <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
-              </div>
-            )}
-          </DetailSection>
+      {/* ═══ 6. DETAILED RESEARCH — full data for power users ═══ */}
+      <div className="mt-14">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted/40 mb-4">
+          detailed research
+        </p>
+        <div className="space-y-3">
+          {s && (
+            <DetailSection title="full reasoning">
+              <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
+              {s.recommended_positioning && (
+                <div className="mt-4 pt-4 border-t border-card-border">
+                  <p className="text-xs text-muted/60 mb-1">recommended positioning</p>
+                  <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
+                </div>
+              )}
+            </DetailSection>
+          )}
+          {pain && (
+            <DetailSection title="pain & user discovery">
+              <PainPoints data={pain} />
+            </DetailSection>
+          )}
+          {comp && (
+            <DetailSection title="competitor research">
+              <Competitors data={comp} />
+            </DetailSection>
+          )}
+          {mktIntel && (
+            <DetailSection title="market intelligence">
+              <MarketIntelligence data={mktIntel} />
+            </DetailSection>
+          )}
+          {graveyard && (
+            <DetailSection title="graveyard research">
+              <GraveyardResearch data={graveyard} />
+            </DetailSection>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
