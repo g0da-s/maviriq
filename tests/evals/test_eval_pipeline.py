@@ -166,9 +166,14 @@ class TestEvalSuite:
             cases=cases,
         )
 
-        for case in cases:
-            print(f"\n--- {case.id} ({case.category}) ---")
+        for case_idx, case in enumerate(cases):
+            print(f"\n--- {case.id} ({case.category}) [{case_idx+1}/{len(cases)}] ---")
             case_trials: list[TrialResult] = []
+
+            # Pause between cases to stay within API rate limits
+            if case_idx > 0:
+                print("  Cooling down 60s for rate limit...")
+                await asyncio.sleep(60)
 
             for trial_num in range(1, num_trials + 1):
                 print(f"  Trial {trial_num}/{num_trials}...")
@@ -315,7 +320,6 @@ def _print_trial_results(case: GoldenCase, trial: TrialResult) -> None:
         verdict = v.value if hasattr(v, "value") else str(v)
         print(f"\nVERDICT: {verdict} (confidence: {trial.synthesis.confidence:.2f})")
         print(f"Summary: {trial.synthesis.one_line_summary}")
-        print(f"Opportunity score: {trial.synthesis.opportunity_score:.2f}")
 
     print(f"\nGRADES ({len(trial.grades)} total):")
     for g in trial.grades:

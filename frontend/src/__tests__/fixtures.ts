@@ -49,7 +49,6 @@ export const mockPainDiscovery: PainDiscoveryOutput = {
   },
   pain_summary: "Meeting scheduling is a significant pain point for tech professionals.",
   search_queries_used: ["meeting scheduling pain", "calendar management frustration"],
-  data_quality: "full",
 };
 
 export const mockCompetitorResearch: CompetitorResearchOutput = {
@@ -79,7 +78,6 @@ export const mockCompetitorResearch: CompetitorResearchOutput = {
   avg_price_point: "$12/mo",
   common_complaints: ["Too expensive", "Poor integration"],
   underserved_needs: ["AI-powered scheduling", "Team coordination"],
-  data_quality: "full",
 };
 
 export const mockViability: ViabilityOutput = {

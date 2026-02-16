@@ -28,77 +28,69 @@ function SourceBadge({ source }: { source: string }) {
   );
 }
 
+const wtpLabel = {
+  high: "Willing to pay a lot",
+  medium: "Willing to pay some",
+  low: "Price sensitive",
+};
+
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   return (
-    <div className="space-y-5">
-      {/* summary */}
-      <p className="text-sm text-muted leading-relaxed">{data.pain_summary}</p>
-
-      {/* target user */}
-      <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-2">
-          primary target user
+    <div className="space-y-6">
+      {/* target user — who has this pain */}
+      <div className="rounded-xl border border-card-border bg-card p-5">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
+          Who has this pain?
         </p>
-        <p className="font-display font-semibold">{data.primary_target_user.label}</p>
-        <p className="mt-1 text-sm text-muted">{data.primary_target_user.description}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/5 px-3 py-0.5 text-xs text-muted">
-            willingness to pay: {data.primary_target_user.willingness_to_pay}
-          </span>
-          <span className="rounded-full bg-white/5 px-3 py-0.5 text-xs text-muted">
-            frequency: {data.primary_target_user.frequency}
-          </span>
+        <p className="font-display text-base font-semibold text-foreground/90">{data.primary_target_user.label}</p>
+        <p className="mt-1.5 text-sm text-foreground/70">{data.primary_target_user.description}</p>
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
+          <span>{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
+          <span className="text-muted/30">|</span>
+          <span>Frequency: {data.primary_target_user.frequency}x</span>
         </div>
       </div>
 
-      {/* pain points */}
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-          pain points ({data.pain_points.length})
-        </p>
-        <div className="space-y-3">
-          {data.pain_points.slice(0, 5).map((pp, i) => (
-            <div key={i} className="rounded-xl border border-card-border bg-white/[0.02] p-4">
-              <div className="flex items-start justify-between gap-4">
-                <p className="text-sm text-foreground/90 italic">&ldquo;{pp.quote}&rdquo;</p>
-                <div className="flex shrink-0 items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <div
-                      key={j}
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        j < pp.pain_severity ? "bg-skip" : "bg-white/10"
-                      }`}
-                    />
-                  ))}
+      {/* pain points — evidence quotes */}
+      {data.pain_points.length > 0 && (
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
+            What people are saying ({data.pain_points.length} quotes found)
+          </p>
+          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
+            {data.pain_points.slice(0, 5).map((pp, i) => (
+              <div key={i} className="px-5 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-sm text-foreground/90 italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
+                  <div className="flex shrink-0 items-center gap-0.5 mt-1">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <div
+                        key={j}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          j < pp.pain_severity ? "bg-skip" : "bg-white/10"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
+                  {pp.source_url && isSafeUrl(pp.source_url) ? (
+                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
+                      <SourceBadge source={pp.source} />
+                    </a>
+                  ) : (
+                    <SourceBadge source={pp.source} />
+                  )}
+                  {pp.author_context && (
+                    <>
+                      <span>&middot;</span>
+                      <span>{pp.author_context}</span>
+                    </>
+                  )}
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted/60">
-                {pp.source_url && isSafeUrl(pp.source_url) ? (
-                  <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
-                    <SourceBadge source={pp.source} />
-                  </a>
-                ) : (
-                  <SourceBadge source={pp.source} />
-                )}
-                {pp.author_context && (
-                  <>
-                    <span>&middot;</span>
-                    <span>{pp.author_context}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* sources searched */}
-      {data.pain_points.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted/40 mr-1">sources:</span>
-          {[...new Set(data.pain_points.map((p) => p.source))].map((src) => (
-            <SourceBadge key={src} source={src} />
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -106,13 +98,18 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {data.user_segments.length > 1 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            user segments ({data.user_segments.length})
+            Other user groups affected
           </p>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.user_segments.map((seg, i) => (
-              <div key={i} className="rounded-lg border border-card-border bg-white/[0.02] p-3">
-                <p className="text-sm font-medium">{seg.label}</p>
-                <p className="mt-1 text-xs text-muted/60">wtp: {seg.willingness_to_pay}</p>
+              <div key={i} className="flex items-center justify-between px-5 py-3.5">
+                <div>
+                  <p className="text-sm font-medium text-foreground/90">{seg.label}</p>
+                  <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
+                </div>
+                <span className="text-xs text-muted/60 shrink-0 ml-4">
+                  {wtpLabel[seg.willingness_to_pay]}
+                </span>
               </div>
             ))}
           </div>

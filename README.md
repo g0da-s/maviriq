@@ -183,7 +183,6 @@ frontend/src/
 
 ### Bias and Fairness
 - LLM verdicts may carry biases from Claude's training data. The system is designed as a research accelerator, not a definitive business oracle. Users should treat verdicts as starting points for further investigation, not final decisions.
-- The "data_quality" flag on each agent's output makes it transparent when insufficient evidence was found, so users know when the verdict is based on limited data.
 
 ### Content Moderation
 - Input validation includes profanity blocking, gibberish detection, and an LLM coherence check to prevent misuse of the system and ensure meaningful outputs.

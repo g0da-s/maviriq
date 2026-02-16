@@ -130,4 +130,3 @@ class TestGraveyardResearchOutputSerialization:
         assert len(restored.previous_attempts) == len(sample_graveyard_research.previous_attempts)
         assert restored.lessons_learned == sample_graveyard_research.lessons_learned
         assert len(restored.churn_signals) == len(sample_graveyard_research.churn_signals)
-        assert len(restored.competitor_health_signals) == len(sample_graveyard_research.competitor_health_signals)

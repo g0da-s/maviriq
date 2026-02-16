@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 _RETRY_POLICY = dict(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(min=1, max=10),
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(min=2, max=120),
     retry=retry_if_exception_type((APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)),
     before_sleep=before_sleep_log(logger, logging.WARNING),
 )
@@ -115,6 +115,11 @@ class LLMService:
         )
         return result.items
 
+    @retry(**_RETRY_POLICY)
+    async def _invoke_with_retry(self, model: Any, messages: list) -> AIMessage:
+        """Invoke a model with retry logic for rate limits."""
+        return await model.ainvoke(messages)
+
     async def run_tool_loop(
         self,
         system_prompt: str,
@@ -159,9 +164,9 @@ class LLMService:
                 forced_model = self.model.bind_tools(
                     [submit_tool], tool_choice=SUBMIT_TOOL_NAME
                 )
-                response: AIMessage = await forced_model.ainvoke(messages)
+                response: AIMessage = await self._invoke_with_retry(forced_model, messages)
             else:
-                response = await model_with_tools.ainvoke(messages)
+                response = await self._invoke_with_retry(model_with_tools, messages)
 
             messages.append(response)
 
@@ -170,7 +175,7 @@ class LLMService:
                 forced_model = self.model.bind_tools(
                     [submit_tool], tool_choice=SUBMIT_TOOL_NAME
                 )
-                forced_response: AIMessage = await forced_model.ainvoke(messages)
+                forced_response: AIMessage = await self._invoke_with_retry(forced_model, messages)
                 messages.append(forced_response)
                 if forced_response.tool_calls:
                     response = forced_response

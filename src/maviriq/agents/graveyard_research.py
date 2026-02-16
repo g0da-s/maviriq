@@ -40,10 +40,7 @@ EXTRACTION RULES:
 - Summarize lessons learned: what must the founder do differently?
 - Identify churn signals: evidence that users leave existing products. \
   Rate severity as "high", "medium", or "low".
-- Identify competitor health signals: evidence about whether existing players \
-  are thriving or struggling. Direction: "positive", "negative", or "neutral".
-- If no failed startups found, set data_quality to "partial" and note that \
-  the space may be untested.
+- If no failed startups found, that's a valid finding — the space may be untested.
 - Do NOT fabricate failed startups. Only report what you find in the data.
 
 When you have gathered enough failure intelligence, call submit_result with \
@@ -70,8 +67,8 @@ class GraveyardResearchAgent(BaseAgent[GraveyardResearchInput, GraveyardResearch
         return (
             f"Research failed startups and warning signs for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n\n"
-            f"Find post-mortems, shutdowns, pivots, churn signals, and competitor "
-            f"health indicators. Use multiple search tools and diverse queries."
+            f"Find post-mortems, shutdowns, pivots, and churn signals. "
+            f"Use multiple search tools and diverse queries."
         )
 
     def get_tools(self) -> list[dict[str, Any]]:

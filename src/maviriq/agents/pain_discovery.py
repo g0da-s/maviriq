@@ -66,7 +66,6 @@ USER SEGMENTS:
 WHEN EVIDENCE IS THIN:
 - If the idea addresses no real problem, it is OK to find few or zero pain \
   points. Do NOT stretch weak signals or fabricate pain points to fill a quota.
-- Set data_quality to "partial" if fewer than 5 real pain points found.
 - The pain_summary should honestly state the lack of evidence if that's the case.
 
 When you have gathered enough evidence (aim for 5-15 pain points across multiple \

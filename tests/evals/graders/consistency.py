@@ -85,40 +85,9 @@ def grade_confidence_consistency(trials: list[TrialResult]) -> GradeResult:
     )
 
 
-def grade_opportunity_score_consistency(trials: list[TrialResult]) -> GradeResult:
-    """Check that opportunity scores are consistent across trials."""
-    scores = []
-    for t in trials:
-        if t.synthesis is None:
-            continue
-        scores.append(t.synthesis.opportunity_score)
-
-    if len(scores) < 2:
-        return GradeResult(
-            grader="consistency:opportunity_score",
-            agent="synthesis",
-            passed=True,
-            score=1.0,
-            details="Fewer than 2 trials — can't check consistency",
-        )
-
-    spread = max(scores) - min(scores)
-    passed = spread <= 0.30
-    score = max(0.0, 1.0 - spread / 0.5)
-
-    return GradeResult(
-        grader="consistency:opportunity_score",
-        agent="synthesis",
-        passed=passed,
-        score=score,
-        details=f"Opportunity scores: {[f'{s:.2f}' for s in scores]} (spread: {spread:.2f})",
-    )
-
-
 def run_consistency_graders(trials: list[TrialResult]) -> list[GradeResult]:
     """Run all consistency graders on a set of trials for the same case."""
     return [
         grade_verdict_consistency(trials),
         grade_confidence_consistency(trials),
-        grade_opportunity_score_consistency(trials),
     ]

@@ -41,7 +41,6 @@ EXTRACTION RULES:
 - Extract funding signals: evidence of investment activity in this space. \
   List recent funding rounds, acquisitions, or VC interest you find on Crunchbase \
   or in news articles. These indicate market validation (or lack thereof).
-- If data is insufficient, set data_quality to "partial".
 - Do NOT fabricate data.
 
 NOTE: You do NOT need to assess monetization or pricing — the Competitor Research \

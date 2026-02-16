@@ -14,7 +14,6 @@ os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
 from maviriq.models.schemas import (
     ChurnSignal,
     Competitor,
-    CompetitorHealthSignal,
     CompetitorPricing,
     CompetitorResearchOutput,
     DistributionChannel,
@@ -144,7 +143,6 @@ def sample_pain_discovery(sample_user_segment) -> PainDiscoveryOutput:
         primary_target_user=sample_user_segment,
         pain_summary="Founders consistently struggle with pitch deck design, spending 10-20 hours on decks that still look unprofessional. Technical founders feel this most acutely.",
         search_queries_used=["pitch deck frustrating", "pitch deck hard reddit"],
-        data_quality="full",
     )
 
 
@@ -187,7 +185,6 @@ def sample_competitor_research(sample_user_segment) -> CompetitorResearchOutput:
         avg_price_point="$20-50/mo",
         common_complaints=["Templates feel generic", "AI doesn't understand startup context"],
         underserved_needs=["Data-driven decks for technical founders", "Integration with metrics dashboards"],
-        data_quality="full",
     )
 
 
@@ -226,7 +223,6 @@ def sample_market_intelligence() -> MarketIntelligenceOutput:
             "Slidebean raised $4M seed, pivoted to financial modeling tools",
         ],
         search_queries_used=["pitch deck market size", "presentation software TAM"],
-        data_quality="full",
     )
 
 
@@ -248,12 +244,7 @@ def sample_graveyard_research() -> GraveyardResearchOutput:
         churn_signals=[
             ChurnSignal(signal="Slidebean users complain about generic templates on Reddit", source="r/startups", severity="medium"),
         ],
-        competitor_health_signals=[
-            CompetitorHealthSignal(company="Beautiful.ai", signal="Raised $11M Series A", direction="positive", source="crunchbase"),
-            CompetitorHealthSignal(company="Slidebean", signal="Pivoted to financial modeling", direction="negative", source="techcrunch"),
-        ],
         search_queries_used=["pitch deck startup failed", "slidebean alternatives"],
-        data_quality="full",
     )
 
 
@@ -278,12 +269,10 @@ def sample_synthesis() -> SynthesisOutput:
         reachability_reasoning="Target users are active on r/startups, Indie Hackers, and YC communities",
         market_gap="No tool specifically builds data-focused pitch decks for technical founders",
         gap_size="medium",
-        opportunity_score=0.72,
         signals=[
             ViabilitySignal(signal="Multiple competitors with paying users", direction="positive", confidence=0.9, source="competitor_pricing"),
             ViabilitySignal(signal="Active online communities for target user", direction="positive", confidence=0.85, source="pain_discovery"),
         ],
-        risk_factors=["Established competitors with funding", "AI commoditization could erode moat"],
         # New fields
         differentiation_strategy="Focus on data-driven decks that auto-pull metrics from Stripe, Mixpanel, and Google Analytics",
         previous_attempts_summary="DeckBot (2022) tried a similar approach but was too generic and couldn't differentiate from Slidebean",

@@ -243,12 +243,52 @@ class TestGraveyardResearchAgent:
 # ──────────────────────────────────────────────
 
 class TestSynthesisAgent:
+    """Synthesis agent uses two LLM passes: viability analysis then verdict."""
+
+    @staticmethod
+    def _make_two_pass_mocks(sample_synthesis):
+        """Build mock returns for the two-pass synthesis architecture.
+
+        Pass 1 returns _ViabilityAnalysis, Pass 2 returns _VerdictStrategy.
+        We import the private schemas here so tests can construct proper mocks.
+        """
+        from maviriq.agents.synthesis import _ViabilityAnalysis, _VerdictStrategy
+
+        viability_mock = _ViabilityAnalysis(
+            people_pay=sample_synthesis.people_pay,
+            people_pay_reasoning=sample_synthesis.people_pay_reasoning,
+            reachability=sample_synthesis.reachability,
+            reachability_reasoning=sample_synthesis.reachability_reasoning,
+            market_gap=sample_synthesis.market_gap,
+            gap_size=sample_synthesis.gap_size,
+            signals=sample_synthesis.signals,
+            estimated_market_size=sample_synthesis.estimated_market_size,
+        )
+        verdict_mock = _VerdictStrategy(
+            verdict=sample_synthesis.verdict,
+            confidence=sample_synthesis.confidence,
+            one_line_summary=sample_synthesis.one_line_summary,
+            reasoning=sample_synthesis.reasoning,
+            key_strengths=sample_synthesis.key_strengths,
+            key_risks=sample_synthesis.key_risks,
+            recommended_mvp=sample_synthesis.recommended_mvp,
+            recommended_positioning=sample_synthesis.recommended_positioning,
+            target_user_summary=sample_synthesis.target_user_summary,
+            next_steps=sample_synthesis.next_steps,
+            differentiation_strategy=sample_synthesis.differentiation_strategy,
+            previous_attempts_summary=sample_synthesis.previous_attempts_summary,
+            lessons_from_failures=sample_synthesis.lessons_from_failures,
+        )
+        return viability_mock, verdict_mock
+
     @pytest.mark.asyncio
     async def test_runs_successfully(
         self, sample_pain_discovery, sample_competitor_research,
         sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
-        llm, search = make_mock_services(llm_structured_return=sample_synthesis)
+        viability_mock, verdict_mock = self._make_two_pass_mocks(sample_synthesis)
+        llm, search = make_mock_services()
+        llm.generate_structured = AsyncMock(side_effect=[viability_mock, verdict_mock])
 
         agent = SynthesisAgent(llm, search)
         result = await agent.run(
@@ -267,12 +307,16 @@ class TestSynthesisAgent:
         assert len(result.next_steps) > 0
 
     @pytest.mark.asyncio
-    async def test_no_search_calls(
+    async def test_two_pass_calls(
         self, sample_pain_discovery, sample_competitor_research,
         sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
-        """Synthesis agent should be pure LLM, no search calls."""
-        llm, search = make_mock_services(llm_structured_return=sample_synthesis)
+        """Verify synthesis makes exactly 2 LLM calls with the correct schemas."""
+        from maviriq.agents.synthesis import _ViabilityAnalysis, _VerdictStrategy
+
+        viability_mock, verdict_mock = self._make_two_pass_mocks(sample_synthesis)
+        llm, search = make_mock_services()
+        llm.generate_structured = AsyncMock(side_effect=[viability_mock, verdict_mock])
 
         agent = SynthesisAgent(llm, search)
         await agent.run(
@@ -285,7 +329,41 @@ class TestSynthesisAgent:
             )
         )
 
-        llm.generate_structured.assert_called_once()
+        assert llm.generate_structured.call_count == 2
+
+        # Pass 1 should use _ViabilityAnalysis
+        pass1_kwargs = llm.generate_structured.call_args_list[0].kwargs
+        assert pass1_kwargs["output_schema"] is _ViabilityAnalysis
+
+        # Pass 2 should use _VerdictStrategy
+        pass2_kwargs = llm.generate_structured.call_args_list[1].kwargs
+        assert pass2_kwargs["output_schema"] is _VerdictStrategy
+
+        # Pass 2 context should contain viability results
+        assert "VIABILITY ANALYSIS" in pass2_kwargs["user_prompt"]
+
+    @pytest.mark.asyncio
+    async def test_no_search_calls(
+        self, sample_pain_discovery, sample_competitor_research,
+        sample_market_intelligence, sample_graveyard_research, sample_synthesis,
+    ):
+        """Synthesis agent should be pure LLM, no search calls."""
+        viability_mock, verdict_mock = self._make_two_pass_mocks(sample_synthesis)
+        llm, search = make_mock_services()
+        llm.generate_structured = AsyncMock(side_effect=[viability_mock, verdict_mock])
+
+        agent = SynthesisAgent(llm, search)
+        await agent.run(
+            SynthesisInput(
+                idea="test",
+                pain_discovery=sample_pain_discovery,
+                competitor_research=sample_competitor_research,
+                market_intelligence=sample_market_intelligence,
+                graveyard_research=sample_graveyard_research,
+            )
+        )
+
+        assert llm.generate_structured.call_count == 2
         search.search.assert_not_called()
         search.search_reddit.assert_not_called()
 
@@ -295,7 +373,9 @@ class TestSynthesisAgent:
         sample_market_intelligence, sample_graveyard_research, sample_synthesis,
     ):
         """When verdict is BUILD, recommended_mvp should be populated."""
-        llm, search = make_mock_services(llm_structured_return=sample_synthesis)
+        viability_mock, verdict_mock = self._make_two_pass_mocks(sample_synthesis)
+        llm, search = make_mock_services()
+        llm.generate_structured = AsyncMock(side_effect=[viability_mock, verdict_mock])
 
         agent = SynthesisAgent(llm, search)
         result = await agent.run(
@@ -316,7 +396,9 @@ class TestSynthesisAgent:
         self, sample_pain_discovery, sample_competitor_research, sample_synthesis,
     ):
         """Synthesis should still work if market_intelligence and graveyard_research are None."""
-        llm, search = make_mock_services(llm_structured_return=sample_synthesis)
+        viability_mock, verdict_mock = self._make_two_pass_mocks(sample_synthesis)
+        llm, search = make_mock_services()
+        llm.generate_structured = AsyncMock(side_effect=[viability_mock, verdict_mock])
 
         agent = SynthesisAgent(llm, search)
         result = await agent.run(
@@ -328,4 +410,4 @@ class TestSynthesisAgent:
         )
 
         assert isinstance(result, SynthesisOutput)
-        llm.generate_structured.assert_called_once()
+        assert llm.generate_structured.call_count == 2

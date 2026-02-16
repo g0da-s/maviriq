@@ -56,7 +56,6 @@ class PainDiscoveryOutput(BaseModel):
     primary_target_user: UserSegment
     pain_summary: str
     search_queries_used: list[str] = []
-    data_quality: str = "full"  # "full" or "partial"
 
 
 # ──────────────────────────────────────────────
@@ -122,7 +121,6 @@ class CompetitorResearchOutput(BaseModel):
     avg_price_point: str
     common_complaints: list[str]
     underserved_needs: list[str]
-    data_quality: str = "full"
 
     @field_validator("market_saturation", mode="before")
     @classmethod
@@ -196,7 +194,6 @@ class MarketIntelligenceOutput(BaseModel):
     distribution_channels: list[DistributionChannel]
     funding_signals: list[str] = []
     search_queries_used: list[str] = []
-    data_quality: str = "full"
 
     @field_validator("growth_direction", mode="before")
     @classmethod
@@ -248,27 +245,6 @@ class ChurnSignal(BaseModel):
         return "medium"
 
 
-class CompetitorHealthSignal(BaseModel):
-    company: str
-    signal: str
-    direction: Literal["positive", "negative", "neutral"]
-    source: str
-
-    @field_validator("direction", mode="before")
-    @classmethod
-    def normalize_direction(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("positive", "negative", "neutral"):
-            return v_lower
-        if "positive" in v_lower:
-            return "positive"
-        if "negative" in v_lower:
-            return "negative"
-        return "neutral"
-
-
 class GraveyardResearchInput(BaseModel):
     idea: str
 
@@ -278,9 +254,7 @@ class GraveyardResearchOutput(BaseModel):
     failure_reasons: list[str]
     lessons_learned: str
     churn_signals: list[ChurnSignal]
-    competitor_health_signals: list[CompetitorHealthSignal]
     search_queries_used: list[str] = []
-    data_quality: str = "full"
 
 
 # ──────────────────────────────────────────────
@@ -395,9 +369,7 @@ class SynthesisOutput(BaseModel):
     reachability_reasoning: str
     market_gap: str
     gap_size: Literal["large", "medium", "small", "none"]
-    opportunity_score: float = Field(ge=0.0, le=1.0)
     signals: list[ViabilitySignal]
-    risk_factors: list[str]
 
     # New fields from new agents
     differentiation_strategy: str | None = None

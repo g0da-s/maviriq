@@ -45,7 +45,6 @@ const PainDiscoveryOutputSchema = z.object({
   primary_target_user: UserSegmentSchema,
   pain_summary: z.string(),
   search_queries_used: z.array(z.string()),
-  data_quality: z.enum(["full", "partial"]),
 });
 
 export type PainPoint = z.infer<typeof PainPointSchema>;
@@ -79,7 +78,6 @@ const CompetitorResearchOutputSchema = z.object({
   avg_price_point: z.string(),
   common_complaints: z.array(z.string()),
   underserved_needs: z.array(z.string()),
-  data_quality: z.enum(["full", "partial"]),
 });
 
 export type CompetitorPricing = z.infer<typeof CompetitorPricingSchema>;
@@ -105,7 +103,6 @@ const MarketIntelligenceOutputSchema = z.object({
   distribution_channels: z.array(DistributionChannelSchema),
   funding_signals: z.array(z.string()).default([]),
   search_queries_used: z.array(z.string()),
-  data_quality: z.enum(["full", "partial"]),
 });
 
 export type DistributionChannel = z.infer<typeof DistributionChannelSchema>;
@@ -129,26 +126,16 @@ const ChurnSignalSchema = z.object({
   severity: ChurnSeveritySchema,
 });
 
-const CompetitorHealthSignalSchema = z.object({
-  company: z.string(),
-  signal: z.string(),
-  direction: SignalDirectionSchema,
-  source: z.string(),
-});
-
 const GraveyardResearchOutputSchema = z.object({
   previous_attempts: z.array(PreviousAttemptSchema),
   failure_reasons: z.array(z.string()),
   lessons_learned: z.string(),
   churn_signals: z.array(ChurnSignalSchema),
-  competitor_health_signals: z.array(CompetitorHealthSignalSchema),
   search_queries_used: z.array(z.string()),
-  data_quality: z.enum(["full", "partial"]),
 });
 
 export type PreviousAttempt = z.infer<typeof PreviousAttemptSchema>;
 export type ChurnSignal = z.infer<typeof ChurnSignalSchema>;
-export type CompetitorHealthSignal = z.infer<typeof CompetitorHealthSignalSchema>;
 export type GraveyardResearchOutput = z.infer<typeof GraveyardResearchOutputSchema>;
 
 // ── Viability (kept for old runs) ──
@@ -196,9 +183,7 @@ const SynthesisOutputSchema = z.object({
   reachability_reasoning: z.string(),
   market_gap: z.string(),
   gap_size: GapSizeSchema,
-  opportunity_score: z.number(),
   signals: z.array(ViabilitySignalSchema),
-  risk_factors: z.array(z.string()),
   // New fields from new agents
   differentiation_strategy: z.string().nullable().optional(),
   previous_attempts_summary: z.string().nullable().optional(),

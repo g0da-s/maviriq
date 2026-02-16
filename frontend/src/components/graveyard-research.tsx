@@ -6,109 +6,78 @@ const severityColor = {
   low: "text-muted",
 };
 
-const directionIcon = {
-  positive: "+",
-  negative: "-",
-  neutral: "~",
-};
-
-const directionColor = {
-  positive: "text-build",
-  negative: "text-skip",
-  neutral: "text-maybe",
+const severityLabel = {
+  high: "High risk",
+  medium: "Medium risk",
+  low: "Low risk",
 };
 
 export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
   return (
-    <div className="space-y-5">
-      {/* previous attempts */}
+    <div className="space-y-6">
+      {/* previous attempts — timeline style */}
       {data.previous_attempts.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            previous attempts
+            Companies that tried this
           </p>
-          <div className="space-y-2">
+          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.previous_attempts.map((attempt, i) => (
-              <div key={i} className="rounded-lg border border-card-border bg-white/[0.02] p-3">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{attempt.name}</p>
+              <div key={i} className="px-5 py-4">
+                <div className="flex items-baseline gap-2 mb-1.5">
+                  <p className="text-sm font-semibold text-foreground/90">{attempt.name}</p>
                   {attempt.year && (
-                    <span className="text-xs text-muted/40">{attempt.year}</span>
+                    <span className="text-xs text-muted/50">{attempt.year}</span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-muted/60">{attempt.what_they_did}</p>
-                <p className="mt-1 text-xs text-skip/80">
-                  Shut down: {attempt.shutdown_reason}
+                <p className="text-sm text-foreground/70 mb-2">{attempt.what_they_did}</p>
+                <p className="text-sm text-skip/90">
+                  <span className="text-xs font-medium text-skip/60 uppercase">Why they failed:</span>{" "}
+                  {attempt.shutdown_reason}
                 </p>
-                <p className="mt-0.5 text-xs text-muted/40">{attempt.source}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* failure reasons */}
+      {/* failure reasons — numbered list, not red pill badges */}
       {data.failure_reasons.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            common failure reasons
+            Common reasons for failure
           </p>
-          <div className="flex flex-wrap gap-2">
-            {data.failure_reasons.map((reason, i) => (
-              <span key={i} className="rounded-full border border-skip/20 bg-skip/5 px-3 py-1 text-xs text-skip/80">
-                {reason}
-              </span>
-            ))}
+          <div className="rounded-xl border border-card-border bg-card px-5 py-4">
+            <ol className="space-y-2">
+              {data.failure_reasons.map((reason, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-skip/10 text-xs font-medium text-skip/70">
+                    {i + 1}
+                  </span>
+                  {reason}
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       )}
 
-      {/* lessons learned */}
-      {data.lessons_learned && (
-        <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
-          <p className="text-xs text-muted/60 mb-1">lessons learned</p>
-          <p className="text-sm text-muted leading-relaxed">{data.lessons_learned}</p>
-        </div>
-      )}
-
-      {/* churn signals */}
+      {/* churn signals — clean table */}
       {data.churn_signals.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            churn signals
+            Warning signs to watch for
           </p>
-          <div className="space-y-2">
+          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.churn_signals.map((sig, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
-                <span className={`font-mono text-xs font-bold ${severityColor[sig.severity]}`}>
-                  {sig.severity === "high" ? "!!!" : sig.severity === "medium" ? "!!" : "!"}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm">{sig.signal}</p>
-                  <p className="mt-0.5 text-xs text-muted/50">{sig.source}</p>
+              <div key={i} className="flex items-center justify-between px-5 py-3.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground/80">{sig.signal}</p>
+                  <p className="text-xs text-muted/40 mt-0.5">{sig.source}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* competitor health signals */}
-      {data.competitor_health_signals.length > 0 && (
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            competitor health
-          </p>
-          <div className="space-y-2">
-            {data.competitor_health_signals.map((sig, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg border border-card-border bg-white/[0.02] p-3">
-                <span className={`font-mono text-sm font-bold ${directionColor[sig.direction]}`}>
-                  {directionIcon[sig.direction]}
+                <span className={`text-xs font-medium shrink-0 ml-4 ${severityColor[sig.severity]}`}>
+                  {severityLabel[sig.severity]}
                 </span>
-                <div className="flex-1">
-                  <p className="text-sm"><span className="font-medium">{sig.company}:</span> {sig.signal}</p>
-                  <p className="mt-0.5 text-xs text-muted/50">{sig.source}</p>
-                </div>
               </div>
             ))}
           </div>

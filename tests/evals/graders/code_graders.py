@@ -81,29 +81,6 @@ def grade_pain_source_diversity(case: GoldenCase, output: Any) -> GradeResult:
     )
 
 
-def grade_pain_data_quality(case: GoldenCase, output: Any) -> GradeResult:
-    """Check that data_quality is set correctly based on evidence found."""
-    if not output:
-        return GradeResult(
-            grader="code:pain_data_quality",
-            agent="pain_discovery",
-            passed=False,
-            score=0.0,
-            details="No output",
-        )
-
-    count = len(output.pain_points)
-    expected_quality = "full" if count >= 5 else "partial"
-    actual = output.data_quality
-    passed = actual == expected_quality
-    return GradeResult(
-        grader="code:pain_data_quality",
-        agent="pain_discovery",
-        passed=passed,
-        score=1.0 if passed else 0.0,
-        details=f"data_quality='{actual}' (expected '{expected_quality}' with {count} pain points)",
-    )
-
 
 def grade_pain_has_target_user(case: GoldenCase, output: Any) -> GradeResult:
     """Check that a primary target user was identified."""
@@ -567,11 +544,11 @@ def grade_next_steps_actionable(case: GoldenCase, output: Any) -> GradeResult:
     )
 
 
-def grade_opportunity_score_aligns_with_verdict(case: GoldenCase, output: Any) -> GradeResult:
-    """Check that opportunity_score is directionally consistent with verdict."""
+def grade_confidence_aligns_with_verdict(case: GoldenCase, output: Any) -> GradeResult:
+    """Check that confidence is directionally consistent with verdict."""
     if not output:
         return GradeResult(
-            grader="code:opp_score_verdict_alignment",
+            grader="code:confidence_verdict_alignment",
             agent="synthesis",
             passed=False,
             score=0.0,
@@ -579,21 +556,21 @@ def grade_opportunity_score_aligns_with_verdict(case: GoldenCase, output: Any) -
         )
 
     verdict = output.verdict.value if hasattr(output.verdict, "value") else str(output.verdict)
-    opp = output.opportunity_score
+    conf = output.confidence
 
-    # BUILD should have high opp score, SKIP should have low
-    if verdict == "BUILD" and opp < 0.4:
+    # BUILD should have high confidence, SKIP should have low
+    if verdict == "BUILD" and conf < 0.4:
         passed = False
-        details = f"BUILD verdict but opportunity_score={opp:.2f} (< 0.4)"
-    elif verdict == "SKIP" and opp > 0.7:
+        details = f"BUILD verdict but confidence={conf:.2f} (< 0.4)"
+    elif verdict == "SKIP" and conf > 0.7:
         passed = False
-        details = f"SKIP verdict but opportunity_score={opp:.2f} (> 0.7)"
+        details = f"SKIP verdict but confidence={conf:.2f} (> 0.7)"
     else:
         passed = True
-        details = f"verdict={verdict}, opportunity_score={opp:.2f} — aligned"
+        details = f"verdict={verdict}, confidence={conf:.2f} — aligned"
 
     return GradeResult(
-        grader="code:opp_score_verdict_alignment",
+        grader="code:confidence_verdict_alignment",
         agent="synthesis",
         passed=passed,
         score=1.0 if passed else 0.0,
@@ -610,7 +587,6 @@ ALL_CODE_GRADERS = {
         grade_pain_point_count,
         grade_pain_severity_distribution,
         grade_pain_source_diversity,
-        grade_pain_data_quality,
         grade_pain_has_target_user,
     ],
     "competitor_research": [
@@ -636,7 +612,7 @@ ALL_CODE_GRADERS = {
         grade_summary_not_restating_idea,
         grade_reasoning_length,
         grade_next_steps_actionable,
-        grade_opportunity_score_aligns_with_verdict,
+        grade_confidence_aligns_with_verdict,
     ],
 }
 
