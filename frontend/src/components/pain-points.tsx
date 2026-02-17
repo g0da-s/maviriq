@@ -85,8 +85,9 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
                   {pp.source_url && isSafeUrl(pp.source_url) ? (
-                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
+                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:opacity-80">
                       <SourceBadge source={pp.source} />
+                      <span className="text-muted/40">&#8599;</span>
                     </a>
                   ) : (
                     <SourceBadge source={pp.source} />
