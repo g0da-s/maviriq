@@ -24,14 +24,6 @@ const sentimentLabel = {
 export function Competitors({ data }: { data: CompetitorResearchOutput }) {
   return (
     <div className="space-y-6">
-      {/* overview stats */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center">
-          <p className="text-sm font-semibold text-foreground mb-1">typical price</p>
-          <p className="text-sm font-semibold text-maybe lowercase">{data.avg_price_point}</p>
-        </div>
-      </div>
-
       {/* competitor cards */}
       {data.competitors.length > 0 && (
         <div>
