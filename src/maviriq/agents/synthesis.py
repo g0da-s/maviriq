@@ -215,21 +215,19 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     async def run(self, input_data: SynthesisInput) -> SynthesisOutput:
         context = self._build_research_context(input_data)
 
-        # Pass 1: Viability Analysis
+        # Pass 1: Viability Analysis (Anthropic Sonnet — better calibrated)
         viability = await self.llm.generate_structured(
             system_prompt=_VIABILITY_PROMPT,
             user_prompt=context,
             output_schema=_ViabilityAnalysis,
-            use_research_model=True,
         )
 
-        # Pass 2: Verdict & Strategy (receives research + viability results)
+        # Pass 2: Verdict & Strategy (Anthropic Sonnet)
         verdict_context = context + self._format_viability_results(viability)
         verdict = await self.llm.generate_structured(
             system_prompt=_VERDICT_PROMPT,
             user_prompt=verdict_context,
             output_schema=_VerdictStrategy,
-            use_research_model=True,
         )
 
         # Merge into final SynthesisOutput

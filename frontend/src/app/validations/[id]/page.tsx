@@ -224,7 +224,10 @@ export default function ValidationPage() {
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">pain severity</p>
             {pain.pain_points.length > 0 ? (
-              <p className="mt-1 font-display text-sm font-bold">
+              <p className={`mt-1 font-display text-sm font-bold ${
+                avgSeverity >= 3.5 ? "text-build" :
+                avgSeverity >= 2 ? "text-maybe" : "text-skip"
+              }`}>
                 {avgSeverity.toFixed(1)}<span className="text-xs text-muted/40">/5</span>
               </p>
             ) : (
