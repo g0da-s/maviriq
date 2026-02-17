@@ -222,7 +222,7 @@ export default function ValidationPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">pain severity</p>
+            <p className="text-sm font-semibold text-foreground">pain severity</p>
             {pain.pain_points.length > 0 ? (
               <p className="mt-1 font-display text-2xl font-bold">
                 {avgSeverity.toFixed(1)}<span className="text-sm text-muted/40">/5</span>
@@ -234,7 +234,7 @@ export default function ValidationPage() {
         )}
         {comp && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">competition</p>
+            <p className="text-sm font-semibold text-foreground">competition</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               comp.market_saturation === "high" ? "text-skip" :
               comp.market_saturation === "medium" ? "text-maybe" : "text-build"
@@ -245,7 +245,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">will pay?</p>
+            <p className="text-sm font-semibold text-foreground">will pay?</p>
             <p className={`mt-1 font-display text-2xl font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
               {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
@@ -253,7 +253,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">market gap</p>
+            <p className="text-sm font-semibold text-foreground">market gap</p>
             {(() => {
               const gapSize = s?.gap_size ?? via?.gap_size;
               return (
@@ -270,7 +270,7 @@ export default function ValidationPage() {
         )}
         {mktIntel && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">growth</p>
+            <p className="text-sm font-semibold text-foreground">growth</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               mktIntel.growth_direction === "growing" ? "text-build" :
               mktIntel.growth_direction === "stable" ? "text-maybe" :
@@ -282,7 +282,7 @@ export default function ValidationPage() {
         )}
         {graveyard && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-foreground/80">dead startups</p>
+            <p className="text-sm font-semibold text-foreground">dead startups</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
             }`}>
@@ -298,9 +298,10 @@ export default function ValidationPage() {
           {s.key_strengths.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-build">
               <p className="text-sm font-semibold text-foreground mb-3">why this could work</p>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {s.key_strengths.map((str, i) => (
-                  <li key={i} className="text-sm text-muted leading-relaxed">
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-muted leading-relaxed">
+                    <span className="text-build mt-1 shrink-0">&#x2022;</span>
                     {str}
                   </li>
                 ))}
@@ -310,9 +311,10 @@ export default function ValidationPage() {
           {s.key_risks.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-skip">
               <p className="text-sm font-semibold text-foreground mb-3">what could kill it</p>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {s.key_risks.map((risk, i) => (
-                  <li key={i} className="text-sm text-muted leading-relaxed">
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-muted leading-relaxed">
+                    <span className="text-skip mt-1 shrink-0">&#x2022;</span>
                     {risk}
                   </li>
                 ))}
@@ -322,78 +324,7 @@ export default function ValidationPage() {
         </div>
       )}
 
-      {/* ═══ 4. ACTION PLAN — moved up, before research ═══ */}
-      {s && (
-        <div className="mt-10">
-          <h2 className="text-lg font-semibold text-foreground mb-5">
-            What to Do Next
-          </h2>
-
-          <div className="grid gap-3 sm:grid-cols-2 mb-4">
-            <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground mb-1">target user</p>
-              <p className="text-sm text-muted">{s.target_user_summary}</p>
-            </div>
-            <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-sm font-semibold text-foreground mb-1">market size</p>
-              <p className="text-sm text-muted">{s.estimated_market_size}</p>
-            </div>
-          </div>
-
-          {s.recommended_mvp && (
-            <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-sm font-semibold text-foreground mb-2">
-                what to build first
-              </p>
-              <p className="text-sm text-muted leading-relaxed">{s.recommended_mvp}</p>
-            </div>
-          )}
-
-          {s.differentiation_strategy && (
-            <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-sm font-semibold text-foreground mb-2">
-                differentiation strategy
-              </p>
-              <p className="text-sm text-muted leading-relaxed">{s.differentiation_strategy}</p>
-            </div>
-          )}
-
-          {s.lessons_from_failures && (
-            <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-sm font-semibold text-foreground mb-2">
-                lessons from past failures
-              </p>
-              <p className="text-sm text-muted leading-relaxed">{s.lessons_from_failures}</p>
-              {s.previous_attempts_summary && (
-                <div className="mt-3 pt-3 border-t border-card-border">
-                  <p className="text-sm font-semibold text-foreground mb-1">previous attempts</p>
-                  <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {s.next_steps.length > 0 && (
-            <div className="rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-sm font-semibold text-foreground mb-3">
-                next steps
-              </p>
-              <ol className="space-y-2.5">
-                {s.next_steps.map((step, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-muted">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══ 5. THE RESEARCH — single source of truth, no duplicate section ═══ */}
+      {/* ═══ 4. THE RESEARCH ═══ */}
       <div className="mt-14">
         <h2 className="text-lg font-semibold text-foreground mb-8">
           The Research
@@ -450,6 +381,66 @@ export default function ValidationPage() {
               Viability Analysis
             </h3>
             <Viability data={via} />
+          </section>
+        )}
+
+        {/* ═══ 5. ACTION PLAN — after research so user has full context ═══ */}
+        {s && (
+          <section className="mb-12">
+            <h3 className="text-base font-semibold text-foreground mb-5">
+              What to Do Next
+            </h3>
+
+            {s.recommended_mvp && (
+              <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  what to build first
+                </p>
+                <p className="text-sm text-muted leading-relaxed">{s.recommended_mvp}</p>
+              </div>
+            )}
+
+            {s.differentiation_strategy && (
+              <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  differentiation strategy
+                </p>
+                <p className="text-sm text-muted leading-relaxed">{s.differentiation_strategy}</p>
+              </div>
+            )}
+
+            {s.lessons_from_failures && (
+              <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  lessons from past failures
+                </p>
+                <p className="text-sm text-muted leading-relaxed">{s.lessons_from_failures}</p>
+                {s.previous_attempts_summary && (
+                  <div className="mt-3 pt-3 border-t border-card-border">
+                    <p className="text-sm font-semibold text-foreground mb-1">previous attempts</p>
+                    <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {s.next_steps.length > 0 && (
+              <div className="rounded-2xl border border-card-border bg-card p-6">
+                <p className="text-sm font-semibold text-foreground mb-3">
+                  next steps
+                </p>
+                <ol className="space-y-2.5">
+                  {s.next_steps.map((step, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-muted">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </section>
         )}
 
