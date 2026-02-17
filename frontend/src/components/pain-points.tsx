@@ -59,12 +59,11 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
         <p className="text-sm font-semibold text-foreground mb-3">
           who has this pain?
         </p>
-        <p className="text-sm text-muted font-medium">{data.primary_target_user.label}</p>
-        <p className="mt-1.5 text-sm text-muted/70">{data.primary_target_user.description}</p>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted/50">
-          <span>{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
-          <span className="text-muted/30">|</span>
-          <span>frequency: {data.primary_target_user.frequency}x</span>
+        <p className="text-base font-bold text-foreground">{data.primary_target_user.label}</p>
+        <p className="mt-1.5 text-sm text-muted">{data.primary_target_user.description}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted/50">
+          <span className="rounded-full bg-white/5 px-2.5 py-0.5">{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-0.5">frequency: {data.primary_target_user.frequency}x</span>
         </div>
       </div>
 
