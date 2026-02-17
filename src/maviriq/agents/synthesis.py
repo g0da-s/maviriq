@@ -155,9 +155,28 @@ Think carefully about where THIS SPECIFIC idea falls. Different ideas should get
   Max 20 words. Focus on the key insight (e.g. "Strong pain but saturated market with \
   entrenched players makes differentiation difficult")
 - Reasoning (3-5 paragraphs, cite the data AND the viability analysis)
-- Key strengths (why BUILD) — be specific but concise. Lead with the insight, then \
-  briefly cite evidence. Don't repeat info already in the metric cards above.
-- Key risks (why SKIP or be cautious) — same: concise, insight-first, no redundancy.
+- Key strengths (why BUILD) — write these like a YC partner scribbling on a notecard. \
+  Max 15 words each. Blunt, punchy, no source citations, no parenthetical references. \
+  Don't repeat what the metric cards already show (pain severity, competition level, etc.). \
+  Focus on WHY a founder should be excited. \
+  Examples of GOOD strengths:
+    - "Devs already mass-adopting AI code — this problem grows itself"
+    - "Competitors charge $30+/mo — room for a freemium wedge"
+    - "No incumbent owns the workflow — land-grab opportunity"
+  Examples of BAD strengths (do NOT write like this):
+    - "Strong pain: AI-generated code introduces security vulnerabilities (Google News, severity 4/5)"
+    - "Willingness to pay: Established competitors with paid subscription models demonstrate customers are willing to pay"
+    - "Underserved needs: Existing solutions often lack context-awareness and are complex to configure"
+- Key risks (why SKIP or be cautious) — same YC notecard style. Max 15 words. \
+  Specific and sharp, not generic warnings. Name the competitor, name the failure mode. \
+  Examples of GOOD risks:
+    - "CodeRabbit has 2yr head start and deep GitHub integration"
+    - "Devs hate false positives — one bad week and they uninstall"
+    - "3 startups already died here — nobody cracked distribution"
+  Examples of BAD risks (do NOT write like this):
+    - "Market saturation: Several competitors already exist, including CodeRabbit, CodiumAI, and SonarQube"
+    - "False positives: Developers disable code analysis tools due to excessive false positives (Stack Overflow discussions)"
+    - "AI hype: Overestimation of AI capabilities in code review may lead to disappointment (Graveyard Research)"
 - If BUILD: recommended MVP (what to build first)
 - If BUILD: positioning (how to differentiate from competitors)
 - Target user summary (who exactly are you building for)
