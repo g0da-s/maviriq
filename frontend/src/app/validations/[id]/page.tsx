@@ -185,7 +185,7 @@ export default function ValidationPage() {
 
       {/* ═══ 1. VERDICT HERO ═══ */}
       <div className="mt-6">
-        <h1 className="font-display text-3xl font-bold leading-tight">{run.idea}</h1>
+        <h1 className="font-display text-3xl font-bold leading-tight uppercase">{run.idea}</h1>
 
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-6">
@@ -222,20 +222,20 @@ export default function ValidationPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">pain severity</p>
+            <p className="text-sm font-semibold text-foreground">pain severity</p>
             {pain.pain_points.length > 0 ? (
-              <p className="mt-1 font-display text-lg font-bold">
+              <p className="mt-1 font-display text-xs font-bold">
                 {avgSeverity.toFixed(1)}<span className="text-xs text-muted/40">/5</span>
               </p>
             ) : (
-              <p className="mt-1 font-display text-base font-bold text-muted/40">N/A</p>
+              <p className="mt-1 font-display text-xs font-bold text-muted/40">N/A</p>
             )}
           </div>
         )}
         {comp && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">competition</p>
-            <p className={`mt-1 font-display text-lg font-bold ${
+            <p className="text-sm font-semibold text-foreground">competition</p>
+            <p className={`mt-1 font-display text-xs font-bold ${
               comp.market_saturation === "high" ? "text-skip" :
               comp.market_saturation === "medium" ? "text-maybe" : "text-build"
             }`}>
@@ -245,19 +245,19 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">will pay?</p>
-            <p className={`mt-1 font-display text-lg font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
+            <p className="text-sm font-semibold text-foreground">will pay?</p>
+            <p className={`mt-1 font-display text-xs font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
               {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
           </div>
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">market gap</p>
+            <p className="text-sm font-semibold text-foreground">market gap</p>
             {(() => {
               const gapSize = s?.gap_size ?? via?.gap_size;
               return (
-                <p className={`mt-1 font-display text-lg font-bold ${
+                <p className={`mt-1 font-display text-xs font-bold ${
                   gapSize === "large" ? "text-build" :
                   gapSize === "medium" ? "text-maybe" :
                   gapSize === "small" ? "text-muted" : "text-skip"
@@ -270,8 +270,8 @@ export default function ValidationPage() {
         )}
         {mktIntel && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">growth</p>
-            <p className={`mt-1 font-display text-lg font-bold ${
+            <p className="text-sm font-semibold text-foreground">growth</p>
+            <p className={`mt-1 font-display text-xs font-bold ${
               mktIntel.growth_direction === "growing" ? "text-build" :
               mktIntel.growth_direction === "stable" ? "text-maybe" :
               mktIntel.growth_direction === "shrinking" ? "text-skip" : "text-muted"
@@ -282,8 +282,8 @@ export default function ValidationPage() {
         )}
         {graveyard && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs font-medium text-muted">dead startups</p>
-            <p className={`mt-1 font-display text-lg font-bold ${
+            <p className="text-sm font-semibold text-foreground">dead startups</p>
+            <p className={`mt-1 font-display text-xs font-bold ${
               graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
             }`}>
               {graveyard.previous_attempts.length}
@@ -432,7 +432,7 @@ export default function ValidationPage() {
                 <ol className="space-y-2.5">
                   {s.next_steps.map((step, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm text-muted">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-foreground">
                         {i + 1}
                       </span>
                       {step}
