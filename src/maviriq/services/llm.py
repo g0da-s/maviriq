@@ -259,6 +259,16 @@ class LLMService:
                 else:
                     search_calls.append(tc)
 
+            if search_calls:
+                logger.info(
+                    "Iteration %d: %d search calls [%s]",
+                    iteration + 1,
+                    len(search_calls),
+                    ", ".join(f"{tc['name']}({tc['args'].get('query', '')[:50]})" for tc in search_calls),
+                )
+            if submit_call is not None:
+                logger.info("Iteration %d: submit_result called", iteration + 1)
+
             # Execute all search calls in parallel
             if search_calls:
                 async def _exec(tc: dict) -> ToolMessage:
