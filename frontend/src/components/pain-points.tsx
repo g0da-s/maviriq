@@ -54,17 +54,41 @@ function SeverityBar({ severity }: { severity: number }) {
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   return (
     <div className="space-y-6">
-      {/* target user */}
-      <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-sm font-semibold text-foreground mb-3">
-          who has this pain?
-        </p>
-        <p className="text-base font-bold text-foreground">{data.primary_target_user.label}</p>
-        <p className="mt-1.5 text-sm text-muted">{data.primary_target_user.description}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted/50">
-          <span className="rounded-full bg-white/5 px-2.5 py-0.5">{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-0.5">frequency: {data.primary_target_user.frequency}x</span>
+      {/* who has this pain — combined target user + segments */}
+      <div className="rounded-xl border border-card-border bg-card">
+        <div className="p-5">
+          <p className="text-sm font-semibold text-foreground mb-3">
+            who has this pain?
+          </p>
+          <p className="text-base font-bold text-foreground">{data.primary_target_user.label}</p>
+          <p className="mt-1.5 text-sm text-muted">{data.primary_target_user.description}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted/50">
+            <span className="rounded-full bg-white/5 px-2.5 py-0.5">{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
+            <span className="rounded-full bg-white/5 px-2.5 py-0.5">frequency: {data.primary_target_user.frequency}x</span>
+          </div>
         </div>
+        {data.user_segments.filter(seg => seg.label !== data.primary_target_user.label).length > 0 && (
+          <div className="border-t border-card-border">
+            <div className="px-5 pt-4 pb-1">
+              <p className="text-xs font-medium text-muted/50 uppercase tracking-wider">also affected</p>
+            </div>
+            <div className="divide-y divide-card-border">
+              {data.user_segments
+                .filter(seg => seg.label !== data.primary_target_user.label)
+                .map((seg, i) => (
+                  <div key={i} className="flex items-center justify-between px-5 py-3">
+                    <div>
+                      <p className="text-sm text-foreground font-medium">{seg.label}</p>
+                      <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
+                    </div>
+                    <span className="text-xs text-muted/50 shrink-0 ml-4">
+                      {wtpLabel[seg.willingness_to_pay]}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* pain points — evidence quotes */}
@@ -98,30 +122,6 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
                     </>
                   )}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* user segments */}
-      {data.user_segments.length > 1 && (
-        <div className="rounded-xl border border-card-border bg-card">
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-sm font-semibold text-foreground">
-              other user groups affected
-            </p>
-          </div>
-          <div className="divide-y divide-card-border">
-            {data.user_segments.map((seg, i) => (
-              <div key={i} className="flex items-center justify-between px-5 py-3.5">
-                <div>
-                  <p className="text-sm text-muted font-medium">{seg.label}</p>
-                  <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
-                </div>
-                <span className="text-xs text-muted/50 shrink-0 ml-4">
-                  {wtpLabel[seg.willingness_to_pay]}
-                </span>
               </div>
             ))}
           </div>
