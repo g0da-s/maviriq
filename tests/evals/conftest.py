@@ -68,10 +68,9 @@ def require_eval_api_keys():
     Evals use real LLM + search calls, so they need real keys.
     The regular test suite uses mocks and sets dummy keys.
     """
-    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    serper_key = os.environ.get("SERPER_API_KEY", "")
+    from maviriq.config import settings
 
-    if anthropic_key in ("", "test-key"):
-        pytest.skip("Evals require a real ANTHROPIC_API_KEY")
-    if serper_key in ("", "test-key"):
+    if settings.google_api_key in ("", "test-key"):
+        pytest.skip("Evals require a real GOOGLE_API_KEY")
+    if settings.serper_api_key in ("", "test-key"):
         pytest.skip("Evals require a real SERPER_API_KEY")

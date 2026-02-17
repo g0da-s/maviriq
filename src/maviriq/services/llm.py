@@ -159,14 +159,16 @@ class LLMService:
 
         return response.content
 
-    @retry(**_ANTHROPIC_RETRY_POLICY)
     async def generate_list(
         self,
         system_prompt: str,
         user_prompt: str,
         use_cheap_model: bool = True,
     ) -> list[str]:
-        """Generate a list of strings (e.g., search queries). Uses cheap model by default."""
+        """Generate a list of strings (e.g., search queries).
+
+        Uses Gemini when available, falls back to Anthropic Haiku.
+        """
 
         class ListOutput(BaseModel):
             items: list[str]
@@ -175,6 +177,7 @@ class LLMService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             output_schema=ListOutput,
+            use_research_model=True,
             use_cheap_model=use_cheap_model,
         )
         return result.items

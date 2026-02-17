@@ -188,17 +188,19 @@ export default function ValidationPage() {
         <h1 className="font-display text-3xl font-bold leading-tight">{run.idea}</h1>
 
         {s && (
-          <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-8 text-center">
-            <span className={`font-display text-6xl font-bold ${
-              Math.round(s.confidence * 100) >= 70 ? "text-build" :
-              Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
-            }`}>
-              {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
-            </span>
-            <div className="mt-3">
-              <VerdictBadge verdict={s.verdict} size="md" />
+          <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-6">
+            <div className="flex items-center justify-between">
+              {/* Score — left */}
+              <span className={`font-display text-6xl font-bold ${
+                Math.round(s.confidence * 100) >= 70 ? "text-build" :
+                Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
+              }`}>
+                {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
+              </span>
+              {/* Verdict — right */}
+              <VerdictBadge verdict={s.verdict} size="lg" />
             </div>
-            <p className="mx-auto mt-5 max-w-2xl text-sm text-muted leading-relaxed">
+            <p className="mt-4 text-sm text-muted leading-relaxed">
               {s.one_line_summary}
             </p>
           </div>
@@ -292,14 +294,14 @@ export default function ValidationPage() {
       {s && (s.key_strengths.length > 0 || s.key_risks.length > 0) && (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {s.key_strengths.length > 0 && (
-            <div className="rounded-2xl border border-build/20 bg-build/5 p-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-build/70 mb-3">
-                strengths
-              </p>
-              <ul className="space-y-2">
+            <div className="rounded-2xl border border-card-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-build/15 text-build text-xs font-bold">+</span>
+                <p className="text-sm font-semibold text-foreground">Why this could work</p>
+              </div>
+              <ul className="space-y-3">
                 {s.key_strengths.map((str, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
-                    <span className="mt-0.5 text-build font-bold">+</span>
+                  <li key={i} className="rounded-lg bg-build/5 border border-build/10 px-3 py-2.5 text-sm text-foreground/90 leading-relaxed">
                     {str}
                   </li>
                 ))}
@@ -307,14 +309,14 @@ export default function ValidationPage() {
             </div>
           )}
           {s.key_risks.length > 0 && (
-            <div className="rounded-2xl border border-skip/20 bg-skip/5 p-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-skip/70 mb-3">
-                risks
-              </p>
-              <ul className="space-y-2">
+            <div className="rounded-2xl border border-card-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-skip/15 text-skip text-xs font-bold">!</span>
+                <p className="text-sm font-semibold text-foreground">What could kill it</p>
+              </div>
+              <ul className="space-y-3">
                 {s.key_risks.map((risk, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
-                    <span className="mt-0.5 text-skip font-bold">-</span>
+                  <li key={i} className="rounded-lg bg-skip/5 border border-skip/10 px-3 py-2.5 text-sm text-foreground/90 leading-relaxed">
                     {risk}
                   </li>
                 ))}

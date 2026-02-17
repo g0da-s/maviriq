@@ -42,7 +42,7 @@ async def _judge(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
         output_schema=JudgmentResult,
-        use_cheap_model=True,  # Use Haiku to judge Sonnet
+        use_research_model=True,  # Use Gemini Flash to avoid Anthropic rate limits/costs
     )
     return result
 
