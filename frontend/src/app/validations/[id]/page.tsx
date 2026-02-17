@@ -325,8 +325,8 @@ export default function ValidationPage() {
       {/* ═══ 4. ACTION PLAN — moved up, before research ═══ */}
       {s && (
         <div className="mt-10">
-          <h2 className="text-sm font-semibold text-foreground mb-5">
-            what to do next
+          <h2 className="text-xs uppercase tracking-wider text-muted/60 mb-5">
+            What to Do Next
           </h2>
 
           <div className="grid gap-3 sm:grid-cols-2 mb-4">
@@ -395,15 +395,15 @@ export default function ValidationPage() {
 
       {/* ═══ 5. THE RESEARCH — single source of truth, no duplicate section ═══ */}
       <div className="mt-14">
-        <h2 className="text-sm font-semibold text-foreground mb-8">
-          the research
+        <h2 className="text-xs uppercase tracking-wider text-muted/60 mb-8">
+          The Research
         </h2>
 
         {/* — The Pain — */}
         {pain && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
-              the pain
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              The Pain
             </h3>
             <p className="text-foreground/80 leading-relaxed mb-5">{pain.pain_summary}</p>
             <PainPoints data={pain} />
@@ -413,8 +413,8 @@ export default function ValidationPage() {
         {/* — The Competition — */}
         {comp && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
-              the competition
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              The Competition
             </h3>
             <Competitors data={comp} />
           </section>
@@ -423,8 +423,8 @@ export default function ValidationPage() {
         {/* — The Market — */}
         {mktIntel && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
-              the market
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              The Market
             </h3>
             <MarketIntelligence data={mktIntel} />
           </section>
@@ -433,8 +433,8 @@ export default function ValidationPage() {
         {/* — The Graveyard — */}
         {graveyard && (graveyard.previous_attempts.length > 0 || graveyard.lessons_learned) && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
-              why others failed
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              Why Others Failed
             </h3>
             {graveyard.lessons_learned && (
               <p className="text-foreground/80 leading-relaxed mb-5">{graveyard.lessons_learned}</p>
@@ -446,8 +446,8 @@ export default function ValidationPage() {
         {/* legacy viability for old runs */}
         {!mktIntel && via && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-4">
-              viability analysis
+            <h3 className="text-sm font-semibold text-foreground mb-4">
+              Viability Analysis
             </h3>
             <Viability data={via} />
           </section>

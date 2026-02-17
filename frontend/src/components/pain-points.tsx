@@ -29,33 +29,33 @@ function SourceBadge({ source }: { source: string }) {
 }
 
 const wtpLabel = {
-  high: "Willing to pay a lot",
-  medium: "Willing to pay some",
-  low: "Price sensitive",
+  high: "willing to pay a lot",
+  medium: "willing to pay some",
+  low: "price sensitive",
 };
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   return (
     <div className="space-y-6">
-      {/* target user — who has this pain */}
+      {/* target user */}
       <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-          Who has this pain?
+        <p className="text-xs text-muted/60 mb-3">
+          who has this pain?
         </p>
-        <p className="font-display text-base font-semibold text-foreground/90">{data.primary_target_user.label}</p>
+        <p className="text-sm font-semibold text-foreground/90">{data.primary_target_user.label}</p>
         <p className="mt-1.5 text-sm text-foreground/70">{data.primary_target_user.description}</p>
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
           <span>{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
           <span className="text-muted/30">|</span>
-          <span>Frequency: {data.primary_target_user.frequency}x</span>
+          <span>frequency: {data.primary_target_user.frequency}x</span>
         </div>
       </div>
 
       {/* pain points — evidence quotes */}
       {data.pain_points.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            What people are saying ({data.pain_points.length} quotes found)
+          <p className="text-xs text-muted/60 mb-3">
+            what people are saying ({data.pain_points.length} quotes found)
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.pain_points.slice(0, 5).map((pp, i) => (
@@ -97,8 +97,8 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* user segments */}
       {data.user_segments.length > 1 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            Other user groups affected
+          <p className="text-xs text-muted/60 mb-3">
+            other user groups affected
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.user_segments.map((seg, i) => (

@@ -7,19 +7,19 @@ const severityColor = {
 };
 
 const severityLabel = {
-  high: "High risk",
-  medium: "Medium risk",
-  low: "Low risk",
+  high: "high risk",
+  medium: "medium risk",
+  low: "low risk",
 };
 
 export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
   return (
     <div className="space-y-6">
-      {/* previous attempts — timeline style */}
+      {/* previous attempts */}
       {data.previous_attempts.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            Companies that tried this
+          <p className="text-xs text-muted/60 mb-3">
+            companies that tried this
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.previous_attempts.map((attempt, i) => (
@@ -31,8 +31,8 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
                   )}
                 </div>
                 <p className="text-sm text-foreground/70 mb-2">{attempt.what_they_did}</p>
-                <p className="text-sm text-skip/90">
-                  <span className="text-xs font-medium text-skip/60 uppercase">Why they failed:</span>{" "}
+                <p className="text-sm text-foreground/70">
+                  <span className="text-xs text-muted/60">why they failed:</span>{" "}
                   {attempt.shutdown_reason}
                 </p>
               </div>
@@ -41,17 +41,17 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
         </div>
       )}
 
-      {/* failure reasons — numbered list, not red pill badges */}
+      {/* failure reasons */}
       {data.failure_reasons.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            Common reasons for failure
+          <p className="text-xs text-muted/60 mb-3">
+            common reasons for failure
           </p>
           <div className="rounded-xl border border-card-border bg-card px-5 py-4">
             <ol className="space-y-2">
               {data.failure_reasons.map((reason, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-skip/10 text-xs font-medium text-skip/70">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
                     {i + 1}
                   </span>
                   {reason}
@@ -62,11 +62,11 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
         </div>
       )}
 
-      {/* churn signals — clean table */}
+      {/* churn signals */}
       {data.churn_signals.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            Warning signs to watch for
+          <p className="text-xs text-muted/60 mb-3">
+            warning signs to watch for
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.churn_signals.map((sig, i) => (

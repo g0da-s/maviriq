@@ -8,16 +8,16 @@ const growthColor = {
 };
 
 const growthLabel = {
-  growing: "Market is growing",
-  stable: "Market is stable",
-  shrinking: "Market is shrinking",
-  unknown: "Growth unknown",
+  growing: "market is growing",
+  stable: "market is stable",
+  shrinking: "market is shrinking",
+  unknown: "growth unknown",
 };
 
 const effortLabel = {
-  low: "Easy to reach",
-  medium: "Moderate effort",
-  high: "Hard to reach",
+  low: "easy to reach",
+  medium: "moderate effort",
+  high: "hard to reach",
 };
 
 const effortColor = {
@@ -29,33 +29,33 @@ const effortColor = {
 export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput }) {
   return (
     <div className="space-y-6">
-      {/* headline stats — big and clear */}
+      {/* headline stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-xs text-muted/60 mb-2">How big is this market?</p>
+          <p className="text-xs text-muted/60 mb-2">how big is this market?</p>
           <p className="font-display text-lg font-bold">{data.market_size_estimate}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-xs text-muted/60 mb-2">Is it growing?</p>
+          <p className="text-xs text-muted/60 mb-2">is it growing?</p>
           <p className={`font-display text-lg font-bold ${growthColor[data.growth_direction]}`}>
             {growthLabel[data.growth_direction]}
           </p>
         </div>
       </div>
 
-      {/* TAM reasoning — the explanation, not just a label */}
+      {/* TAM reasoning */}
       <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-          Why this size?
+        <p className="text-xs text-muted/60 mb-3">
+          why this size?
         </p>
         <p className="text-sm text-foreground/80 leading-relaxed">{data.tam_reasoning}</p>
       </div>
 
-      {/* distribution channels — clear table-like layout */}
+      {/* distribution channels */}
       {data.distribution_channels.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            How to reach customers
+          <p className="text-xs text-muted/60 mb-3">
+            how to reach customers
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.distribution_channels.map((ch, i) => (
@@ -76,8 +76,8 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {/* funding signals */}
       {data.funding_signals.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            Investor activity in this space
+          <p className="text-xs text-muted/60 mb-3">
+            investor activity in this space
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.funding_signals.map((sig, i) => (
