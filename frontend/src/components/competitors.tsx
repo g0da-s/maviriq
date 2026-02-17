@@ -28,7 +28,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground mb-1">market crowded?</p>
-          <p className={`mt-1 font-display text-lg font-bold ${
+          <p className={`text-sm font-bold ${
             data.market_saturation === "high" ? "text-skip" :
             data.market_saturation === "medium" ? "text-maybe" : "text-build"
           }`}>
@@ -38,11 +38,11 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
         </div>
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground mb-1">typical price</p>
-          <p className="mt-1 font-display text-lg font-bold">{data.avg_price_point}</p>
+          <p className="text-sm font-bold">{data.avg_price_point}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
           <p className="text-sm font-semibold text-foreground mb-1">competitors found</p>
-          <p className="mt-1 font-display text-lg font-bold">{data.competitors.length}</p>
+          <p className="text-sm font-bold">{data.competitors.length}</p>
         </div>
       </div>
 
