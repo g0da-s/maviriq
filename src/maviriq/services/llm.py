@@ -19,10 +19,24 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-_RETRY_POLICY = dict(
+_ANTHROPIC_RETRY_POLICY = dict(
     stop=stop_after_attempt(6),
     wait=wait_exponential(min=2, max=120),
     retry=retry_if_exception_type((APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
+
+# Google errors are imported lazily to avoid hard failure if the package isn't installed
+try:
+    from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable, TooManyRequests
+    _GOOGLE_RETRY_EXCEPTIONS: tuple = (ResourceExhausted, ServiceUnavailable, TooManyRequests, ConnectionError)
+except ImportError:
+    _GOOGLE_RETRY_EXCEPTIONS = (ConnectionError,)
+
+_GOOGLE_RETRY_POLICY = dict(
+    stop=stop_after_attempt(6),
+    wait=wait_exponential(min=2, max=120),
+    retry=retry_if_exception_type(_GOOGLE_RETRY_EXCEPTIONS),
     before_sleep=before_sleep_log(logger, logging.WARNING),
 )
 
@@ -49,6 +63,7 @@ def _build_submit_tool(output_schema: type[BaseModel]) -> dict[str, Any]:
 
 class LLMService:
     def __init__(self) -> None:
+        # Anthropic models — used for synthesis + cheap tasks
         self.model = ChatAnthropic(
             model=settings.reasoning_model,
             max_tokens=4096,
@@ -58,10 +73,23 @@ class LLMService:
             max_tokens=4096,
         )
 
+        # Gemini model — used for research agent tool loops
+        self.research_model = None
+        if settings.google_api_key:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            self.research_model = ChatGoogleGenerativeAI(
+                model=settings.research_model,
+                google_api_key=settings.google_api_key,
+                max_output_tokens=4096,
+            )
+            logger.info("Research agents will use Gemini (%s)", settings.research_model)
+        else:
+            logger.info("No GOOGLE_API_KEY set — research agents will use Anthropic (%s)", settings.reasoning_model)
+
     def _get_model(self, use_cheap_model: bool = False) -> ChatAnthropic:
         return self.cheap_model if use_cheap_model else self.model
 
-    @retry(**_RETRY_POLICY)
+    @retry(**_ANTHROPIC_RETRY_POLICY)
     async def generate_structured(
         self,
         system_prompt: str,
@@ -69,6 +97,7 @@ class LLMService:
         output_schema: type[T],
         use_cheap_model: bool = False,
     ) -> T:
+        """Generate structured output. Always uses Anthropic (Sonnet or Haiku)."""
         model = self._get_model(use_cheap_model)
         structured_model = model.with_structured_output(output_schema)
 
@@ -79,7 +108,7 @@ class LLMService:
 
         return result
 
-    @retry(**_RETRY_POLICY)
+    @retry(**_ANTHROPIC_RETRY_POLICY)
     async def generate_text(
         self,
         system_prompt: str,
@@ -95,7 +124,7 @@ class LLMService:
 
         return response.content
 
-    @retry(**_RETRY_POLICY)
+    @retry(**_ANTHROPIC_RETRY_POLICY)
     async def generate_list(
         self,
         system_prompt: str,
@@ -115,9 +144,14 @@ class LLMService:
         )
         return result.items
 
-    @retry(**_RETRY_POLICY)
-    async def _invoke_with_retry(self, model: Any, messages: list) -> AIMessage:
-        """Invoke a model with retry logic for rate limits."""
+    @retry(**_GOOGLE_RETRY_POLICY)
+    async def _invoke_research(self, model: Any, messages: list) -> AIMessage:
+        """Invoke the Gemini research model with Google-specific retry logic."""
+        return await model.ainvoke(messages)
+
+    @retry(**_ANTHROPIC_RETRY_POLICY)
+    async def _invoke_anthropic(self, model: Any, messages: list) -> AIMessage:
+        """Invoke an Anthropic model with Anthropic-specific retry logic."""
         return await model.ainvoke(messages)
 
     async def run_tool_loop(
@@ -131,25 +165,21 @@ class LLMService:
     ) -> T:
         """Run an agentic tool-use loop.
 
-        The model receives search tools plus an auto-generated ``submit_result``
-        tool. It decides what to search, evaluates results, and submits a final
-        structured result. Multiple tool calls per turn are executed in parallel.
-
-        Args:
-            system_prompt: System instructions for the agent.
-            user_prompt: The user task (idea + any context).
-            tools: Search tool schemas (from ``build_tools_for_agent``).
-            tool_executors: Map of tool name to async executor function.
-            output_schema: Pydantic model for the final result.
-            max_iterations: Maximum number of LLM round-trips.
-
-        Returns:
-            Validated instance of ``output_schema``.
+        Uses Gemini Flash for research when available,
+        falls back to Anthropic Sonnet if no Google API key is set.
         """
         submit_tool = _build_submit_tool(output_schema)
         all_tools = tools + [submit_tool]
 
-        model_with_tools = self.model.bind_tools(all_tools)
+        # Pick the model: Gemini for research, Anthropic as fallback
+        if self.research_model is not None:
+            base_model = self.research_model
+            invoke_fn = self._invoke_research
+        else:
+            base_model = self.model
+            invoke_fn = self._invoke_anthropic
+
+        model_with_tools = base_model.bind_tools(all_tools)
 
         messages: list = [
             SystemMessage(content=system_prompt),
@@ -161,21 +191,21 @@ class LLMService:
 
             # On last iteration, force the model to call submit_result
             if iteration == max_iterations - 1:
-                forced_model = self.model.bind_tools(
+                forced_model = base_model.bind_tools(
                     [submit_tool], tool_choice=SUBMIT_TOOL_NAME
                 )
-                response: AIMessage = await self._invoke_with_retry(forced_model, messages)
+                response: AIMessage = await invoke_fn(forced_model, messages)
             else:
-                response = await self._invoke_with_retry(model_with_tools, messages)
+                response = await invoke_fn(model_with_tools, messages)
 
             messages.append(response)
 
             # No tool calls — force submit on next turn
             if not response.tool_calls:
-                forced_model = self.model.bind_tools(
+                forced_model = base_model.bind_tools(
                     [submit_tool], tool_choice=SUBMIT_TOOL_NAME
                 )
-                forced_response: AIMessage = await self._invoke_with_retry(forced_model, messages)
+                forced_response: AIMessage = await invoke_fn(forced_model, messages)
                 messages.append(forced_response)
                 if forced_response.tool_calls:
                     response = forced_response
@@ -230,6 +260,6 @@ class LLMService:
 
         # Absolute fallback: use structured output to force a result
         logger.warning("Tool loop exhausted %d iterations, using structured output fallback", max_iterations)
-        structured_model = self.model.with_structured_output(output_schema)
-        result = await structured_model.ainvoke(messages)
+        structured_model = base_model.with_structured_output(output_schema)
+        result = await invoke_fn(structured_model, messages)
         return result

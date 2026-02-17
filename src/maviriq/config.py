@@ -10,9 +10,13 @@ class Settings(BaseSettings):
     anthropic_api_key: str
     serper_api_key: str
 
+    # Google
+    google_api_key: str = ""
+
     # LLM Models
     reasoning_model: str = "claude-sonnet-4-5-20250929"
     cheap_model: str = "claude-haiku-4-5-20251001"
+    research_model: str = "gemini-2.0-flash"
 
     # Serper
     serper_base_url: str = "https://google.serper.dev"
