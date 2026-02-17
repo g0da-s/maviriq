@@ -326,14 +326,14 @@ export default function ValidationPage() {
 
       {/* ═══ 4. THE RESEARCH ═══ */}
       <div className="mt-14">
-        <h2 className="text-lg font-semibold text-foreground mb-8">
+        <h2 className="font-display text-3xl font-bold text-foreground mb-8">
           The Research
         </h2>
 
         {/* — The Pain — */}
         {pain && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               The Pain
             </h3>
             <p className="text-muted leading-relaxed mb-5">{pain.pain_summary}</p>
@@ -344,7 +344,7 @@ export default function ValidationPage() {
         {/* — The Competition — */}
         {comp && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               The Competition
             </h3>
             <Competitors data={comp} />
@@ -354,7 +354,7 @@ export default function ValidationPage() {
         {/* — The Market — */}
         {mktIntel && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               The Market
             </h3>
             <MarketIntelligence data={mktIntel} />
@@ -364,7 +364,7 @@ export default function ValidationPage() {
         {/* — The Graveyard — */}
         {graveyard && (graveyard.previous_attempts.length > 0 || graveyard.lessons_learned) && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Why Others Failed
             </h3>
             {graveyard.lessons_learned && (
@@ -377,7 +377,7 @@ export default function ValidationPage() {
         {/* legacy viability for old runs */}
         {!mktIntel && via && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               Viability Analysis
             </h3>
             <Viability data={via} />
@@ -387,7 +387,7 @@ export default function ValidationPage() {
         {/* ═══ 5. ACTION PLAN — after research so user has full context ═══ */}
         {s && (
           <section className="mb-12">
-            <h3 className="text-base font-semibold text-foreground mb-5">
+            <h3 className="text-lg font-semibold text-foreground mb-5">
               What to Do Next
             </h3>
 
