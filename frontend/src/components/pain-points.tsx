@@ -34,6 +34,8 @@ const wtpLabel = {
   low: "price sensitive",
 };
 
+const wtpRank = { high: 3, medium: 2, low: 1 } as const;
+
 function SeverityBar({ severity }: { severity: number }) {
   const color = severity >= 4 ? "bg-skip" : severity >= 3 ? "bg-maybe" : "bg-muted/30";
   return (
@@ -52,6 +54,12 @@ function SeverityBar({ severity }: { severity: number }) {
 }
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
+  const allSegments = [data.primary_target_user, ...data.user_segments.filter(seg => seg.label !== data.primary_target_user.label)]
+    .sort((a, b) => wtpRank[b.willingness_to_pay] - wtpRank[a.willingness_to_pay]);
+
+  const sortedQuotes = [...data.pain_points]
+    .sort((a, b) => b.pain_severity - a.pain_severity);
+
   return (
     <div className="space-y-6">
       {/* who has this pain — combined target user + segments */}
@@ -62,35 +70,22 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
           </p>
         </div>
         <div className="divide-y divide-card-border">
-          {/* primary target user */}
-          <div className="flex items-center justify-between px-5 py-3">
-            <div>
-              <p className="text-sm text-foreground font-medium">{data.primary_target_user.label}</p>
-              <p className="text-xs text-muted/50 mt-0.5">{data.primary_target_user.description}</p>
-            </div>
-            <span className="text-xs text-muted/50 shrink-0 ml-4">
-              {wtpLabel[data.primary_target_user.willingness_to_pay]}
-            </span>
-          </div>
-          {/* other segments */}
-          {data.user_segments
-            .filter(seg => seg.label !== data.primary_target_user.label)
-            .map((seg, i) => (
-              <div key={i} className="flex items-center justify-between px-5 py-3">
-                <div>
-                  <p className="text-sm text-foreground font-medium">{seg.label}</p>
-                  <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
-                </div>
-                <span className="text-xs text-muted/50 shrink-0 ml-4">
-                  {wtpLabel[seg.willingness_to_pay]}
-                </span>
+          {allSegments.map((seg, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-3">
+              <div>
+                <p className="text-sm text-foreground font-medium">{seg.label}</p>
+                <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
               </div>
-            ))}
+              <span className="text-xs text-muted/50 shrink-0 ml-4">
+                {wtpLabel[seg.willingness_to_pay]}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* pain points — evidence quotes */}
-      {data.pain_points.length > 0 && (
+      {sortedQuotes.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 pt-5 pb-3">
             <p className="text-sm font-semibold text-foreground">
@@ -98,7 +93,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
             </p>
           </div>
           <div className="divide-y divide-card-border">
-            {data.pain_points.slice(0, 5).map((pp, i) => (
+            {sortedQuotes.slice(0, 5).map((pp, i) => (
               <div key={i} className="px-5 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>

@@ -49,9 +49,6 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* competitor cards */}
       {data.competitors.length > 0 && (
         <div>
-          <p className="text-sm font-semibold text-foreground mb-3">
-            who you&apos;re up against
-          </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.competitors.map((comp, i) => (
               <div key={i} className="px-5 py-4">
@@ -127,11 +124,13 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
 
       {/* underserved needs */}
       {data.underserved_needs.length > 0 && (
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-3">
-            gaps competitors aren&apos;t filling
-          </p>
-          <div className="rounded-xl border border-card-border bg-card px-5 py-4">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-sm font-semibold text-foreground">
+              gaps competitors aren&apos;t filling
+            </p>
+          </div>
+          <div className="px-5 pb-4">
             <ul className="space-y-2">
               {data.underserved_needs.map((need, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted">
@@ -146,11 +145,13 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
 
       {/* common complaints */}
       {data.common_complaints.length > 0 && (
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-3">
-            what users complain about
-          </p>
-          <div className="rounded-xl border border-card-border bg-card px-5 py-4">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-sm font-semibold text-foreground">
+              what users complain about
+            </p>
+          </div>
+          <div className="px-5 pb-4">
             <ul className="space-y-2">
               {data.common_complaints.map((c, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted">

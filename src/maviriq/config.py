@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str
 
     # Search cache TTL (seconds)
-    search_cache_ttl: int = 86400  # 24 hours
+    search_cache_ttl: int = 600  # 10 minutes
 
     # Pipeline
     max_search_queries_per_agent: int = 8
