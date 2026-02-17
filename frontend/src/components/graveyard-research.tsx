@@ -18,7 +18,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* previous attempts */}
       {data.previous_attempts.length > 0 && (
         <div>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-xs font-medium text-foreground/80 mb-3">
             companies that tried this
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
@@ -30,8 +30,8 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
                     <span className="text-xs text-muted/50">{attempt.year}</span>
                   )}
                 </div>
-                <p className="text-sm text-foreground/70 mb-2">{attempt.what_they_did}</p>
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-muted mb-2">{attempt.what_they_did}</p>
+                <p className="text-sm text-muted">
                   <span className="text-xs text-muted">why they failed:</span>{" "}
                   {attempt.shutdown_reason}
                 </p>
@@ -44,13 +44,13 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* failure reasons */}
       {data.failure_reasons.length > 0 && (
         <div>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-xs font-medium text-foreground/80 mb-3">
             common reasons for failure
           </p>
           <div className="rounded-xl border border-card-border bg-card px-5 py-4">
             <ol className="space-y-2">
               {data.failure_reasons.map((reason, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-foreground/60">
+                <li key={i} className="flex items-start gap-3 text-sm text-muted">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
                     {i + 1}
                   </span>
@@ -65,14 +65,14 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* churn signals */}
       {data.churn_signals.length > 0 && (
         <div>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-xs font-medium text-foreground/80 mb-3">
             warning signs to watch for
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.churn_signals.map((sig, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground/60">{sig.signal}</p>
+                  <p className="text-sm text-muted">{sig.signal}</p>
                   <p className="text-xs text-muted/40 mt-0.5">{sig.source}</p>
                 </div>
                 <span className={`text-xs font-medium shrink-0 ml-4 ${severityColor[sig.severity]}`}>

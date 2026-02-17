@@ -39,11 +39,11 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
     <div className="space-y-6">
       {/* target user */}
       <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-xs text-muted mb-3">
+        <p className="text-xs font-medium text-foreground/80 mb-3">
           who has this pain?
         </p>
         <p className="text-sm font-semibold text-foreground">{data.primary_target_user.label}</p>
-        <p className="mt-1.5 text-sm text-foreground/70">{data.primary_target_user.description}</p>
+        <p className="mt-1.5 text-sm text-muted">{data.primary_target_user.description}</p>
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
           <span>{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
           <span className="text-muted/30">|</span>
@@ -54,14 +54,14 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* pain points — evidence quotes */}
       {data.pain_points.length > 0 && (
         <div>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-xs font-medium text-foreground/80 mb-3">
             what people are saying ({data.pain_points.length} quotes found)
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.pain_points.slice(0, 5).map((pp, i) => (
               <div key={i} className="px-5 py-4">
                 <div className="flex items-start justify-between gap-4">
-                  <p className="text-sm text-foreground/70 italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
+                  <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
                   <div className="flex shrink-0 items-center gap-0.5 mt-1">
                     {Array.from({ length: 5 }).map((_, j) => (
                       <div
@@ -97,7 +97,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* user segments */}
       {data.user_segments.length > 1 && (
         <div>
-          <p className="text-xs text-muted mb-3">
+          <p className="text-xs font-medium text-foreground/80 mb-3">
             other user groups affected
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
