@@ -188,8 +188,8 @@ export default function ValidationPage() {
         <h1 className="font-display text-3xl font-bold leading-tight uppercase">{run.idea}</h1>
 
         {s && (
-          <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-6">
-            <div className="flex items-center gap-6">
+          <div className="mt-5 rounded-2xl border border-card-border bg-card px-8 py-7">
+            <div className="flex items-center gap-8">
               <div className="flex flex-col items-start shrink-0">
                 <span className={`font-display text-6xl font-bold leading-none ${
                   Math.round(s.confidence * 100) >= 70 ? "text-build" :
@@ -224,21 +224,21 @@ export default function ValidationPage() {
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">pain severity</p>
             {pain.pain_points.length > 0 ? (
-              <p className={`mt-1 font-display text-sm font-bold ${
+              <p className={`mt-1 font-display text-base font-bold ${
                 avgSeverity >= 3.5 ? "text-build" :
                 avgSeverity >= 2 ? "text-maybe" : "text-skip"
               }`}>
                 {avgSeverity.toFixed(1)}<span className="text-xs text-muted/40">/5</span>
               </p>
             ) : (
-              <p className="mt-1 font-display text-sm font-bold text-muted/40">N/A</p>
+              <p className="mt-1 font-display text-base font-bold text-muted/40">N/A</p>
             )}
           </div>
         )}
         {comp && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">competition</p>
-            <p className={`mt-1 font-display text-sm font-bold ${
+            <p className={`mt-1 font-display text-base font-bold ${
               comp.market_saturation === "high" ? "text-skip" :
               comp.market_saturation === "medium" ? "text-maybe" : "text-build"
             }`}>
@@ -249,7 +249,7 @@ export default function ValidationPage() {
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">will pay?</p>
-            <p className={`mt-1 font-display text-sm font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
+            <p className={`mt-1 font-display text-base font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
               {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
           </div>
@@ -260,7 +260,7 @@ export default function ValidationPage() {
             {(() => {
               const gapSize = s?.gap_size ?? via?.gap_size;
               return (
-                <p className={`mt-1 font-display text-sm font-bold ${
+                <p className={`mt-1 font-display text-base font-bold ${
                   gapSize === "large" ? "text-build" :
                   gapSize === "medium" ? "text-maybe" :
                   gapSize === "small" ? "text-muted" : "text-skip"
@@ -274,7 +274,7 @@ export default function ValidationPage() {
         {mktIntel && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">growth</p>
-            <p className={`mt-1 font-display text-sm font-bold ${
+            <p className={`mt-1 font-display text-base font-bold ${
               mktIntel.growth_direction === "growing" ? "text-build" :
               mktIntel.growth_direction === "stable" ? "text-maybe" :
               mktIntel.growth_direction === "shrinking" ? "text-skip" : "text-muted"
@@ -286,7 +286,7 @@ export default function ValidationPage() {
         {graveyard && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-semibold text-foreground">dead startups</p>
-            <p className={`mt-1 font-display text-sm font-bold ${
+            <p className={`mt-1 font-display text-base font-bold ${
               graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
             }`}>
               {graveyard.previous_attempts.length}
