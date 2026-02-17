@@ -170,10 +170,10 @@ class TestEvalSuite:
             print(f"\n--- {case.id} ({case.category}) [{case_idx+1}/{len(cases)}] ---")
             case_trials: list[TrialResult] = []
 
-            # Pause between cases to stay within API rate limits
+            # Brief pause between cases to avoid burst rate limits
             if case_idx > 0:
-                print("  Cooling down 60s for rate limit...")
-                await asyncio.sleep(60)
+                print("  Cooling down 10s...")
+                await asyncio.sleep(10)
 
             for trial_num in range(1, num_trials + 1):
                 print(f"  Trial {trial_num}/{num_trials}...")

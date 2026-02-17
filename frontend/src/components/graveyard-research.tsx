@@ -18,7 +18,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* previous attempts */}
       {data.previous_attempts.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-foreground/80 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             companies that tried this
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
@@ -44,7 +44,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* failure reasons */}
       {data.failure_reasons.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-foreground/80 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             common reasons for failure
           </p>
           <div className="rounded-xl border border-card-border bg-card px-5 py-4">
@@ -65,7 +65,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
       {/* churn signals */}
       {data.churn_signals.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-foreground/80 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             warning signs to watch for
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">

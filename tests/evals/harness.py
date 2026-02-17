@@ -272,25 +272,15 @@ async def run_full_pipeline(idea: str) -> TrialResult:
     start = time.monotonic()
 
     try:
-        # Run agents in two batches of 2 to stay within rate limits.
-        # Batch 1: pain_discovery + competitor_research
-        batch1 = await asyncio.gather(
+        # Run all 4 research agents in parallel.
+        # Gemini's token limit (1M/min) can handle this; RPM retries are automatic.
+        results = await asyncio.gather(
             run_single_agent("pain_discovery", idea),
             run_single_agent("competitor_research", idea),
-            return_exceptions=True,
-        )
-
-        # Brief pause between batches to let the rate limit window slide
-        await asyncio.sleep(15)
-
-        # Batch 2: market_intelligence + graveyard_research
-        batch2 = await asyncio.gather(
             run_single_agent("market_intelligence", idea),
             run_single_agent("graveyard_research", idea),
             return_exceptions=True,
         )
-
-        results = [batch1[0], batch1[1], batch2[0], batch2[1]]
 
         # Unpack, tolerating individual agent failures
         pain = results[0] if not isinstance(results[0], Exception) else None

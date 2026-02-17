@@ -177,7 +177,7 @@ export default function ValidationPage() {
           &larr; back to history
         </Link>
         {run.completed_at && (
-          <span className="text-xs font-medium text-foreground/80/40">
+          <span className="text-xs text-muted/40">
             {new Date(run.completed_at).toLocaleDateString()}
           </span>
         )}
@@ -297,7 +297,7 @@ export default function ValidationPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {s.key_strengths.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-build">
-              <p className="text-xs font-medium text-foreground/80 mb-3">why this could work</p>
+              <p className="text-sm font-semibold text-foreground mb-3">why this could work</p>
               <ul className="space-y-2">
                 {s.key_strengths.map((str, i) => (
                   <li key={i} className="text-sm text-muted leading-relaxed">
@@ -309,7 +309,7 @@ export default function ValidationPage() {
           )}
           {s.key_risks.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-skip">
-              <p className="text-xs font-medium text-foreground/80 mb-3">what could kill it</p>
+              <p className="text-sm font-semibold text-foreground mb-3">what could kill it</p>
               <ul className="space-y-2">
                 {s.key_risks.map((risk, i) => (
                   <li key={i} className="text-sm text-muted leading-relaxed">
@@ -331,18 +331,18 @@ export default function ValidationPage() {
 
           <div className="grid gap-3 sm:grid-cols-2 mb-4">
             <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-xs font-medium text-foreground/80 mb-1">target user</p>
+              <p className="text-sm font-semibold text-foreground mb-1">target user</p>
               <p className="text-sm text-muted">{s.target_user_summary}</p>
             </div>
             <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-xs font-medium text-foreground/80 mb-1">market size</p>
+              <p className="text-sm font-semibold text-foreground mb-1">market size</p>
               <p className="text-sm text-muted">{s.estimated_market_size}</p>
             </div>
           </div>
 
           {s.recommended_mvp && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs font-medium text-foreground/80 mb-2">
+              <p className="text-sm font-semibold text-foreground mb-2">
                 what to build first
               </p>
               <p className="text-sm text-muted leading-relaxed">{s.recommended_mvp}</p>
@@ -351,7 +351,7 @@ export default function ValidationPage() {
 
           {s.differentiation_strategy && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs font-medium text-foreground/80 mb-2">
+              <p className="text-sm font-semibold text-foreground mb-2">
                 differentiation strategy
               </p>
               <p className="text-sm text-muted leading-relaxed">{s.differentiation_strategy}</p>
@@ -360,13 +360,13 @@ export default function ValidationPage() {
 
           {s.lessons_from_failures && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs font-medium text-foreground/80 mb-2">
+              <p className="text-sm font-semibold text-foreground mb-2">
                 lessons from past failures
               </p>
               <p className="text-sm text-muted leading-relaxed">{s.lessons_from_failures}</p>
               {s.previous_attempts_summary && (
                 <div className="mt-3 pt-3 border-t border-card-border">
-                  <p className="text-xs font-medium text-foreground/80 mb-1">previous attempts</p>
+                  <p className="text-sm font-semibold text-foreground mb-1">previous attempts</p>
                   <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
                 </div>
               )}
@@ -375,7 +375,7 @@ export default function ValidationPage() {
 
           {s.next_steps.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs font-medium text-foreground/80 mb-3">
+              <p className="text-sm font-semibold text-foreground mb-3">
                 next steps
               </p>
               <ol className="space-y-2.5">
@@ -402,7 +402,7 @@ export default function ValidationPage() {
         {/* — The Pain — */}
         {pain && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Pain
             </h3>
             <p className="text-muted leading-relaxed mb-5">{pain.pain_summary}</p>
@@ -413,7 +413,7 @@ export default function ValidationPage() {
         {/* — The Competition — */}
         {comp && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Competition
             </h3>
             <Competitors data={comp} />
@@ -423,7 +423,7 @@ export default function ValidationPage() {
         {/* — The Market — */}
         {mktIntel && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Market
             </h3>
             <MarketIntelligence data={mktIntel} />
@@ -433,7 +433,7 @@ export default function ValidationPage() {
         {/* — The Graveyard — */}
         {graveyard && (graveyard.previous_attempts.length > 0 || graveyard.lessons_learned) && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               Why Others Failed
             </h3>
             {graveyard.lessons_learned && (
@@ -446,7 +446,7 @@ export default function ValidationPage() {
         {/* legacy viability for old runs */}
         {!mktIntel && via && (
           <section className="mb-12">
-            <h3 className="text-sm font-medium text-muted mb-4">
+            <h3 className="text-base font-semibold text-foreground mb-4">
               Viability Analysis
             </h3>
             <Viability data={via} />
@@ -456,7 +456,7 @@ export default function ValidationPage() {
         {/* — Full Reasoning (collapsed) — */}
         {s && (
           <details className="mb-8 rounded-2xl border border-card-border bg-card group">
-            <summary className="flex cursor-pointer items-center justify-between p-5 text-sm font-medium text-muted hover:bg-white/[0.02] transition-colors select-none">
+            <summary className="flex cursor-pointer items-center justify-between p-5 text-base font-semibold text-foreground hover:bg-white/[0.02] transition-colors select-none">
               full AI reasoning
               <svg
                 className="h-4 w-4 text-muted/40 transition-transform group-open:rotate-180"
@@ -472,7 +472,7 @@ export default function ValidationPage() {
               <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
               {s.recommended_positioning && (
                 <div className="mt-4 pt-4 border-t border-card-border">
-                  <p className="text-xs font-medium text-foreground/80 mb-1">recommended positioning</p>
+                  <p className="text-sm font-semibold text-foreground mb-1">recommended positioning</p>
                   <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
                 </div>
               )}

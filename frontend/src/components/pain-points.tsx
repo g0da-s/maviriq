@@ -39,7 +39,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
     <div className="space-y-6">
       {/* target user */}
       <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-xs font-medium text-foreground/80 mb-3">
+        <p className="text-sm font-semibold text-foreground mb-3">
           who has this pain?
         </p>
         <p className="text-sm font-semibold text-foreground">{data.primary_target_user.label}</p>
@@ -54,7 +54,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* pain points — evidence quotes */}
       {data.pain_points.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-foreground/80 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             what people are saying ({data.pain_points.length} quotes found)
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
@@ -97,7 +97,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* user segments */}
       {data.user_segments.length > 1 && (
         <div>
-          <p className="text-xs font-medium text-foreground/80 mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             other user groups affected
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
