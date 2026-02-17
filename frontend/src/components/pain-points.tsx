@@ -34,6 +34,23 @@ const wtpLabel = {
   low: "price sensitive",
 };
 
+function SeverityBar({ severity }: { severity: number }) {
+  const color = severity >= 4 ? "bg-skip" : severity >= 3 ? "bg-maybe" : "bg-muted/30";
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="text-xs text-muted/50">{severity}/5</span>
+      <div className="flex gap-0.5">
+        {Array.from({ length: 5 }).map((_, j) => (
+          <div
+            key={j}
+            className={`h-1.5 w-1.5 rounded-full ${j < severity ? color : "bg-white/10"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   return (
     <div className="space-y-6">
@@ -42,9 +59,9 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
         <p className="text-sm font-semibold text-foreground mb-3">
           who has this pain?
         </p>
-        <p className="text-sm font-semibold text-foreground">{data.primary_target_user.label}</p>
-        <p className="mt-1.5 text-sm text-muted">{data.primary_target_user.description}</p>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
+        <p className="text-sm text-muted font-medium">{data.primary_target_user.label}</p>
+        <p className="mt-1.5 text-sm text-muted/70">{data.primary_target_user.description}</p>
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted/50">
           <span>{wtpLabel[data.primary_target_user.willingness_to_pay]}</span>
           <span className="text-muted/30">|</span>
           <span>frequency: {data.primary_target_user.frequency}x</span>
@@ -53,25 +70,18 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
 
       {/* pain points — evidence quotes */}
       {data.pain_points.length > 0 && (
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-3">
-            what people are saying ({data.pain_points.length} quotes found)
-          </p>
-          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-sm font-semibold text-foreground">
+              what people are saying ({data.pain_points.length} quotes found)
+            </p>
+          </div>
+          <div className="divide-y divide-card-border">
             {data.pain_points.slice(0, 5).map((pp, i) => (
               <div key={i} className="px-5 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
-                  <div className="flex shrink-0 items-center gap-0.5 mt-1">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <div
-                        key={j}
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          j < pp.pain_severity ? "bg-skip" : "bg-white/10"
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  <SeverityBar severity={pp.pain_severity} />
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
                   {pp.source_url && isSafeUrl(pp.source_url) ? (
@@ -96,18 +106,20 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
 
       {/* user segments */}
       {data.user_segments.length > 1 && (
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-3">
-            other user groups affected
-          </p>
-          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-sm font-semibold text-foreground">
+              other user groups affected
+            </p>
+          </div>
+          <div className="divide-y divide-card-border">
             {data.user_segments.map((seg, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <p className="text-sm font-medium text-foreground/90">{seg.label}</p>
+                  <p className="text-sm text-muted font-medium">{seg.label}</p>
                   <p className="text-xs text-muted/50 mt-0.5">{seg.description}</p>
                 </div>
-                <span className="text-xs text-muted shrink-0 ml-4">
+                <span className="text-xs text-muted/50 shrink-0 ml-4">
                   {wtpLabel[seg.willingness_to_pay]}
                 </span>
               </div>
