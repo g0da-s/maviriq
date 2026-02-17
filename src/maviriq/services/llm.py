@@ -90,23 +90,58 @@ class LLMService:
         return self.cheap_model if use_cheap_model else self.model
 
     @retry(**_ANTHROPIC_RETRY_POLICY)
-    async def generate_structured(
+    async def _generate_structured_anthropic(
         self,
         system_prompt: str,
         user_prompt: str,
         output_schema: type[T],
         use_cheap_model: bool = False,
     ) -> T:
-        """Generate structured output. Always uses Anthropic (Sonnet or Haiku)."""
         model = self._get_model(use_cheap_model)
         structured_model = model.with_structured_output(output_schema)
-
-        result = await structured_model.ainvoke([
+        return await structured_model.ainvoke([
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt),
         ])
 
-        return result
+    @retry(**_GOOGLE_RETRY_POLICY)
+    async def _generate_structured_google(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        output_schema: type[T],
+    ) -> T:
+        structured_model = self.research_model.with_structured_output(output_schema)
+        return await structured_model.ainvoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ])
+
+    async def generate_structured(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        output_schema: type[T],
+        use_cheap_model: bool = False,
+        use_research_model: bool = False,
+    ) -> T:
+        """Generate structured output.
+
+        Uses Gemini when use_research_model=True and a Google API key is configured,
+        otherwise falls back to Anthropic (Sonnet or Haiku).
+        """
+        if use_research_model and self.research_model is not None:
+            return await self._generate_structured_google(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                output_schema=output_schema,
+            )
+        return await self._generate_structured_anthropic(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            output_schema=output_schema,
+            use_cheap_model=use_cheap_model,
+        )
 
     @retry(**_ANTHROPIC_RETRY_POLICY)
     async def generate_text(

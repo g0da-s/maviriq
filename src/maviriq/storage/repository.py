@@ -197,7 +197,7 @@ class SearchCacheRepository:
                 .select("response")
                 .eq("query_hash", key)
                 .gt("expires_at", now)
-                .maybe_single()
+                .limit(1)
                 .execute()
             )
         except Exception:
@@ -205,7 +205,7 @@ class SearchCacheRepository:
             return None
         if result is None or not result.data:
             return None
-        return result.data["response"]
+        return result.data[0]["response"]
 
     async def set(self, query: str, source: str, response: dict, ttl_seconds: int = 86400) -> None:
         key = self._hash(query, source)

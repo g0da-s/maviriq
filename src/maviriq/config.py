@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     max_competitors: int = 10
     agent_timeout: int = 120  # seconds per agent before giving up
     agent_max_iterations: int = 10  # max tool-use loop iterations per agent
+    anthropic_max_concurrent: int = 2  # max concurrent Anthropic API calls to avoid rate limits
 
     # LangSmith
     langsmith_tracing: str = "true"

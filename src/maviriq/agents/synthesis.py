@@ -201,6 +201,7 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
             system_prompt=_VIABILITY_PROMPT,
             user_prompt=context,
             output_schema=_ViabilityAnalysis,
+            use_research_model=True,
         )
 
         # Pass 2: Verdict & Strategy (receives research + viability results)
@@ -209,6 +210,7 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
             system_prompt=_VERDICT_PROMPT,
             user_prompt=verdict_context,
             output_schema=_VerdictStrategy,
+            use_research_model=True,
         )
 
         # Merge into final SynthesisOutput
