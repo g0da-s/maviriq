@@ -189,16 +189,18 @@ export default function ValidationPage() {
 
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-6">
-            <div className="flex flex-col items-start gap-2">
-              <span className={`font-display text-6xl font-bold ${
-                Math.round(s.confidence * 100) >= 70 ? "text-build" :
-                Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
-              }`}>
-                {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
-              </span>
-              <VerdictBadge verdict={s.verdict} size="md" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className={`font-display text-6xl font-bold ${
+                  Math.round(s.confidence * 100) >= 70 ? "text-build" :
+                  Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
+                }`}>
+                  {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
+                </span>
+                <VerdictBadge verdict={s.verdict} size="md" />
+              </div>
             </div>
-            <p className="mt-4 text-sm text-muted leading-relaxed">
+            <p className="mt-4 text-sm text-muted leading-relaxed lowercase">
               {s.one_line_summary}
             </p>
           </div>
