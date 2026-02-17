@@ -40,7 +40,6 @@ function SeverityBar({ severity }: { severity: number }) {
   const color = severity >= 4 ? "bg-skip" : severity >= 3 ? "bg-maybe" : "bg-muted/30";
   return (
     <div className="flex items-center gap-2 shrink-0">
-      <span className="text-xs text-muted/50">{severity}/5</span>
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, j) => (
           <div

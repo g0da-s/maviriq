@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
+
+class SearchUnavailableError(Exception):
+    """Raised when all search tool calls failed (e.g. bad API key, service down)."""
+
 _ANTHROPIC_RETRY_POLICY = dict(
     stop=stop_after_attempt(6),
     wait=wait_exponential(min=2, max=120),
@@ -224,6 +228,9 @@ class LLMService:
             HumanMessage(content=user_prompt),
         ]
 
+        search_successes = 0
+        search_failures = 0
+
         for iteration in range(max_iterations):
             logger.debug("Tool loop iteration %d/%d", iteration + 1, max_iterations)
 
@@ -272,15 +279,19 @@ class LLMService:
             # Execute all search calls in parallel
             if search_calls:
                 async def _exec(tc: dict) -> ToolMessage:
+                    nonlocal search_successes, search_failures
                     name = tc["name"]
                     query = tc["args"].get("query", "")
                     executor = tool_executors.get(name)
                     if executor is None:
+                        search_failures += 1
                         content = f"Error: unknown tool '{name}'"
                     else:
                         try:
                             content = await executor(query)
+                            search_successes += 1
                         except Exception as e:
+                            search_failures += 1
                             logger.warning("Tool %s failed: %s", name, e)
                             content = f"Search failed: {e}"
                     return ToolMessage(content=content, tool_call_id=tc["id"])
@@ -294,6 +305,10 @@ class LLMService:
             if submit_call is not None:
                 try:
                     result = output_schema.model_validate(submit_call["args"])
+                    if search_failures > 0 and search_successes == 0:
+                        raise SearchUnavailableError(
+                            f"All {search_failures} search calls failed. Results would be based on general knowledge, not real research."
+                        )
                     return result
                 except ValidationError as e:
                     error_msg = f"Validation error in submit_result: {e}"
@@ -305,6 +320,12 @@ class LLMService:
                         )
                     )
                     # Continue loop so the model can fix and resubmit
+
+        # Check if all searches failed before falling back
+        if search_failures > 0 and search_successes == 0:
+            raise SearchUnavailableError(
+                f"All {search_failures} search calls failed. Results would be based on general knowledge, not real research."
+            )
 
         # Absolute fallback: use structured output to force a result
         logger.warning("Tool loop exhausted %d iterations, using structured output fallback", max_iterations)

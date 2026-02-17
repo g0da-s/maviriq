@@ -40,7 +40,9 @@ EXTRACTION RULES:
   Rate effort as "low", "medium", or "high".
 - Extract funding signals: evidence of investment activity in this space. \
   List recent funding rounds, acquisitions, or VC interest you find on Crunchbase \
-  or in news articles. These indicate market validation (or lack thereof).
+  or in news articles. These indicate market validation (or lack thereof). \
+  For each signal, provide it as an object with "description" (the signal text) \
+  and "source_url" (the URL where you found this information, or null if unknown).
 - Do NOT fabricate data.
 
 NOTE: You do NOT need to assess monetization or pricing — the Competitor Research \

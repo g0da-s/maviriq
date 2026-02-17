@@ -34,7 +34,7 @@ from maviriq.pipeline.events import (
     SSEEvent,
 )
 from maviriq.pipeline import pubsub
-from maviriq.services.llm import LLMService
+from maviriq.services.llm import LLMService, SearchUnavailableError
 from maviriq.services.search import SerperService
 from maviriq.storage.repository import ValidationRepository
 
@@ -300,6 +300,23 @@ class PipelineGraph:
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
             pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, "Processing timed out. Please try again."))
+
+        except SearchUnavailableError as e:
+            run = await self.repository.get(run_id)
+            agent_num = run.current_agent if run else 0
+            logger.error("Search unavailable for run %s (agent %s): %s", run_id, agent_num, e)
+            if run:
+                run.status = ValidationStatus.FAILED
+                run.error = str(e)
+                run.completed_at = datetime.now(timezone.utc)
+                await self.repository.update(run)
+            pubsub.publish(
+                run_id,
+                PipelineErrorEvent.create(
+                    agent_num,
+                    "Our research tools are temporarily unavailable. Please try again in a few minutes.",
+                ),
+            )
 
         except Exception as e:
             run = await self.repository.get(run_id)

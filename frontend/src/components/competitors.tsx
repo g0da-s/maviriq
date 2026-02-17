@@ -9,18 +9,6 @@ function isSafeUrl(url: string): boolean {
   }
 }
 
-const sentimentColor = {
-  positive: "text-build",
-  mixed: "text-maybe",
-  negative: "text-skip",
-};
-
-const sentimentLabel = {
-  positive: "liked",
-  mixed: "mixed reviews",
-  negative: "disliked",
-};
-
 export function Competitors({ data }: { data: CompetitorResearchOutput }) {
   return (
     <div className="space-y-6">
@@ -42,9 +30,8 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-xs font-medium ${sentimentColor[comp.review_sentiment]}`}>
-                      {sentimentLabel[comp.review_sentiment]}
-                      {comp.review_count != null && comp.review_count > 0 && ` (${comp.review_count})`}
+                    <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-muted/60">
+                      {comp.competitor_type}
                     </span>
                   </div>
                 </div>

@@ -96,15 +96,21 @@ const DistributionChannelSchema = z.object({
   effort: EffortSchema,
 });
 
+const FundingSignalSchema = z.object({
+  description: z.string(),
+  source_url: z.string().nullable().default(null),
+});
+
 const MarketIntelligenceOutputSchema = z.object({
   market_size_estimate: z.string(),
   growth_direction: GrowthDirectionSchema,
   tam_reasoning: z.string(),
   distribution_channels: z.array(DistributionChannelSchema),
-  funding_signals: z.array(z.string()).default([]),
+  funding_signals: z.array(z.union([z.string(), FundingSignalSchema])).default([]),
   search_queries_used: z.array(z.string()),
 });
 
+export type FundingSignal = z.infer<typeof FundingSignalSchema>;
 export type DistributionChannel = z.infer<typeof DistributionChannelSchema>;
 export type GrowthDirection = z.infer<typeof GrowthDirectionSchema>;
 export type MarketIntelligenceOutput = z.infer<typeof MarketIntelligenceOutputSchema>;

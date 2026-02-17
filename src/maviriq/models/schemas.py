@@ -183,6 +183,11 @@ class DistributionChannel(BaseModel):
         return "medium"
 
 
+class FundingSignal(BaseModel):
+    description: str
+    source_url: str | None = None
+
+
 class MarketIntelligenceInput(BaseModel):
     idea: str
 
@@ -192,7 +197,7 @@ class MarketIntelligenceOutput(BaseModel):
     growth_direction: Literal["growing", "stable", "shrinking", "unknown"]
     tam_reasoning: str
     distribution_channels: list[DistributionChannel]
-    funding_signals: list[str] = []
+    funding_signals: list[str | FundingSignal] = []
     search_queries_used: list[str] = []
 
     @field_validator("growth_direction", mode="before")
