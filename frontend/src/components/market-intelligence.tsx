@@ -32,11 +32,11 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {/* headline stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-xs text-muted/60 mb-2">how big is this market?</p>
+          <p className="text-xs text-muted mb-2">how big is this market?</p>
           <p className="font-display text-lg font-bold">{data.market_size_estimate}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-xs text-muted/60 mb-2">is it growing?</p>
+          <p className="text-xs text-muted mb-2">is it growing?</p>
           <p className={`font-display text-lg font-bold ${growthColor[data.growth_direction]}`}>
             {growthLabel[data.growth_direction]}
           </p>
@@ -45,16 +45,16 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
 
       {/* TAM reasoning */}
       <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-xs text-muted/60 mb-3">
+        <p className="text-xs text-muted mb-3">
           why this size?
         </p>
-        <p className="text-sm text-foreground/80 leading-relaxed">{data.tam_reasoning}</p>
+        <p className="text-sm text-foreground/60 leading-relaxed">{data.tam_reasoning}</p>
       </div>
 
       {/* distribution channels */}
       {data.distribution_channels.length > 0 && (
         <div>
-          <p className="text-xs text-muted/60 mb-3">
+          <p className="text-xs text-muted mb-3">
             how to reach customers
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
@@ -76,13 +76,13 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {/* funding signals */}
       {data.funding_signals.length > 0 && (
         <div>
-          <p className="text-xs text-muted/60 mb-3">
+          <p className="text-xs text-muted mb-3">
             investor activity in this space
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
             {data.funding_signals.map((sig, i) => (
               <div key={i} className="px-5 py-3.5">
-                <p className="text-sm text-foreground/80">{sig}</p>
+                <p className="text-sm text-foreground/60">{sig}</p>
               </div>
             ))}
           </div>

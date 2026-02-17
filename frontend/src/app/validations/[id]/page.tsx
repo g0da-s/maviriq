@@ -189,7 +189,7 @@ export default function ValidationPage() {
 
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-6 py-6">
-            <div className="flex items-start gap-6">
+            <div className="flex items-center gap-6">
               <div className="flex flex-col items-start shrink-0">
                 <span className={`font-display text-6xl font-bold leading-none ${
                   Math.round(s.confidence * 100) >= 70 ? "text-build" :
@@ -201,7 +201,7 @@ export default function ValidationPage() {
                   <VerdictBadge verdict={s.verdict} size="md" />
                 </div>
               </div>
-              <p className="text-sm text-muted leading-relaxed lowercase pt-2">
+              <p className="text-sm text-muted leading-relaxed lowercase">
                 {s.one_line_summary}
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function ValidationPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">pain severity</p>
+            <p className="text-xs text-muted">pain severity</p>
             {pain.pain_points.length > 0 ? (
               <p className="mt-1 font-display text-2xl font-bold">
                 {avgSeverity.toFixed(1)}<span className="text-sm text-muted/40">/5</span>
@@ -234,7 +234,7 @@ export default function ValidationPage() {
         )}
         {comp && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">competition</p>
+            <p className="text-xs text-muted">competition</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               comp.market_saturation === "high" ? "text-skip" :
               comp.market_saturation === "medium" ? "text-maybe" : "text-build"
@@ -245,7 +245,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">will pay?</p>
+            <p className="text-xs text-muted">will pay?</p>
             <p className={`mt-1 font-display text-2xl font-bold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
               {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
@@ -253,7 +253,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">market gap</p>
+            <p className="text-xs text-muted">market gap</p>
             {(() => {
               const gapSize = s?.gap_size ?? via?.gap_size;
               return (
@@ -270,7 +270,7 @@ export default function ValidationPage() {
         )}
         {mktIntel && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">growth</p>
+            <p className="text-xs text-muted">growth</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               mktIntel.growth_direction === "growing" ? "text-build" :
               mktIntel.growth_direction === "stable" ? "text-maybe" :
@@ -282,7 +282,7 @@ export default function ValidationPage() {
         )}
         {graveyard && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-xs text-muted/60">dead startups</p>
+            <p className="text-xs text-muted">dead startups</p>
             <p className={`mt-1 font-display text-2xl font-bold ${
               graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
             }`}>
@@ -297,10 +297,10 @@ export default function ValidationPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {s.key_strengths.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-build">
-              <p className="text-xs text-muted/60 mb-3">why this could work</p>
+              <p className="text-xs text-muted mb-3">why this could work</p>
               <ul className="space-y-2">
                 {s.key_strengths.map((str, i) => (
-                  <li key={i} className="text-sm text-foreground/80 leading-relaxed">
+                  <li key={i} className="text-sm text-foreground/60 leading-relaxed">
                     {str}
                   </li>
                 ))}
@@ -309,10 +309,10 @@ export default function ValidationPage() {
           )}
           {s.key_risks.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-5 border-l-2 border-l-skip">
-              <p className="text-xs text-muted/60 mb-3">what could kill it</p>
+              <p className="text-xs text-muted mb-3">what could kill it</p>
               <ul className="space-y-2">
                 {s.key_risks.map((risk, i) => (
-                  <li key={i} className="text-sm text-foreground/80 leading-relaxed">
+                  <li key={i} className="text-sm text-foreground/60 leading-relaxed">
                     {risk}
                   </li>
                 ))}
@@ -325,48 +325,48 @@ export default function ValidationPage() {
       {/* ═══ 4. ACTION PLAN — moved up, before research ═══ */}
       {s && (
         <div className="mt-10">
-          <h2 className="text-xs uppercase tracking-wider text-muted/60 mb-5">
+          <h2 className="text-xs uppercase tracking-wider text-foreground/50 mb-5">
             What to Do Next
           </h2>
 
           <div className="grid gap-3 sm:grid-cols-2 mb-4">
             <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-xs text-muted/60 mb-1">target user</p>
-              <p className="text-sm text-foreground/80">{s.target_user_summary}</p>
+              <p className="text-xs text-muted mb-1">target user</p>
+              <p className="text-sm text-foreground/60">{s.target_user_summary}</p>
             </div>
             <div className="rounded-xl border border-card-border bg-card p-4">
-              <p className="text-xs text-muted/60 mb-1">market size</p>
-              <p className="text-sm text-foreground/80">{s.estimated_market_size}</p>
+              <p className="text-xs text-muted mb-1">market size</p>
+              <p className="text-sm text-foreground/60">{s.estimated_market_size}</p>
             </div>
           </div>
 
           {s.recommended_mvp && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs text-muted/60 mb-2">
+              <p className="text-xs text-muted mb-2">
                 what to build first
               </p>
-              <p className="text-sm text-foreground/90 leading-relaxed">{s.recommended_mvp}</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">{s.recommended_mvp}</p>
             </div>
           )}
 
           {s.differentiation_strategy && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs text-muted/60 mb-2">
+              <p className="text-xs text-muted mb-2">
                 differentiation strategy
               </p>
-              <p className="text-sm text-foreground/90 leading-relaxed">{s.differentiation_strategy}</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">{s.differentiation_strategy}</p>
             </div>
           )}
 
           {s.lessons_from_failures && (
             <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs text-muted/60 mb-2">
+              <p className="text-xs text-muted mb-2">
                 lessons from past failures
               </p>
-              <p className="text-sm text-foreground/90 leading-relaxed">{s.lessons_from_failures}</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">{s.lessons_from_failures}</p>
               {s.previous_attempts_summary && (
                 <div className="mt-3 pt-3 border-t border-card-border">
-                  <p className="text-xs text-muted/60 mb-1">previous attempts</p>
+                  <p className="text-xs text-muted mb-1">previous attempts</p>
                   <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
                 </div>
               )}
@@ -375,12 +375,12 @@ export default function ValidationPage() {
 
           {s.next_steps.length > 0 && (
             <div className="rounded-2xl border border-card-border bg-card p-6">
-              <p className="text-xs text-muted/60 mb-3">
+              <p className="text-xs text-muted mb-3">
                 next steps
               </p>
               <ol className="space-y-2.5">
                 {s.next_steps.map((step, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground/60">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
                       {i + 1}
                     </span>
@@ -395,17 +395,17 @@ export default function ValidationPage() {
 
       {/* ═══ 5. THE RESEARCH — single source of truth, no duplicate section ═══ */}
       <div className="mt-14">
-        <h2 className="text-xs uppercase tracking-wider text-muted/60 mb-8">
+        <h2 className="text-xs uppercase tracking-wider text-foreground/50 mb-8">
           The Research
         </h2>
 
         {/* — The Pain — */}
         {pain && (
           <section className="mb-12">
-            <h3 className="text-sm font-semibold text-foreground mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Pain
             </h3>
-            <p className="text-foreground/80 leading-relaxed mb-5">{pain.pain_summary}</p>
+            <p className="text-foreground/60 leading-relaxed mb-5">{pain.pain_summary}</p>
             <PainPoints data={pain} />
           </section>
         )}
@@ -413,7 +413,7 @@ export default function ValidationPage() {
         {/* — The Competition — */}
         {comp && (
           <section className="mb-12">
-            <h3 className="text-sm font-semibold text-foreground mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Competition
             </h3>
             <Competitors data={comp} />
@@ -423,7 +423,7 @@ export default function ValidationPage() {
         {/* — The Market — */}
         {mktIntel && (
           <section className="mb-12">
-            <h3 className="text-sm font-semibold text-foreground mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               The Market
             </h3>
             <MarketIntelligence data={mktIntel} />
@@ -433,11 +433,11 @@ export default function ValidationPage() {
         {/* — The Graveyard — */}
         {graveyard && (graveyard.previous_attempts.length > 0 || graveyard.lessons_learned) && (
           <section className="mb-12">
-            <h3 className="text-sm font-semibold text-foreground mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-2">
               Why Others Failed
             </h3>
             {graveyard.lessons_learned && (
-              <p className="text-foreground/80 leading-relaxed mb-5">{graveyard.lessons_learned}</p>
+              <p className="text-foreground/60 leading-relaxed mb-5">{graveyard.lessons_learned}</p>
             )}
             <GraveyardResearch data={graveyard} />
           </section>
@@ -446,7 +446,7 @@ export default function ValidationPage() {
         {/* legacy viability for old runs */}
         {!mktIntel && via && (
           <section className="mb-12">
-            <h3 className="text-sm font-semibold text-foreground mb-4">
+            <h3 className="text-base font-semibold text-foreground mb-4">
               Viability Analysis
             </h3>
             <Viability data={via} />
@@ -472,7 +472,7 @@ export default function ValidationPage() {
               <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
               {s.recommended_positioning && (
                 <div className="mt-4 pt-4 border-t border-card-border">
-                  <p className="text-xs text-muted/60 mb-1">recommended positioning</p>
+                  <p className="text-xs text-muted mb-1">recommended positioning</p>
                   <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
                 </div>
               )}

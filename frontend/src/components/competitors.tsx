@@ -27,7 +27,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* overview stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-          <p className="text-xs text-muted/60 mb-1">market crowded?</p>
+          <p className="text-xs text-muted mb-1">market crowded?</p>
           <p className={`mt-1 font-display text-lg font-bold ${
             data.market_saturation === "high" ? "text-skip" :
             data.market_saturation === "medium" ? "text-maybe" : "text-build"
@@ -37,11 +37,11 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
           </p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-          <p className="text-xs text-muted/60 mb-1">typical price</p>
+          <p className="text-xs text-muted mb-1">typical price</p>
           <p className="mt-1 font-display text-lg font-bold">{data.avg_price_point}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-          <p className="text-xs text-muted/60 mb-1">competitors found</p>
+          <p className="text-xs text-muted mb-1">competitors found</p>
           <p className="mt-1 font-display text-lg font-bold">{data.competitors.length}</p>
         </div>
       </div>
@@ -49,7 +49,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* competitor cards */}
       {data.competitors.length > 0 && (
         <div>
-          <p className="text-xs text-muted/60 mb-3">
+          <p className="text-xs text-muted mb-3">
             who you&apos;re up against
           </p>
           <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
@@ -59,11 +59,11 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                 <div className="flex items-start justify-between mb-1.5">
                   <div>
                     {comp.url && isSafeUrl(comp.url) ? (
-                      <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground/90 hover:underline">
+                      <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:underline">
                         {comp.name}<span className="ml-1 text-muted/40 text-xs">&#8599;</span>
                       </a>
                     ) : (
-                      <p className="text-sm font-semibold text-foreground/90">{comp.name}</p>
+                      <p className="text-sm font-semibold text-foreground">{comp.name}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -93,7 +93,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   <div className="grid gap-3 sm:grid-cols-2">
                     {comp.strengths.length > 0 && (
                       <div>
-                        <p className="text-xs text-muted/60 mb-1.5">what they do well</p>
+                        <p className="text-xs text-muted mb-1.5">what they do well</p>
                         <ul className="space-y-1">
                           {comp.strengths.slice(0, 3).map((s, j) => (
                             <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
@@ -106,7 +106,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                     )}
                     {comp.weaknesses.length > 0 && (
                       <div>
-                        <p className="text-xs text-muted/60 mb-1.5">where they fall short</p>
+                        <p className="text-xs text-muted mb-1.5">where they fall short</p>
                         <ul className="space-y-1">
                           {comp.weaknesses.slice(0, 3).map((w, j) => (
                             <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
@@ -128,13 +128,13 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* underserved needs */}
       {data.underserved_needs.length > 0 && (
         <div>
-          <p className="text-xs text-muted/60 mb-3">
+          <p className="text-xs text-muted mb-3">
             gaps competitors aren&apos;t filling
           </p>
           <div className="rounded-xl border border-card-border bg-card px-5 py-4">
             <ul className="space-y-2">
               {data.underserved_needs.map((need, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
+                <li key={i} className="flex items-start gap-2 text-sm text-foreground/60">
                   <span className="text-build mt-0.5 font-bold">+</span>
                   {need}
                 </li>
@@ -147,7 +147,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* common complaints */}
       {data.common_complaints.length > 0 && (
         <div>
-          <p className="text-xs text-muted/60 mb-3">
+          <p className="text-xs text-muted mb-3">
             what users complain about
           </p>
           <div className="rounded-xl border border-card-border bg-card px-5 py-4">
