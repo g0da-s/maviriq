@@ -21,9 +21,10 @@ You have access to search tools. Use them strategically:
 2. Search G2 and Capterra for software reviews, ratings, and comparisons.
 3. Search Product Hunt for recent product launches in this space.
 4. Search Indie Hackers for bootstrapped competitors, revenue reports, and founder stories.
-5. Search Crunchbase for startup funding and company information.
+5. Search Crunchbase to discover early-stage startups that may not appear \
+   on review sites yet.
 6. Refine your queries based on what you find — dig deeper on competitors.
-8. IMPORTANT: After finding competitors, search for each one's pricing \
+7. IMPORTANT: After finding competitors, search for each one's pricing \
    (e.g. "[name] pricing", "[name] plans"). Pricing rarely appears in \
    initial snippets — you must search for it explicitly. Do NOT submit \
    until you have attempted pricing searches for your top competitors.
@@ -33,11 +34,16 @@ You can call multiple search tools in a single turn for parallel execution.
 EXTRACTION RULES:
 - For each competitor: extract name, URL, one-liner description.
 - Classify each competitor's type:
-  "direct" = solves the same problem for the same audience (e.g., Figma vs Sketch)
+  "direct" = solves the same problem for the same audience
   "indirect" = solves a related problem or serves a different audience but users \
-    might use it instead (e.g., Google Docs vs Notion for note-taking)
-  "potential" = large company that could easily enter this space but hasn't yet \
-    (e.g., Apple entering a new market)
+    might use it instead
+  "potential" = large company that could easily enter this space but hasn't yet
+  <example>
+  Idea: "AI meeting summarizer"
+  Otter.ai → direct (same problem, same audience)
+  Notion AI → indirect (different product, but users might use it instead)
+  Apple → potential (could add this to Siri but hasn't)
+  </example>
 - Extract pricing tiers if mentioned in search results (plan name, price, features).
 - Extract strengths and weaknesses from review snippets.
 - For review_sentiment, use ONLY: "positive", "mixed", or "negative".
@@ -53,8 +59,11 @@ EXTRACTION RULES:
     (e.g., CRM with Salesforce/HubSpot, email marketing with Mailchimp/ConvertKit, \
     project management with Jira/Asana/Monday)
 - Determine average price point across competitors.
-- List common complaints users have about existing solutions.
-- Identify underserved needs (gaps in the market).
+- List common complaints users have about existing solutions. Each complaint \
+  must name a specific failing — "slow export takes 5+ minutes for large files" \
+  not "performance issues." Pull these from real review snippets, not generic guesses.
+- Identify underserved needs (gaps in the market). Be specific — "no solution \
+  handles multi-language codebases" not "lacks features."
 - Do NOT fabricate competitors. Only report what you find in the data.
 - If the idea targets a niche or novel space and only 1-2 competitors exist, \
   that's a valid finding — it means the market is underserved. Do NOT pad the \

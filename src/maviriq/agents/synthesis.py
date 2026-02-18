@@ -121,6 +121,29 @@ Focus ONLY on these questions — be precise and cite the data:
    - Narrow to the specific niche, not the broad category
    - Show your reasoning if the data supports it
 
+TONE & LENGTH:
+- Write like a sharp founder talking to another founder. No corporate speak, no filler.
+- people_pay_reasoning: 1-2 sentences max. These display in small metric cards. \
+  GOOD: "3 competitors charge $20-50/mo with paying customers. Pain is real and funded." \
+  BAD: "Based on the competitor analysis, there appears to be evidence suggesting willingness to pay."
+- reachability_reasoning: 1-2 sentences max. Same metric card format. \
+  GOOD: "Target users live on r/devops and HN. ProductHunt launch = instant visibility." \
+  BAD: "Distribution channels exist through various online communities and platforms."
+- market_gap: 2-3 sentences. What's missing and why it matters.
+- Each signal: 1 sentence, specific. "Devs on r/golang complain about slow CI — 12 threads in 6 months" \
+  not "there is demand for faster tools."
+
+<example>
+GOOD viability analysis (for "AI code review for Python security"):
+- people_pay: true
+- people_pay_reasoning: "CodeRabbit charges $19/seat/mo, Snyk has enterprise pricing. Devs already pay for code security."
+- reachability: "easy"
+- reachability_reasoning: "VS Code marketplace + GitHub Actions = built-in distribution. Python devs are on r/python (1.5M members)."
+- market_gap: "Existing tools flag issues but don't auto-fix. Python-specific security context is weak across all players."
+- gap_size: "medium"
+- signals: [positive] "8 pain points about AI-generated code security on HN" / [negative] "CodeRabbit has 2yr head start with deep GitHub integration"
+</example>
+
 Be evidence-driven, not pessimistic or optimistic. If the data is strong, say so. \
 If the data is weak, say so. Don't inflate weak signals, but don't deflate strong ones either. \
 Your job is accurate assessment — let the data speak.
@@ -164,45 +187,63 @@ VERDICT CALIBRATION EXAMPLES — use these as anchors:
 - "Generic CRM for small businesses" with pain but Salesforce/HubSpot dominate → SKIP, 0.30
 - "API docs from code" with strong developer pain, 2-3 competitors, growing market → BUILD, 0.72
 
-**What to provide:**
+TONE — write like a sharp founder advising another founder:
+- No corporate speak, no filler, no hedging with "it appears that" or "based on the analysis."
+- Be direct and conversational. Imagine you're at a coffee shop telling a friend whether \
+  their idea is worth quitting their job for.
+- GOOD: "Devs are screaming about this on HN. 3 competitors exist but they all suck at Python. Ship it."
+- BAD: "The analysis suggests that there is a meaningful market opportunity with several positive indicators."
+
+**What to provide (with length guidance):**
 - Verdict + confidence (0.0-1.0, calibrated per the scale above)
-- One-line summary: explain WHY you gave this verdict, do NOT restate the idea. \
-  Max 20 words. Focus on the key insight (e.g. "Strong pain but saturated market with \
-  entrenched players makes differentiation difficult")
-- Reasoning (3-5 paragraphs, cite the data AND the viability analysis)
-- Key strengths (why BUILD) — write these like a YC partner scribbling on a notecard. \
+- one_line_summary: 1 sentence, max 20 words. Explain WHY this verdict, don't restate the idea. \
+  GOOD: "Strong pain but saturated market with entrenched players makes differentiation difficult" \
+  BAD: "An AI code review tool for Python security vulnerabilities"
+- reasoning: 3-4 short paragraphs. Cite the data. Write in plain language a founder can skim \
+  in 30 seconds. No walls of text.
+- key_strengths (3-5 items) — YC partner notecard style. \
   Max 15 words each. Blunt, punchy, no source citations, no parenthetical references. \
   Don't repeat what the metric cards already show (pain severity, competition level, etc.). \
   Focus on WHY a founder should be excited. \
-  Examples of GOOD strengths:
-    - "Devs already mass-adopting AI code — this problem grows itself"
-    - "Competitors charge $30+/mo — room for a freemium wedge"
-    - "No incumbent owns the workflow — land-grab opportunity"
-  Examples of BAD strengths (do NOT write like this):
-    - "Strong pain: AI-generated code introduces security vulnerabilities (Google News, severity 4/5)"
-    - "Willingness to pay: Established competitors with paid subscription models demonstrate customers are willing to pay"
-    - "Underserved needs: Existing solutions often lack context-awareness and are complex to configure"
-- Key risks (why SKIP or be cautious) — same YC notecard style. Max 15 words. \
+  GOOD: "Devs already mass-adopting AI code — this problem grows itself" \
+  GOOD: "Competitors charge $30+/mo — room for a freemium wedge" \
+  GOOD: "No incumbent owns the workflow — land-grab opportunity" \
+  BAD: "Strong pain: AI-generated code introduces security vulnerabilities (Google News, severity 4/5)" \
+  BAD: "Willingness to pay: Established competitors with paid subscription models demonstrate customers are willing to pay"
+- key_risks (3-5 items) — same YC notecard style. Max 15 words. \
   Specific and sharp, not generic warnings. Name the competitor, name the failure mode. \
-  Examples of GOOD risks:
-    - "CodeRabbit has 2yr head start and deep GitHub integration"
-    - "Devs hate false positives — one bad week and they uninstall"
-    - "3 startups already died here — nobody cracked distribution"
-  Examples of BAD risks (do NOT write like this):
-    - "Market saturation: Several competitors already exist, including CodeRabbit, CodiumAI, and SonarQube"
-    - "False positives: Developers disable code analysis tools due to excessive false positives (Stack Overflow discussions)"
-    - "AI hype: Overestimation of AI capabilities in code review may lead to disappointment (Graveyard Research)"
-- If BUILD: recommended MVP (what to build first)
-- If BUILD: positioning (how to differentiate from competitors)
-- Target user summary (who exactly are you building for)
-- Next steps — each must include a specific action, a channel/method, and a concrete \
-  metric or milestone. Not generic advice.
-- Differentiation strategy: what SPECIFIC angle should this product take?
-- Previous attempts summary: what was tried before and what happened?
-- Lessons from failures: what must the founder do differently?
+  GOOD: "CodeRabbit has 2yr head start and deep GitHub integration" \
+  GOOD: "Devs hate false positives — one bad week and they uninstall" \
+  BAD: "Market saturation: Several competitors already exist, including CodeRabbit, CodiumAI, and SonarQube"
+- recommended_mvp: 2-3 sentences if BUILD. What to build first, what to skip. \
+  GOOD: "VS Code extension that scans Python files on save. Flag top 5 OWASP issues only — no noise. Ship in 2 weeks." \
+  BAD: "Develop a comprehensive code analysis platform with multi-language support and CI/CD integration."
+- recommended_positioning: 1-2 sentences if BUILD. How to stand out. \
+  GOOD: "The Python-only security tool that actually understands your codebase context." \
+  BAD: "Position as a differentiated AI-powered code review solution."
+- target_user_summary: 1-2 sentences. Who exactly, in plain language. \
+  GOOD: "Senior Python devs at startups (10-50 people) shipping fast and worried about security debt." \
+  BAD: "Software developers and engineering teams who require code security solutions."
+- next_steps: 3-5 items. Each must include a specific action + channel + concrete metric. \
+  <example>
+  GOOD next steps:
+  - "Post on r/Python asking 'how do you handle security reviews?' — aim for 20+ responses in 1 week"
+  - "Build a VS Code extension MVP that flags OWASP Top 5 in Python — ship to 10 beta users in 2 weeks"
+  - "DM 5 CTOs from YC W24 batch who mentioned security pain — get 3 discovery calls booked"
+  BAD next steps:
+  - "Conduct customer discovery interviews"
+  - "Build an MVP"
+  - "Validate the market"
+  </example>
+- differentiation_strategy: 2-3 sentences. What SPECIFIC angle should this product take?
+- previous_attempts_summary: 1-2 sentences. What was tried before and what happened? \
+  Skip if no previous attempts found.
+- lessons_from_failures: 1-2 sentences. What must the founder do differently? \
+  Skip if no failures found.
 
 Use the viability analysis as established facts. Do NOT contradict its findings — build on them.
-Be critical. Don't oversell weak ideas. This is NOT a pitch deck — it's an honest assessment."""
+Be direct. Don't oversell weak ideas. This is NOT a pitch deck — it's an honest assessment \
+from one founder to another."""
 
 
 # ──────────────────────────────────────────────
@@ -299,7 +340,7 @@ Target user: {pain.primary_target_user.label}
 {len(pain.pain_points)} pain points found — {pain_signal}
 Pain summary: {pain.pain_summary}
 
-Top pain points:
+Top pain points{f" (showing top 5 of {len(pain.pain_points)})" if len(pain.pain_points) > 5 else ""}:
 {chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
 
 User segments found:
@@ -310,7 +351,7 @@ User segments found:
 Market saturation: {competitors.market_saturation}
 Avg price: {competitors.avg_price_point}
 
-Top competitors:
+Top competitors{f" (showing top 5 of {len(competitors.competitors)})" if len(competitors.competitors) > 5 else ""}:
 {chr(10).join(f'{i+1}. {c.name} [{c.competitor_type}]: {c.one_liner}' + chr(10) + f'   Pricing: {", ".join(p.price for p in c.pricing)}' + chr(10) + f'   Strengths: {", ".join(c.strengths[:2])}' + chr(10) + f'   Weaknesses: {", ".join(c.weaknesses[:2])}' for i, c in enumerate(competitors.competitors[:5])) or "None found"}
 
 Common complaints:

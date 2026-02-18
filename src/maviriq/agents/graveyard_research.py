@@ -33,6 +33,9 @@ SEARCH TIPS:
 You can call multiple search tools in a single turn for parallel execution.
 
 EXTRACTION RULES:
+- Aim for 2-5 highly relevant previous attempts. Quality over quantity — 2 \
+  perfectly relevant failures are more useful than 8 loosely related ones. \
+  If you can only find 1, that's fine. If you find 0, that's a valid finding.
 - Find previous_attempts: real startups that tried to SOLVE THE SAME PROBLEM \
   for the SAME AUDIENCE and failed.
 - RELEVANCE IS CRITICAL: Only include startups that are directly comparable to \
@@ -58,6 +61,14 @@ EXTRACTION RULES:
 - For shutdown_reason, be SPECIFIC to that company. Bad: "Failed due to lack of \
   market demand." Good: "Couldn't get developers to integrate into CI/CD pipelines \
   — onboarding friction killed activation rates."
+- RECENCY MATTERS: Prioritize failures from the last 5 years. A startup that \
+  failed in 2012 may have failed for reasons that no longer apply (e.g., mobile \
+  internet wasn't widespread, cloud infrastructure was expensive). Older failures \
+  are still worth including if the failure reason is timeless (e.g., "marketplace \
+  cold-start problem", "couldn't get SMBs to pay for software").
+- For source, use the URL or website name where you found this information \
+  (e.g., "failory.com", "techcrunch.com", "reddit.com"). This is NOT the \
+  startup's own website — it's where the post-mortem or shutdown story was found.
 - If no RELEVANT failed startups found, that's a valid finding — report an empty \
   list. The space may be untested. Do NOT pad the list with vaguely related companies \
   from adjacent industries.
