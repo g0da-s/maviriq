@@ -86,12 +86,12 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* underserved needs */}
       {data.underserved_needs.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-sm font-semibold text-foreground">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
               gaps competitors aren&apos;t filling
             </p>
           </div>
-          <div className="px-5 pb-4">
+          <div className="px-5 py-4">
             <ul className="space-y-2">
               {data.underserved_needs.map((need, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted">
@@ -107,12 +107,12 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
       {/* common complaints */}
       {data.common_complaints.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-sm font-semibold text-foreground">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
               what users complain about
             </p>
           </div>
-          <div className="px-5 pb-4">
+          <div className="px-5 py-4">
             <ul className="space-y-2">
               {data.common_complaints.map((c, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted">

@@ -49,8 +49,8 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
     <div className="space-y-6">
       {/* who has this pain — combined target user + segments */}
       <div className="rounded-xl border border-card-border bg-card">
-        <div className="px-5 pt-5 pb-3">
-          <p className="text-sm font-semibold text-foreground">
+        <div className="px-5 py-3 border-b border-card-border">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
             who has this pain?
           </p>
         </div>
@@ -72,9 +72,10 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       {/* pain points — evidence quotes */}
       {sortedQuotes.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-sm font-semibold text-foreground">
-              what people are saying ({data.pain_points.length} quotes found)
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
+              what people are saying
+              <span className="ml-1.5 text-muted/30">{data.pain_points.length} found</span>
             </p>
           </div>
           <div className="divide-y divide-card-border">
