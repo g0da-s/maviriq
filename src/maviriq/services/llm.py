@@ -271,7 +271,7 @@ class LLMService:
                     "Iteration %d: %d search calls [%s]",
                     iteration + 1,
                     len(search_calls),
-                    ", ".join(f"{tc['name']}({tc['args'].get('query', '')[:50]})" for tc in search_calls),
+                    ", ".join(f"{tc['name']}({(tc['args'].get('query') or tc['args'].get('url', ''))[:50]})" for tc in search_calls),
                 )
             if submit_call is not None:
                 logger.info("Iteration %d: submit_result called", iteration + 1)
@@ -281,14 +281,15 @@ class LLMService:
                 async def _exec(tc: dict) -> ToolMessage:
                     nonlocal search_successes, search_failures
                     name = tc["name"]
-                    query = tc["args"].get("query", "")
+                    # Most tools use "query", scrape_url uses "url"
+                    arg = tc["args"].get("query") or tc["args"].get("url", "")
                     executor = tool_executors.get(name)
                     if executor is None:
                         search_failures += 1
                         content = f"Error: unknown tool '{name}'"
                     else:
                         try:
-                            content = await executor(query)
+                            content = await executor(arg)
                             search_successes += 1
                         except Exception as e:
                             search_failures += 1

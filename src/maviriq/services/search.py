@@ -197,6 +197,35 @@ class SerperService:
 
         return results
 
+    @retry(**_RETRY_POLICY)
+    async def scrape_url(self, url: str) -> str:
+        """Scrape a URL and return its text content (via Serper /scrape)."""
+        cached = await self.cache.get(url, "serper_scrape")
+        if cached:
+            logger.debug(f"Cache hit for scrape: {url}")
+            return cached if isinstance(cached, str) else cached[0]
+
+        async with self._semaphore:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                response = await client.post(
+                    f"{self.base_url}/scrape",
+                    headers={
+                        "X-API-KEY": self.api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json={"url": url},
+                )
+                response.raise_for_status()
+                data = response.json()
+
+        text = data.get("text", "")
+        # Truncate to avoid blowing up context
+        if len(text) > 8000:
+            text = text[:8000] + "\n\n[...truncated]"
+
+        await self.cache.set(url, "serper_scrape", [text], settings.search_cache_ttl)
+        return text
+
     async def multi_search(self, queries: list[str]) -> list[SearchResult]:
         """Run multiple searches in parallel, deduplicate results by URL."""
         tasks = [self.search(q) for q in queries]

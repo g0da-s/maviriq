@@ -96,6 +96,9 @@ _CATALOG_MAP: dict[str, tuple[str, str]] = {
     name: (desc, method) for name, desc, method in TOOL_CATALOG
 }
 
+# Special tool name for the scrape endpoint (takes url, not query)
+_SCRAPE_TOOL = "scrape_url"
+
 
 def build_tools_for_agent(
     search: SerperService,
@@ -112,6 +115,37 @@ def build_tools_for_agent(
     executors: dict[str, Callable[[str], Awaitable[str]]] = {}
 
     for name in tool_names:
+        # Handle scrape_url separately — different schema and executor
+        if name == _SCRAPE_TOOL:
+            schemas.append({
+                "name": _SCRAPE_TOOL,
+                "description": (
+                    "Scrape a webpage and return its text content. Use this to visit "
+                    "pricing pages, product pages, or any URL to get accurate, current data. "
+                    "Pass the full URL (e.g. https://example.com/pricing)."
+                ),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "description": "The full URL to scrape.",
+                        }
+                    },
+                    "required": ["url"],
+                },
+            })
+
+            async def _scrape_executor(url: str) -> str:
+                try:
+                    return await search.scrape_url(url)
+                except Exception as e:
+                    logger.warning(f"Scrape failed for {url}: {e}")
+                    return f"Failed to scrape {url}: {e}"
+
+            executors[_SCRAPE_TOOL] = _scrape_executor
+            continue
+
         if name not in _CATALOG_MAP:
             raise ValueError(f"Unknown tool: {name}")
         desc, method_name = _CATALOG_MAP[name]

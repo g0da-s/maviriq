@@ -24,10 +24,12 @@ You have access to search tools. Use them strategically:
 5. Search Crunchbase to discover early-stage startups that may not appear \
    on review sites yet.
 6. Refine your queries based on what you find — dig deeper on competitors.
-7. IMPORTANT: After finding competitors, search for each one's pricing \
-   (e.g. "[name] pricing", "[name] plans"). Pricing rarely appears in \
-   initial snippets — you must search for it explicitly. Do NOT submit \
-   until you have attempted pricing searches for your top competitors.
+7. IMPORTANT: After finding competitors, you MUST verify pricing by scraping \
+   the actual pricing page. Search snippets often contain outdated prices. \
+   For each top competitor: first search "[name] pricing" to find the URL, \
+   then use scrape_url to visit the actual pricing page and extract current \
+   prices. Do NOT submit until you have scraped pricing pages for your top \
+   competitors. Never rely on search snippets alone for pricing data.
 
 You can call multiple search tools in a single turn for parallel execution.
 
@@ -86,6 +88,7 @@ TOOL_NAMES = [
     "search_producthunt",
     "search_indiehackers",
     "search_crunchbase",
+    "scrape_url",
 ]
 
 
