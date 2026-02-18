@@ -10,6 +10,7 @@ const GapSizeSchema = z.enum(["large", "medium", "small", "none"]);
 const SignalDirectionSchema = z.enum(["positive", "negative", "neutral"]);
 const ReachabilitySchema = z.enum(["easy", "moderate", "hard"]);
 const ReviewSentimentSchema = z.enum(["positive", "mixed", "negative"]);
+const PainSeveritySchema = z.enum(["critical", "major", "moderate", "minor"]);
 
 export type ValidationStatus = z.infer<typeof ValidationStatusSchema>;
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -19,6 +20,7 @@ export type GapSize = z.infer<typeof GapSizeSchema>;
 export type SignalDirection = z.infer<typeof SignalDirectionSchema>;
 export type Reachability = z.infer<typeof ReachabilitySchema>;
 export type ReviewSentiment = z.infer<typeof ReviewSentimentSchema>;
+export type PainSeverity = z.infer<typeof PainSeveritySchema>;
 
 // ── Pain Discovery ──
 
@@ -27,7 +29,7 @@ const PainPointSchema = z.object({
   source_url: z.string(),
   quote: z.string(),
   author_context: z.string(),
-  pain_severity: z.number(),
+  pain_severity: PainSeveritySchema,
   date: z.string().nullable(),
 });
 

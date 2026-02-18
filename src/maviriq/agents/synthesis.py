@@ -265,8 +265,14 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         market_intel = input_data.market_intelligence
         graveyard = input_data.graveyard_research
 
-        avg_severity = (
-            f"{sum(p.pain_severity for p in pain.pain_points) / len(pain.pain_points):.1f}/5"
+        severity_counts = {"critical": 0, "major": 0, "moderate": 0, "minor": 0}
+        for p in pain.pain_points:
+            severity_counts[p.pain_severity] = severity_counts.get(p.pain_severity, 0) + 1
+        high_impact = severity_counts["critical"] + severity_counts["major"]
+        pain_signal = (
+            f"{high_impact} of {len(pain.pain_points)} high-impact "
+            f"({severity_counts['critical']} critical, {severity_counts['major']} major, "
+            f"{severity_counts['moderate']} moderate, {severity_counts['minor']} minor)"
             if pain.pain_points else "N/A"
         )
 
@@ -275,11 +281,11 @@ IDEA: {idea}
 
 ═══ PAIN RESEARCH ═══
 Target user: {pain.primary_target_user.label}
-{len(pain.pain_points)} pain points found (avg severity: {avg_severity})
+{len(pain.pain_points)} pain points found — {pain_signal}
 Pain summary: {pain.pain_summary}
 
 Top pain points:
-{chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}/5, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
+{chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
 
 User segments found:
 {chr(10).join(f'- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})' for s in pain.user_segments) or "None found"}

@@ -41,15 +41,18 @@ EXTRACTION RULES:
   paraphrase, or "clean up" the language.
 - For source_url, use the actual URL from search results.
 
-SEVERITY RATING (1-5) — Rate based on IMPACT to the person, not their tone. \
+SEVERITY RATING — Rate based on IMPACT to the person, not their tone. \
 A calm person describing an expensive workaround is higher severity than \
-someone dramatically ranting about a minor inconvenience:
-  1 = Cosmetic or preference ("I wish it looked different")
-  2 = Inconvenience with easy workaround ("I just use a spreadsheet instead")
-  3 = Recurring time or money drain ("I spend hours every week on this manually")
-  4 = Significant business impact ("we're losing customers", "I had to hire \
-      someone just to handle this")
-  5 = Existential, no viable workaround ("we can't operate without solving this")
+someone dramatically ranting about a minor inconvenience. Use these categories:
+  "minor" = Cosmetic or preference ("I wish it looked different"), easy workaround exists
+  "moderate" = Recurring time or money drain ("I spend hours every week on this manually")
+  "major" = Significant business impact ("we're losing customers", "I had to hire someone")
+  "critical" = Existential, no viable workaround ("we can't operate without solving this")
+
+SOURCE CREDIBILITY — Weight your assessment by who is speaking:
+  A paying customer or decision-maker (CTO, founder, team lead) describing impact \
+  is far more meaningful than an anonymous Reddit rant or a student wishing for a free tool. \
+  Capture this in author_context — be specific about their role when possible.
 
 - For author_context, infer from clues (subreddit, job title mentions, how they \
   describe themselves). If unclear, say "unknown user".

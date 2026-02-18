@@ -165,9 +165,10 @@ export default function ValidationPage() {
   const graveyard = run.graveyard_research;
   const via = run.viability;
 
-  const avgSeverity = pain && pain.pain_points.length > 0
-    ? (pain.pain_points.reduce((sum, p) => sum + p.pain_severity, 0) / pain.pain_points.length)
+  const highImpactCount = pain
+    ? pain.pain_points.filter(p => p.pain_severity === "critical" || p.pain_severity === "major").length
     : 0;
+  const totalPainPoints = pain ? pain.pain_points.length : 0;
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-28 pb-16">
@@ -222,13 +223,13 @@ export default function ValidationPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">pain severity</p>
-            {pain.pain_points.length > 0 ? (
+            <p className="text-sm font-semibold text-foreground mb-1">high-impact pain</p>
+            {totalPainPoints > 0 ? (
               <p className={`text-sm font-semibold ${
-                avgSeverity >= 3.5 ? "text-build" :
-                avgSeverity >= 2 ? "text-maybe" : "text-skip"
+                highImpactCount >= 3 ? "text-build" :
+                highImpactCount >= 1 ? "text-maybe" : "text-skip"
               }`}>
-                {avgSeverity.toFixed(1)}<span className="text-xs text-muted/40">/5</span>
+                {highImpactCount}<span className="text-xs text-muted/40">/{totalPainPoints}</span>
               </p>
             ) : (
               <p className="text-sm font-semibold text-muted/40">N/A</p>

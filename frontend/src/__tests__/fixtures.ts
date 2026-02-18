@@ -15,7 +15,7 @@ export const mockPainDiscovery: PainDiscoveryOutput = {
       source_url: "https://reddit.com/r/test",
       quote: "Scheduling meetings is a nightmare",
       author_context: "Engineering manager",
-      pain_severity: 4,
+      pain_severity: "major",
       date: "2024-01-15",
     },
     {
@@ -23,7 +23,7 @@ export const mockPainDiscovery: PainDiscoveryOutput = {
       source_url: "https://news.ycombinator.com",
       quote: "I spend 2 hours a week just scheduling",
       author_context: "Startup founder",
-      pain_severity: 3,
+      pain_severity: "moderate",
       date: "2024-02-01",
     },
   ],

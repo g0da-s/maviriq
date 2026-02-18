@@ -36,28 +36,14 @@ const wtpLabel = {
 
 const wtpRank = { high: 3, medium: 2, low: 1 } as const;
 
-function SeverityBar({ severity }: { severity: number }) {
-  const color = severity >= 4 ? "bg-skip" : severity >= 3 ? "bg-maybe" : "bg-muted/30";
-  return (
-    <div className="flex items-center gap-2 shrink-0">
-      <div className="flex gap-0.5">
-        {Array.from({ length: 5 }).map((_, j) => (
-          <div
-            key={j}
-            className={`h-1.5 w-1.5 rounded-full ${j < severity ? color : "bg-white/10"}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+const severityRank = { critical: 4, major: 3, moderate: 2, minor: 1 } as const;
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   const allSegments = [data.primary_target_user, ...data.user_segments.filter(seg => seg.label !== data.primary_target_user.label)]
     .sort((a, b) => wtpRank[b.willingness_to_pay] - wtpRank[a.willingness_to_pay]);
 
   const sortedQuotes = [...data.pain_points]
-    .sort((a, b) => b.pain_severity - a.pain_severity);
+    .sort((a, b) => severityRank[b.pain_severity] - severityRank[a.pain_severity]);
 
   return (
     <div className="space-y-6">
@@ -94,9 +80,8 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
           <div className="divide-y divide-card-border">
             {sortedQuotes.slice(0, 5).map((pp, i) => (
               <div key={i} className="px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
+                <div>
                   <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
-                  <SeverityBar severity={pp.pain_severity} />
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
                   {pp.source_url && isSafeUrl(pp.source_url) ? (

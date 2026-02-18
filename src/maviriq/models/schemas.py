@@ -17,8 +17,33 @@ class PainPoint(BaseModel):
     source_url: str
     quote: str
     author_context: str  # Who is this person (role, industry)
-    pain_severity: int = Field(ge=1, le=5)
+    pain_severity: Literal["critical", "major", "moderate", "minor"]
     date: str | None = None
+
+    @field_validator("pain_severity", mode="before")
+    @classmethod
+    def normalize_pain_severity(cls, v: object) -> str:
+        if isinstance(v, int):
+            # Backward compat: map old 1-5 scale to categories
+            if v >= 5:
+                return "critical"
+            if v >= 4:
+                return "major"
+            if v >= 3:
+                return "moderate"
+            return "minor"
+        if not isinstance(v, str):
+            return v  # type: ignore[return-value]
+        v_lower = v.lower().strip()
+        if v_lower in ("critical", "major", "moderate", "minor"):
+            return v_lower
+        if "critical" in v_lower or "existential" in v_lower:
+            return "critical"
+        if "major" in v_lower or "significant" in v_lower:
+            return "major"
+        if "moderate" in v_lower or "recurring" in v_lower:
+            return "moderate"
+        return "minor"
 
 
 class UserSegment(BaseModel):
