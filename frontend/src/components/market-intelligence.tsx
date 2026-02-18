@@ -79,11 +79,8 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
           <div className="px-5 py-4 space-y-3">
             {data.distribution_channels.map((ch, i) => (
               <div key={i} className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground/90">{ch.channel}</p>
-                  <p className="text-xs text-muted/50 mt-0.5">{ch.reach_estimate}</p>
-                </div>
-                <span className={`text-xs font-medium ${effortColor[ch.effort]}`}>
+                <p className="text-sm font-medium text-foreground/90">{ch.channel}</p>
+                <span className={`text-xs font-medium shrink-0 ml-4 ${effortColor[ch.effort]}`}>
                   {effortLabel[ch.effort]}
                 </span>
               </div>
