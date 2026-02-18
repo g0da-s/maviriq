@@ -57,13 +57,19 @@ EXTRACTION RULES:
 - List common complaints users have about existing solutions.
 - Identify underserved needs (gaps in the market).
 - Do NOT fabricate competitors. Only report what you find in the data.
-- If only 1-2 competitors exist, that's a valid finding — it means the market \
-  is underserved. Do NOT pad the list with irrelevant companies to hit a number.
+- If the idea targets a niche or novel space and only 1-2 competitors exist, \
+  that's a valid finding — it means the market is underserved. Do NOT pad the \
+  list with irrelevant companies to hit a number.
 - If zero competitors exist, report that honestly. An empty landscape is signal.
+- However, if the idea targets a WELL-KNOWN category (CRM, email marketing, \
+  project management, note-taking, etc.), there are definitely 5+ competitors. \
+  If you've only found 2-3 in a known category, you haven't searched broadly \
+  enough — try "[category] alternatives", "[category] top tools", or check \
+  G2/Capterra category pages before submitting.
 
 When you have mapped the landscape, call submit_result with your structured \
-findings. Quality over quantity — 2-3 well-researched competitors are better \
-than 10 shallow ones."""
+findings. Quality matters — each competitor should have strengths, weaknesses, \
+and ideally pricing."""
 
 TOOL_NAMES = [
     "search_web",

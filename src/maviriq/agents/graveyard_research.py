@@ -34,10 +34,34 @@ SEARCH TIPS:
 You can call multiple search tools in a single turn for parallel execution.
 
 EXTRACTION RULES:
-- Find previous_attempts: real startups that tried something similar and failed. \
-  For each, include what they did, why they shut down (be specific — not generic \
-  reasons like "ran out of money", dig into the real cause), and when (if available).
-- If no failed startups found, that's a valid finding — the space may be untested.
+- Find previous_attempts: real startups that tried to SOLVE THE SAME PROBLEM \
+  for the SAME AUDIENCE and failed.
+- RELEVANCE IS CRITICAL: Only include startups that are directly comparable to \
+  the idea being researched. Ask yourself: "Did this startup try to solve the \
+  same core problem?" If not, DO NOT include it.
+  <examples>
+  <example>
+  Idea: "AI codebase auditor that finds security vulnerabilities"
+  GOOD match: "Codacy (pivoted away from automated code review)" — same problem
+  BAD match: "Lovable (AI website builder that shut down)" — completely different problem, \
+    just because both use AI does not make them relevant
+  </example>
+  <example>
+  Idea: "On-demand mobile barber app"
+  GOOD match: "Hot Barber (marketplace connecting barbers and customers)" — same model
+  BAD match: "Uber (ride-sharing)" — different industry, just because both are on-demand \
+    does not make them relevant
+  </example>
+  </examples>
+- For each previous attempt: include what they did, why they shut down (be specific \
+  — not generic reasons like "ran out of money", dig into the real cause), and when \
+  (if available).
+- For shutdown_reason, be SPECIFIC to that company. Bad: "Failed due to lack of \
+  market demand." Good: "Couldn't get developers to integrate into CI/CD pipelines \
+  — onboarding friction killed activation rates."
+- If no RELEVANT failed startups found, that's a valid finding — report an empty \
+  list. The space may be untested. Do NOT pad the list with vaguely related companies \
+  from adjacent industries.
 - Do NOT fabricate failed startups. Only report what you find in the data.
 
 When you have gathered enough failure intelligence, call submit_result with \
