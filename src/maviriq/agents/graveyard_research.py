@@ -22,8 +22,7 @@ You have access to search tools. Use them strategically:
 3. Search Google News for recent shutdowns, pivots, and layoffs.
 4. Search Reddit for discussions about failed products and alternatives.
 5. Search Hacker News for technical discussions about startup failures.
-6. Search Crunchbase for funding history and company status.
-7. Refine your queries based on what you find — chase failure stories.
+6. Refine your queries based on what you find — chase failure stories.
 
 SEARCH TIPS:
 - Try "site:failory.com [keyword]" as one of your first searches.
@@ -72,7 +71,6 @@ TOOL_NAMES = [
     "search_news",
     "search_reddit",
     "search_hackernews",
-    "search_crunchbase",
 ]
 
 

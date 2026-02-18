@@ -17,14 +17,22 @@ is to find REAL evidence that people struggle with a specific problem.
 SEARCH STRATEGY:
 1. Search for the PROBLEM, not the solution. Search for the job people are \
    trying to do and where they get stuck.
-2. Search Reddit and Hacker News for genuine complaints — real people in their \
-   own words. These are your best sources.
-3. Search Twitter/X for complaints and rants. Note: Twitter search is unreliable \
-   — try it once but if it returns no results, move on. Do not retry.
-4. Search Google News for industry coverage of the problem.
-5. Refine based on what you find. Try different phrasings: "frustrated with X", \
+2. Search Reddit for genuine complaints — real people in their own words. \
+   Try both general startup communities (r/startups, r/entrepreneur, r/SaaS) \
+   and broader Reddit search. Use queries like \
+   "site:reddit.com [problem]" via search_web for targeted results.
+3. Search Hacker News (news.ycombinator.com) — this is the most respected \
+   tech/startup community. Founders and investors read HN daily. Pain points \
+   found here carry extra weight. Search for "Ask HN" threads, Show HN \
+   feedback, and comment discussions about the problem space.
+4. Search Indie Hackers for founder discussions — builders openly share what \
+   problems they're solving, what's not working, and what users are asking for.
+5. Search Google News as a secondary source — look for articles reporting on \
+   the problem at scale (e.g., "companies struggle with X", "the cost of Y \
+   problem"). This validates that the pain is widespread, not just anecdotal.
+6. Refine based on what you find. Try different phrasings: "frustrated with X", \
    "X is broken", "X alternative", "switched from X because".
-6. You can call multiple search tools in a single turn for parallel execution.
+7. You can call multiple search tools in a single turn for parallel execution.
 
 RECENCY IS CRITICAL:
 - Only use complaints from the last 6-12 months. A pain point from 2 years ago \
@@ -124,8 +132,8 @@ TOOL_NAMES = [
     "search_web",
     "search_reddit",
     "search_hackernews",
-    "search_twitter",
     "search_news",
+    "search_indiehackers",
 ]
 
 

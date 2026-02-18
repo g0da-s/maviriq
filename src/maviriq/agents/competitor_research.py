@@ -22,8 +22,7 @@ You have access to search tools. Use them strategically:
 3. Search Product Hunt for recent product launches in this space.
 4. Search Indie Hackers for bootstrapped competitors, revenue reports, and founder stories.
 5. Search Crunchbase for startup funding and company information.
-6. Search Google News for recent competitive moves and announcements.
-7. Refine your queries based on what you find — dig deeper on competitors.
+6. Refine your queries based on what you find — dig deeper on competitors.
 8. IMPORTANT: After finding competitors, search for each one's pricing \
    (e.g. "[name] pricing", "[name] plans"). Pricing rarely appears in \
    initial snippets — you must search for it explicitly. Do NOT submit \
@@ -78,7 +77,6 @@ TOOL_NAMES = [
     "search_producthunt",
     "search_indiehackers",
     "search_crunchbase",
-    "search_news",
 ]
 
 

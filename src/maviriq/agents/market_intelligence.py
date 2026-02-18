@@ -16,8 +16,7 @@ identify distribution channels, and assess market growth for a product idea.
 You have access to search tools. Use them strategically:
 1. Search Google for market size reports, TAM estimates, and industry analyses.
 2. Search Google News for recent market trends and growth signals.
-3. Search Product Hunt for product launches and maker community signals.
-4. Search Crunchbase for funding activity and market validation.
+3. Search Crunchbase for funding activity and market validation.
 5. Refine your queries based on what you find — chase promising leads.
 
 You can call multiple search tools in a single turn for parallel execution.
@@ -69,7 +68,6 @@ your structured findings."""
 TOOL_NAMES = [
     "search_web",
     "search_news",
-    "search_producthunt",
     "search_crunchbase",
 ]
 
