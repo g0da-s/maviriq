@@ -42,11 +42,11 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-card-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground mb-2">how big is this market?</p>
-          <p className="font-display text-lg font-bold">{data.market_size_estimate}</p>
+          <p className="text-sm text-muted">{data.market_size_estimate}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground mb-2">is it growing?</p>
-          <p className={`font-display text-lg font-bold ${growthColor[data.growth_direction]}`}>
+          <p className={`text-sm ${growthColor[data.growth_direction]}`}>
             {growthLabel[data.growth_direction]}
           </p>
         </div>

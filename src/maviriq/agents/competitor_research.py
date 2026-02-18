@@ -21,6 +21,10 @@ You have access to search tools. Use them strategically:
 5. Search Crunchbase for startup funding and company information.
 6. Search Google News for recent competitive moves and announcements.
 7. Refine your queries based on what you find — dig deeper on competitors.
+8. IMPORTANT: After finding competitors, search for each one's pricing \
+   (e.g. "[name] pricing", "[name] plans"). Pricing rarely appears in \
+   initial snippets — you must search for it explicitly. Do NOT submit \
+   until you have attempted pricing searches for your top competitors.
 
 You can call multiple search tools in a single turn for parallel execution.
 
