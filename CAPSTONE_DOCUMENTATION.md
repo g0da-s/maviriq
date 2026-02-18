@@ -91,8 +91,10 @@
 - Stream mode for real-time SSE event publishing (user sees progress per agent)
 
 **Prompt Engineering Techniques Applied**:
-- Bias toward skepticism: "Most ideas should get SKIP or MAYBE. BUILD requires STRONG evidence across ALL dimensions."
-- Confidence calibration: explicit scale (0.90+ = overwhelming evidence, 0.35-0.54 = weak case) to prevent clustering around 0.60-0.65
+- Evidence-driven assessment: "Be evidence-driven, not pessimistic or optimistic. Let the data speak." (replaced earlier "Bias toward skepticism" after eval showed systematic pessimism — see Phase 6)
+- Confidence calibration: explicit scale (0.85+ = overwhelming evidence, 0.25-0.44 = weak case) with few-shot anchor examples to prevent clustering around 0.30-0.35
+- Few-shot severity calibration: 5 diverse `<example>` tags in Pain Discovery showing mild/moderate/high ratings to prevent central tendency bias (see Phase 6)
+- Market saturation threshold criteria: explicit competitor-count and revenue thresholds to eliminate subjective saturation ratings (see Phase 6)
 - Dynamic date injection: Pain Discovery prompt uses `{current_year}` and `{previous_year}` to ensure recency (not hardcoded dates)
 - Twitter reliability guidance: "try it once but if it returns no results, move on. Do not retry."
 - TAM narrowing: "Search results will give you BROAD market numbers. Always narrow down: the broad market is $XB, but this idea targets [specific niche], which is roughly X% = $Y."
@@ -302,6 +304,49 @@ Built a comprehensive evaluation system:
 - Results saved as JSON for before/after comparison
 - Configurable: `--skip-model` for cheaper runs, `--trials=N` for consistency, `--category` for targeted testing
 
+### Phase 6: Eval-Driven Prompt Fixes (Post-Eval Run `eval_20260218_111357`)
+
+Ran full eval suite (25 cases, 1 trial each). Results: **20% pass rate** (5/25). Average score was high (0.90) but a single failed grader per trial causes a full trial failure. Diagnosed 4 systemic root causes and applied targeted prompt engineering fixes informed by [Anthropic's multishot prompting best practices](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting) and [LLM calibration research](https://learnprompting.org/docs/reliability/calibration).
+
+**Root Cause Analysis:**
+
+| Root Cause | Failures Caused | Agent | Technique Applied |
+|---|---|---|---|
+| Pain severity central tendency bias | 14/20 | Pain Discovery | Few-shot examples + sharper boundary definitions + explicit calibration instruction |
+| Market saturation undefined criteria | 6/20 | Competitor Research | Explicit threshold criteria with concrete examples |
+| Synthesis double-pessimism cascade | 6/20 | Synthesis (both passes) | Removed skepticism bias from viability pass; added calibration anchor examples to verdict pass |
+| Known competitor detection gaps | 5/20 | Competitor Research | Reordered search strategy to prioritize incumbents first |
+
+**Fix 1 — Pain Severity Distribution** (`pain_discovery.py`):
+- **Problem**: LLM rated every pain point "moderate" (14/20 cases). This is classic [central tendency bias](https://learnprompting.org/docs/reliability/debiasing) — the model defaults to the safe middle option when category boundaries are vague.
+- **Technique**: Applied Anthropic's recommended [few-shot prompting](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting) with 5 diverse examples (2 mild, 1 moderate, 2 high) wrapped in `<example>` tags. Added sharper boundary definitions that eliminate overlap between levels. Added explicit calibration instruction: "You MUST use the full range of severity levels."
+- **Why few-shot**: Anthropic's docs state "Examples are your secret weapon...particularly effective for tasks that require structured outputs." The 5 examples are diverse (covering different severities), relevant (using real-world complaint patterns), and balanced (not skewed toward one label — addressing [majority label bias](https://learnprompting.org/docs/reliability/calibration)).
+- **Why sharper boundaries**: Old "moderate" definition ("recurring time or money drain, significant business impact") covered 90% of real complaints. New definitions use concrete decision rules: "If the person just wishes something were better → mild; If they describe spending time/money but managing → moderate; If they describe it as blocking, costly, or existential → high."
+
+**Fix 2 — Market Saturation Criteria** (`competitor_research.py`):
+- **Problem**: Agent had zero guidance for what constitutes low/medium/high saturation. The prompt said only "Synthesize market saturation: ONLY low, medium, or high" — no definitions, no examples.
+- **Technique**: Added explicit threshold-based criteria with concrete examples. "low" = 0-2 direct competitors, no dominant player. "medium" = 3-6 direct competitors, some funded. "high" = 7+ competitors OR any competitor with >$100M revenue or millions of users. Each level includes a real-world example.
+- **Why thresholds**: Without criteria, the LLM was inferring saturation from vibes. Email marketing (Mailchimp with 13M+ users) was rated "medium" because the agent found only 3-4 competitors in its search results, ignoring the massive scale of incumbents. The threshold "any competitor with >$100M revenue or millions of users → high" catches this.
+
+**Fix 3 — Synthesis Pessimism Bias** (`synthesis.py`):
+- **Problem**: All 5 "obviously_good" ideas and 3/5 "niche_viable" ideas got SKIP instead of BUILD/MAYBE. Confidence clustered at 0.32.
+- **Root cause**: Double-pessimism cascade. Pass 1 (Viability) was instructed "Bias toward skepticism." Pass 2 (Verdict) was told "Be critical" and "Use the viability analysis as established facts." So Pass 2 built on an already-deflated assessment. Additionally, the upstream pain severity bug fed "0 of N high-impact" into synthesis, making even strong ideas appear weak.
+- **Technique 1**: Replaced "Bias toward skepticism" in the viability prompt with "Be evidence-driven, not pessimistic or optimistic. Let the data speak." This is the [prompt debiasing](https://learnprompting.org/docs/reliability/debiasing) principle — removing directional bias from instructions.
+- **Technique 2**: Added "Competition VALIDATES demand" and "If research found 5+ real pain points with high-impact severity, funded competitors, and growing market, that is strong BUILD evidence" to the verdict prompt. This counteracts the natural LLM tendency to list risks as reasons to SKIP.
+- **Technique 3**: Added 5 verdict calibration anchor examples (few-shot) spanning the full BUILD/SKIP/MAYBE spectrum with specific confidence scores. This applies Anthropic's recommendation to "include 3-5 diverse, relevant examples" and addresses [confidence calibration](https://learnprompting.org/docs/reliability/calibration) by showing the model what different verdicts look like with real data patterns.
+
+**Fix 4 — Known Competitor Detection** (`competitor_research.py`):
+- **Problem**: Agent missed household-name competitors (WeWork for office space, Mailchimp for email, Outreach for SDR tools) while finding niche players from Product Hunt.
+- **Technique**: Reordered search strategy to start with "FIRST: Search for obvious market leaders and incumbents" before deep-diving into niche tools. Added explicit instruction: "Missing a household name like Salesforce in CRM or Mailchimp in email marketing is a critical error."
+- **Why reorder**: The agent's search budget is limited. By searching niche sources first, it consumed search turns on small players and ran out of budget before finding the obvious incumbents. Frontloading incumbent search ensures the most important competitors are always found.
+
+**Prompt Engineering Principles Applied** (summary):
+1. **Few-shot examples with balanced label distribution** — prevents central tendency bias by showing the model all categories are valid and expected (Anthropic multishot prompting + calibration research)
+2. **Explicit boundary definitions** — eliminates ambiguity that causes the model to default to safe middle values
+3. **Directional debiasing** — removing words like "skepticism" and "bias toward" that compound across multi-pass prompts
+4. **Calibration anchors** — concrete input→output examples that establish the expected scoring range
+5. **Search strategy reordering** — ensuring the most critical information (market leaders) is gathered first within limited tool-use budgets
+
 ---
 
 ## 8. Presentation Notes
@@ -316,8 +361,8 @@ Built a comprehensive evaluation system:
 **Key talking points**:
 1. **Agentic architecture**: Not just "ask GPT a question" — 5 specialized agents with tool-use loops that autonomously decide what to search
 2. **Fan-out parallelism**: Agents 1-4 run simultaneously, cutting pipeline time by ~70%
-3. **Evidence-based skepticism**: The system is biased toward SKIP — BUILD requires strong evidence across ALL dimensions
-4. **Iterative improvement**: Systematic prompt engineering based on eval results (ownership boundaries, TAM narrowing, redundancy removal)
+3. **Evidence-driven calibration**: The system uses few-shot examples, calibration anchors, and explicit boundary definitions to produce accurate verdicts — not biased toward SKIP or BUILD
+4. **Iterative improvement**: Systematic prompt engineering based on eval results (ownership boundaries, TAM narrowing, redundancy removal, severity calibration, pessimism debiasing)
 5. **Evaluation framework**: 25 golden test cases with automated grading — not just "it looks right," but measurable pass/fail criteria
 
 **Demo flow suggestion**:

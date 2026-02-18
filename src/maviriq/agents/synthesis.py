@@ -121,7 +121,9 @@ Focus ONLY on these questions — be precise and cite the data:
    - Narrow to the specific niche, not the broad category
    - Show your reasoning if the data supports it
 
-Bias toward skepticism. If data is weak or contradictory, say so explicitly.
+Be evidence-driven, not pessimistic or optimistic. If the data is strong, say so. \
+If the data is weak, say so. Don't inflate weak signals, but don't deflate strong ones either. \
+Your job is accurate assessment — let the data speak.
 Do NOT provide a verdict — that comes in the next step."""
 
 _VERDICT_PROMPT = """\
@@ -135,9 +137,15 @@ ALL the research AND the viability analysis into a clear verdict and actionable 
 - SKIP: Weak pain OR saturated market OR unreachable users OR no gap
 - MAYBE: Viable BUT only under specific conditions (specify what those are)
 
-IMPORTANT — Be evidence-driven, not encouraging:
-- Let the data decide. Don't inflate weak ideas, but don't artificially suppress strong ones either.
+IMPORTANT — Be evidence-driven, not encouraging AND not artificially pessimistic:
+- Let the data decide. Don't inflate weak ideas, but don't deflate strong ones either.
 - If prior startups failed at this exact idea, you need a CLEAR reason why this time would be different to justify BUILD.
+- Competition VALIDATES demand — finding competitors is positive signal, not automatic SKIP. \
+  Saturated markets with entrenched players warrant caution, but "competitors exist" alone \
+  is not a reason to SKIP.
+- If the research found 5+ real pain points with high-impact severity, funded competitors \
+  with paying customers, and a growing market, that is strong BUILD evidence. Don't SKIP \
+  just because risks exist — every real business has risks.
 - Your job is an HONEST assessment — not a pitch deck, not a death sentence.
 
 **Confidence calibration (be precise, avoid clustering around 0.55-0.65):**
@@ -148,6 +156,13 @@ IMPORTANT — Be evidence-driven, not encouraging:
 - Below 0.25: SKIP — no evidence of pain, no gap, or major red flags
 The confidence score should MATCH the verdict. A BUILD below 0.65 or a SKIP above 0.65 needs explicit justification in your reasoning.
 Think carefully about where THIS SPECIFIC idea falls. Different ideas should get meaningfully different scores.
+
+VERDICT CALIBRATION EXAMPLES — use these as anchors:
+- "AI code review tool" with 8 high-severity pain points, 4 funded competitors, $500M market → BUILD, 0.78
+- "Social network for pets" with 0 pain points, failed predecessors, no monetization path → SKIP, 0.15
+- "On-demand barber app" with moderate pain, 1 failed predecessor, real but risky market → MAYBE, 0.48
+- "Generic CRM for small businesses" with pain but Salesforce/HubSpot dominate → SKIP, 0.30
+- "API docs from code" with strong developer pain, 2-3 competitors, growing market → BUILD, 0.72
 
 **What to provide:**
 - Verdict + confidence (0.0-1.0, calibrated per the scale above)

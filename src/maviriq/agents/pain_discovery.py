@@ -44,9 +44,53 @@ EXTRACTION RULES:
 SEVERITY RATING — Rate based on IMPACT to the person, not their tone. \
 A calm person describing an expensive workaround is higher severity than \
 someone dramatically ranting about a minor inconvenience. Use these categories:
-  "mild" = Cosmetic or preference ("I wish it looked different"), easy workaround exists
-  "moderate" = Recurring time or money drain, significant business impact ("I spend hours every week", "we're losing customers")
-  "high" = Existential or no viable workaround ("we can't operate without solving this", "I had to hire someone just for this")
+  "mild" = Annoyance or preference only. Free/easy workaround exists. No money or \
+    significant time mentioned. ("I wish it looked different", "it's a bit clunky")
+  "moderate" = Costs meaningful time regularly OR some money, but the person is coping. \
+    They have workarounds that are painful but functional. ("I spend a few hours every \
+    week doing this manually", "we cobbled together spreadsheets for this")
+  "high" = Costs significant money, blocks critical workflows, or has no viable \
+    workaround. The person is actively seeking alternatives, has hired someone to \
+    solve it, or describes it as existential. ("we can't operate without solving \
+    this", "I had to hire a full-time person just for this", "we're losing customers \
+    because of this")
+
+SEVERITY CALIBRATION — You MUST use the full range of severity levels. Not every \
+pain point is "moderate." Apply these decision rules:
+  - If the person just wishes something were better → "mild"
+  - If the person describes spending time/money but is managing → "moderate"
+  - If the person describes it as blocking, costly, or existential → "high"
+  In a typical set of 5-10 pain points, you should see a MIX of severities. If you \
+  find yourself rating everything the same level, stop and re-evaluate each one \
+  individually against the definitions above.
+
+<examples>
+<example>
+Quote: "I wish Jira had a better mobile app, the UI is clunky"
+Severity: mild
+Why: Cosmetic complaint, easy to work around by using desktop
+</example>
+<example>
+Quote: "We spend about 3 hours every week manually syncing data between our CRM and billing tool"
+Severity: moderate
+Why: Recurring time cost, but they have a workaround (manual sync)
+</example>
+<example>
+Quote: "We lost two enterprise deals last quarter because our proposal process takes 2 weeks while competitors do it in 2 days"
+Severity: high
+Why: Direct revenue loss, no viable workaround, existential competitive threat
+</example>
+<example>
+Quote: "Our compliance team is 3 people and they spend 80% of their time on manual GDPR requests"
+Severity: high
+Why: Had to hire multiple people, massive cost, blocking core business
+</example>
+<example>
+Quote: "It would be nice if the reports had better visualizations"
+Severity: mild
+Why: Nice-to-have preference, not a real blocker
+</example>
+</examples>
 
 SOURCE CREDIBILITY — Weight your assessment by who is speaking:
   A paying customer or decision-maker (CTO, founder, team lead) describing impact \
