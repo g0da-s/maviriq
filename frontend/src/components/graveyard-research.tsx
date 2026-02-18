@@ -17,13 +17,13 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
     <div className="space-y-6">
       {/* previous attempts */}
       {data.previous_attempts.length > 0 && (
-        <div>
+        <div className="rounded-xl border border-card-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground mb-3">
             companies that tried this
           </p>
-          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
+          <div className="space-y-4">
             {data.previous_attempts.map((attempt, i) => (
-              <div key={i} className="px-5 py-4">
+              <div key={i}>
                 <div className="flex items-baseline gap-2 mb-1.5">
                   <p className="text-sm font-semibold text-foreground">{attempt.name}</p>
                   {attempt.year && (
@@ -43,34 +43,32 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
 
       {/* failure reasons */}
       {data.failure_reasons.length > 0 && (
-        <div>
+        <div className="rounded-xl border border-card-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground mb-3">
             common reasons for failure
           </p>
-          <div className="rounded-xl border border-card-border bg-card px-5 py-4">
-            <ol className="space-y-2">
-              {data.failure_reasons.map((reason, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-muted">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
-                    {i + 1}
-                  </span>
-                  {reason}
-                </li>
-              ))}
-            </ol>
-          </div>
+          <ol className="space-y-2">
+            {data.failure_reasons.map((reason, i) => (
+              <li key={i} className="flex items-start gap-3 text-sm text-muted">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium text-muted">
+                  {i + 1}
+                </span>
+                {reason}
+              </li>
+            ))}
+          </ol>
         </div>
       )}
 
       {/* churn signals */}
       {data.churn_signals.length > 0 && (
-        <div>
+        <div className="rounded-xl border border-card-border bg-card p-5">
           <p className="text-sm font-semibold text-foreground mb-3">
             warning signs to watch for
           </p>
-          <div className="rounded-xl border border-card-border bg-card divide-y divide-card-border">
+          <div className="space-y-3">
             {data.churn_signals.map((sig, i) => (
-              <div key={i} className="flex items-center justify-between px-5 py-3.5">
+              <div key={i} className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted">{sig.signal}</p>
                   <p className="text-xs text-muted/40 mt-0.5">{sig.source}</p>

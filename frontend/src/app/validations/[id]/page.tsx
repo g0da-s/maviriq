@@ -371,7 +371,10 @@ export default function ValidationPage() {
               Why Others Failed
             </h3>
             {graveyard.lessons_learned && (
-              <p className="text-muted leading-relaxed mb-5">{graveyard.lessons_learned}</p>
+              <div className="rounded-xl border border-card-border bg-card p-5 mb-5">
+                <p className="text-sm font-semibold text-foreground mb-3">key lesson</p>
+                <p className="text-sm text-muted leading-relaxed">{graveyard.lessons_learned}</p>
+              </div>
             )}
             <GraveyardResearch data={graveyard} />
           </section>
