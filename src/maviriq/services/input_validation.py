@@ -1,6 +1,9 @@
 """Input validation for idea submissions — catches gibberish and profanity."""
 
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 # Profanity / slur blocklist (matched as whole words, case-insensitive)
 _BLOCKED_WORDS = {
@@ -64,3 +67,32 @@ def check_gibberish(text: str) -> str | None:
 def validate_idea_input(text: str) -> str | None:
     """Run all checks. Returns first error message found, or None if clean."""
     return check_profanity(text) or check_gibberish(text)
+
+
+async def normalize_idea(text: str) -> str:
+    """Fix typos, grammar, and abbreviations in a user-submitted idea.
+
+    Uses the cheap LLM model to clean up the text while preserving intent.
+    Returns original text on any failure so the pipeline is never blocked.
+    """
+    from maviriq.services.llm import LLMService
+
+    llm = LLMService()
+    try:
+        cleaned = await llm.generate_text(
+            system_prompt=(
+                "Fix spelling, grammar, and punctuation in this startup idea. "
+                "Expand obvious abbreviations. Do NOT change the meaning, "
+                "add new information, or rephrase beyond fixing errors. "
+                "Return ONLY the corrected text — no commentary."
+            ),
+            user_prompt=text,
+            use_cheap_model=True,
+        )
+        # Sanity check: if the LLM returned something wildly different in length, keep original
+        if not cleaned or len(cleaned) > len(text) * 2:
+            return text
+        return cleaned.strip()
+    except Exception:
+        logger.warning("Idea normalization failed — using original text", exc_info=True)
+        return text

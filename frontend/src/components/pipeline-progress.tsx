@@ -140,8 +140,13 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     return "waiting";
   }
 
+  const parallelAgents = AGENTS.filter((a) => PARALLEL_AGENTS.has(a.num));
+  const synthesisAgent = AGENTS.find((a) => a.num === 5)!;
+  const synthesisStatus = getStatus(synthesisAgent.num);
+  const allParallelDone = parallelAgents.every((a) => getStatus(a.num) === "done");
+
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       {verdict && (
         <div className="mb-8 text-center">
           <p className="text-sm text-muted mb-2">verdict</p>
@@ -162,76 +167,116 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         </div>
       )}
 
-      <div className="space-y-0">
-        {AGENTS.map((agent, i) => {
+      {/* parallel agents in a 2x2 grid */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-3">
+        {parallelAgents.map((agent) => {
           const status = getStatus(agent.num);
           return (
-            <div key={agent.num} className="flex gap-4">
-              {/* timeline */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${
-                    status === "done"
-                      ? "border-build bg-build/20 text-build"
-                      : status === "running"
-                        ? "border-build text-build pulse-glow"
-                        : "border-card-border text-muted/40"
-                  }`}
-                >
-                  {status === "done" ? (
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    agent.num
-                  )}
-                </div>
-                {i < AGENTS.length - 1 && (
-                  <div
-                    className={`w-0.5 flex-1 min-h-[2rem] transition-colors duration-500 ${
-                      status === "done" ? "bg-build/40" : "bg-card-border"
-                    }`}
-                  />
+            <div key={agent.num} className="flex flex-col items-center text-center">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
+                  status === "done"
+                    ? "border-build bg-build/20 text-build"
+                    : status === "running"
+                      ? "border-build text-build pulse-glow"
+                      : "border-card-border text-muted/40"
+                }`}
+              >
+                {status === "done" ? (
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  agent.num
                 )}
               </div>
-
-              {/* content */}
-              <div className="pb-8">
-                <p
-                  className={`font-display font-semibold transition-colors duration-300 ${
-                    status === "done"
-                      ? "text-foreground"
-                      : status === "running"
-                        ? "text-foreground"
-                        : "text-muted/40"
-                  }`}
-                >
-                  {agent.name}
-                </p>
-                <p
-                  className={`mt-0.5 text-sm transition-colors duration-300 ${
-                    status === "running" ? "text-muted" : "text-muted/30"
-                  }`}
-                >
-                  {status === "running" ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-build" />
-                      {agent.desc}
-                    </span>
-                  ) : status === "done" ? (
-                    "complete"
-                  ) : (
-                    "waiting"
-                  )}
-                </p>
-              </div>
+              <p
+                className={`mt-2 font-display text-sm font-semibold leading-tight transition-colors duration-300 ${
+                  status === "done" || status === "running"
+                    ? "text-foreground"
+                    : "text-muted/40"
+                }`}
+              >
+                {agent.name}
+              </p>
+              <p
+                className={`mt-1 text-xs leading-snug transition-colors duration-300 ${
+                  status === "running" ? "text-muted" : "text-muted/30"
+                }`}
+              >
+                {status === "running" ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-build shrink-0" />
+                    {agent.desc}
+                  </span>
+                ) : status === "done" ? (
+                  "complete"
+                ) : (
+                  "waiting"
+                )}
+              </p>
             </div>
           );
         })}
       </div>
 
+      {/* connector lines merging down to synthesis */}
+      <div className="flex justify-center py-3">
+        <div
+          className={`w-0.5 h-8 transition-colors duration-500 ${
+            allParallelDone ? "bg-build/40" : "bg-card-border"
+          }`}
+        />
+      </div>
+
+      {/* synthesis agent */}
+      <div className="flex flex-col items-center text-center">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
+            synthesisStatus === "done"
+              ? "border-build bg-build/20 text-build"
+              : synthesisStatus === "running"
+                ? "border-build text-build pulse-glow"
+                : "border-card-border text-muted/40"
+          }`}
+        >
+          {synthesisStatus === "done" ? (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            synthesisAgent.num
+          )}
+        </div>
+        <p
+          className={`mt-2 font-display text-sm font-semibold transition-colors duration-300 ${
+            synthesisStatus === "done" || synthesisStatus === "running"
+              ? "text-foreground"
+              : "text-muted/40"
+          }`}
+        >
+          {synthesisAgent.name}
+        </p>
+        <p
+          className={`mt-1 text-xs transition-colors duration-300 ${
+            synthesisStatus === "running" ? "text-muted" : "text-muted/30"
+          }`}
+        >
+          {synthesisStatus === "running" ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-build" />
+              {synthesisAgent.desc}
+            </span>
+          ) : synthesisStatus === "done" ? (
+            "complete"
+          ) : (
+            "waiting"
+          )}
+        </p>
+      </div>
+
       {reconnecting && (
-        <div role="alert" className="mt-4 rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center text-sm text-maybe">
+        <div role="alert" className="mt-6 rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center text-sm text-maybe">
           <span className="inline-flex items-center gap-2">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-maybe" />
             reconnecting...
@@ -240,7 +285,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       )}
 
       {failed && (
-        <div role="alert" className="mt-4 rounded-xl border border-skip/30 bg-skip/5 p-4 text-center text-sm text-skip">
+        <div role="alert" className="mt-6 rounded-xl border border-skip/30 bg-skip/5 p-4 text-center text-sm text-skip">
           something went wrong — please try again
         </div>
       )}

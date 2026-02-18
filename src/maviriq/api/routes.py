@@ -82,6 +82,13 @@ async def create_validation(
             detail="Validation service temporarily unavailable. Please try again in a moment.",
         )
 
+    # Normalize idea — fix typos, grammar, abbreviations before pipeline
+    from maviriq.services.input_validation import normalize_idea
+
+    clean_idea = await normalize_idea(request.idea)
+    if clean_idea != request.idea:
+        logger.info("Idea normalized for user %s: %r -> %r", user["id"], request.idea, clean_idea)
+
     # Atomically deduct credit + record transaction in a single DB call
     txn_repo = CreditTransactionRepository()
     if not await txn_repo.deduct_credit_with_txn(user["id"], "validation"):
@@ -90,9 +97,9 @@ async def create_validation(
 
     run_id = f"val_{uuid4().hex[:12]}"
 
-    # Start pipeline in background
+    # Start pipeline in background — use cleaned idea for better research quality
     task = asyncio.create_task(
-        _run_pipeline_background(run_id, request.idea, runner, user_id=user["id"])
+        _run_pipeline_background(run_id, clean_idea, runner, user_id=user["id"])
     )
     _running_pipelines[run_id] = task
     task.add_done_callback(lambda _: _running_pipelines.pop(run_id, None))
