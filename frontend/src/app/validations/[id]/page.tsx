@@ -410,20 +410,7 @@ export default function ValidationPage() {
               </div>
             )}
 
-            {s.lessons_from_failures && (
-              <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-                <p className="text-sm font-semibold text-foreground mb-2">
-                  lessons from past failures
-                </p>
-                <p className="text-sm text-muted leading-relaxed">{s.lessons_from_failures}</p>
-                {s.previous_attempts_summary && (
-                  <div className="mt-3 pt-3 border-t border-card-border">
-                    <p className="text-sm font-semibold text-foreground mb-1">previous attempts</p>
-                    <p className="text-sm text-muted leading-relaxed">{s.previous_attempts_summary}</p>
-                  </div>
-                )}
-              </div>
-            )}
+
 
             {s.next_steps.length > 0 && (
               <div className="rounded-2xl border border-card-border bg-card p-6">
