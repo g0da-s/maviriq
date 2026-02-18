@@ -33,8 +33,21 @@ TAM ESTIMATION — BE HONEST ABOUT SCOPE:
 - Do NOT present a broad market number as if it's the addressable market for this idea.
 - If you can't find any market size data, say "insufficient data" — do NOT guess.
 
+MARKET GROWTH — REQUIRE EVIDENCE:
+- Do NOT guess growth_direction from the TAM number alone. A large market can be \
+  shrinking and a small market can be growing fast.
+- Look for CAGR, year-over-year growth rates, or analyst projections in the market \
+  size reports you already find (these reports almost always include growth data).
+- Set growth_direction based on what you find:
+  - "growing" = evidence of positive growth (CAGR > 5%, expanding demand)
+  - "stable" = growth is flat or low single digits
+  - "shrinking" = declining revenue, shrinking user base, or negative CAGR
+  - "unknown" = you could not find any growth data — do NOT default to "growing"
+- In growth_evidence, cite the specific data point (e.g., "AI code review market \
+  projected to grow at 25% CAGR through 2028 — Grand View Research"). Keep it to \
+  1-2 sentences. If you found nothing, say "No specific growth data found."
+
 EXTRACTION RULES:
-- For growth_direction, use ONLY: "growing", "stable", "shrinking", or "unknown".
 - Identify distribution channels: where can the founder reach potential users? \
   Think about where these users already spend time online and offline. \
   Rate effort as "low", "medium", or "high".

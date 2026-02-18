@@ -60,13 +60,16 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
         </div>
       </div>
 
-      {/* TAM reasoning */}
+      {/* TAM + growth reasoning */}
       <div className="rounded-xl border border-card-border bg-card">
         <div className="px-5 py-3 border-b border-card-border">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">why this size?</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">why these numbers?</p>
         </div>
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 space-y-3">
           <p className="text-sm text-muted leading-relaxed">{data.tam_reasoning}</p>
+          {data.growth_evidence && (
+            <p className="text-sm text-muted leading-relaxed">{data.growth_evidence}</p>
+          )}
         </div>
       </div>
 

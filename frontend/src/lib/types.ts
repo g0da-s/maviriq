@@ -109,6 +109,7 @@ const FundingSignalSchema = z.object({
 const MarketIntelligenceOutputSchema = z.object({
   market_size_estimate: z.string(),
   growth_direction: GrowthDirectionSchema,
+  growth_evidence: z.string().default(""),
   tam_reasoning: z.string(),
   distribution_channels: z.array(DistributionChannelSchema),
   funding_signals: z.array(z.union([z.string(), FundingSignalSchema])).default([]),

@@ -217,6 +217,7 @@ class MarketIntelligenceInput(BaseModel):
 class MarketIntelligenceOutput(BaseModel):
     market_size_estimate: str
     growth_direction: Literal["growing", "stable", "shrinking", "unknown"]
+    growth_evidence: str = ""
     tam_reasoning: str
     distribution_channels: list[DistributionChannel]
     funding_signals: list[str | FundingSignal] = []
