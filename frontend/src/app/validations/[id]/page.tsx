@@ -366,17 +366,11 @@ export default function ValidationPage() {
         )}
 
         {/* — The Graveyard — */}
-        {graveyard && (graveyard.previous_attempts.length > 0 || graveyard.lessons_learned) && (
+        {graveyard && graveyard.previous_attempts.length > 0 && (
           <section className="mb-12">
             <h3 className="text-lg font-semibold text-foreground mb-2 uppercase">
               Why Others Failed
             </h3>
-            {graveyard.lessons_learned && (
-              <div className="rounded-xl border border-card-border bg-card p-5 mb-5">
-                <p className="text-sm font-semibold text-foreground mb-3">key lesson</p>
-                <p className="text-sm text-muted leading-relaxed">{graveyard.lessons_learned}</p>
-              </div>
-            )}
             <GraveyardResearch data={graveyard} />
           </section>
         )}

@@ -279,9 +279,9 @@ class GraveyardResearchInput(BaseModel):
 
 class GraveyardResearchOutput(BaseModel):
     previous_attempts: list[PreviousAttempt]
-    failure_reasons: list[str]
-    lessons_learned: str
-    churn_signals: list[ChurnSignal]
+    failure_reasons: list[str] = []  # deprecated, kept for old DB rows
+    lessons_learned: str = ""  # deprecated, kept for old DB rows
+    churn_signals: list[ChurnSignal] = []  # deprecated, kept for old DB rows
     search_queries_used: list[str] = []
 
 

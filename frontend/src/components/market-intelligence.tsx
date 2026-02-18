@@ -80,7 +80,10 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
             <p className="text-xs font-medium uppercase tracking-wider text-muted/50">how to reach customers</p>
           </div>
           <div className="px-5 py-4 space-y-3">
-            {data.distribution_channels.map((ch, i) => (
+            {[...data.distribution_channels].sort((a, b) => {
+              const order = { low: 0, medium: 1, high: 2 };
+              return order[a.effort] - order[b.effort];
+            }).map((ch, i) => (
               <div key={i} className="flex items-center justify-between">
                 <p className="text-sm font-medium text-foreground/90">{ch.channel}</p>
                 <span className={`text-xs font-medium shrink-0 ml-4 ${effortColor[ch.effort]}`}>
@@ -100,14 +103,14 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
           </div>
           <div className="px-5 py-4 space-y-3">
             {data.funding_signals.map((sig, i) => (
-              <div key={i}>
-                <p className="text-sm text-muted">{typeof sig === "string" ? sig : sig.description}</p>
+              <p key={i} className="text-sm text-muted">
+                {typeof sig === "string" ? sig : sig.description}
                 {typeof sig === "object" && sig.source_url && isSafeUrl(sig.source_url) && (
-                  <a href={sig.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1 text-xs text-muted/40 hover:text-muted/60">
-                    source <span>&#8599;</span>
+                  <a href={sig.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-baseline gap-1 ml-1 text-xs text-muted/40 hover:text-muted/60">
+                    source<span>&#8599;</span>
                   </a>
                 )}
-              </div>
+              </p>
             ))}
           </div>
         </div>

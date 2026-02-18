@@ -325,14 +325,6 @@ Funding signals:
 Previous attempts:
 {chr(10).join(f'- {a.name}: {a.what_they_did} → Shut down because: {a.shutdown_reason} ({a.year or "unknown year"})' for a in graveyard.previous_attempts) or "No previous attempts found"}
 
-Common failure reasons:
-{chr(10).join(f'- {r}' for r in graveyard.failure_reasons) or "None identified"}
-
-Lessons learned: {graveyard.lessons_learned}
-
-Churn signals:
-{chr(10).join(f'- [{sig.severity.upper()}] {sig.signal} (source: {sig.source})' for sig in graveyard.churn_signals) or "None found"}
-
 """
 
         return context

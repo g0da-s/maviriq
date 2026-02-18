@@ -34,12 +34,9 @@ SEARCH TIPS:
 You can call multiple search tools in a single turn for parallel execution.
 
 EXTRACTION RULES:
-- Identify previous attempts: startups that tried something similar and failed. \
-  Include what they did, why they shut down, and when (if available).
-- Extract common failure reasons across the space.
-- Summarize lessons learned: what must the founder do differently?
-- Identify churn signals: evidence that users leave existing products. \
-  Rate severity as "high", "medium", or "low".
+- Find previous_attempts: real startups that tried something similar and failed. \
+  For each, include what they did, why they shut down (be specific — not generic \
+  reasons like "ran out of money", dig into the real cause), and when (if available).
 - If no failed startups found, that's a valid finding — the space may be untested.
 - Do NOT fabricate failed startups. Only report what you find in the data.
 
@@ -67,7 +64,7 @@ class GraveyardResearchAgent(BaseAgent[GraveyardResearchInput, GraveyardResearch
         return (
             f"Research failed startups and warning signs for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n\n"
-            f"Find post-mortems, shutdowns, pivots, and churn signals. "
+            f"Find post-mortems, shutdowns, and pivots. "
             f"Use multiple search tools and diverse queries."
         )
 

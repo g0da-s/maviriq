@@ -55,7 +55,9 @@ EXTRACTION RULES:
   List recent funding rounds, acquisitions, or VC interest you find on Crunchbase \
   or in news articles. These indicate market validation (or lack thereof). \
   For each signal, provide it as an object with "description" (the signal text) \
-  and "source_url" (the URL where you found this information, or null if unknown).
+  and "source_url" (the URL where you found it). You MUST include the source_url — \
+  every signal came from a search result, so you have the URL. Only use null if \
+  you truly cannot determine the source.
 - Do NOT fabricate data.
 
 NOTE: You do NOT need to assess monetization or pricing — the Competitor Research \

@@ -93,7 +93,7 @@ export type CompetitorResearchOutput = z.infer<typeof CompetitorResearchOutputSc
 
 const EffortSchema = z.enum(["low", "medium", "high"]);
 const GrowthDirectionSchema = z.enum(["growing", "stable", "shrinking", "unknown"]);
-const ChurnSeveritySchema = z.enum(["high", "medium", "low"]);
+const ChurnSeveritySchema = z.enum(["high", "medium", "low"]); // deprecated, kept for old data
 
 const DistributionChannelSchema = z.object({
   channel: z.string(),
@@ -140,9 +140,9 @@ const ChurnSignalSchema = z.object({
 
 const GraveyardResearchOutputSchema = z.object({
   previous_attempts: z.array(PreviousAttemptSchema),
-  failure_reasons: z.array(z.string()),
-  lessons_learned: z.string(),
-  churn_signals: z.array(ChurnSignalSchema),
+  failure_reasons: z.array(z.string()).default([]),  // deprecated
+  lessons_learned: z.string().default(""),  // deprecated
+  churn_signals: z.array(ChurnSignalSchema).default([]),  // deprecated
   search_queries_used: z.array(z.string()),
 });
 
