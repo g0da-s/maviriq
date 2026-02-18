@@ -36,7 +36,13 @@ const wtpLabel = {
 
 const wtpRank = { high: 3, medium: 2, low: 1 } as const;
 
-const severityRank = { critical: 4, major: 3, moderate: 2, minor: 1 } as const;
+const severityRank = { high: 3, moderate: 2, mild: 1 } as const;
+
+const severityTextColor: Record<string, string> = {
+  high: "text-skip",
+  moderate: "text-maybe",
+  mild: "text-build",
+};
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   const allSegments = [data.primary_target_user, ...data.user_segments.filter(seg => seg.label !== data.primary_target_user.label)]
@@ -79,12 +85,17 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
             </p>
           </div>
           <div className="divide-y divide-card-border">
-            {sortedQuotes.slice(0, 5).map((pp, i) => (
+            {sortedQuotes.slice(0, 3).map((pp, i) => (
               <div key={i} className="px-5 py-4">
                 <div>
                   <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
+                  <span className="font-medium text-foreground">pain</span>
+                  <span className={`font-medium ${severityTextColor[pp.pain_severity]}`}>
+                    {pp.pain_severity}
+                  </span>
+                  <span>&middot;</span>
                   {pp.source_url && isSafeUrl(pp.source_url) ? (
                     <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:opacity-80">
                       <SourceBadge source={pp.source} />

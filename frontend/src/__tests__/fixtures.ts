@@ -15,7 +15,7 @@ export const mockPainDiscovery: PainDiscoveryOutput = {
       source_url: "https://reddit.com/r/test",
       quote: "Scheduling meetings is a nightmare",
       author_context: "Engineering manager",
-      pain_severity: "major",
+      pain_severity: "high",
       date: "2024-01-15",
     },
     {

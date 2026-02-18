@@ -44,10 +44,9 @@ EXTRACTION RULES:
 SEVERITY RATING — Rate based on IMPACT to the person, not their tone. \
 A calm person describing an expensive workaround is higher severity than \
 someone dramatically ranting about a minor inconvenience. Use these categories:
-  "minor" = Cosmetic or preference ("I wish it looked different"), easy workaround exists
-  "moderate" = Recurring time or money drain ("I spend hours every week on this manually")
-  "major" = Significant business impact ("we're losing customers", "I had to hire someone")
-  "critical" = Existential, no viable workaround ("we can't operate without solving this")
+  "mild" = Cosmetic or preference ("I wish it looked different"), easy workaround exists
+  "moderate" = Recurring time or money drain, significant business impact ("I spend hours every week", "we're losing customers")
+  "high" = Existential or no viable workaround ("we can't operate without solving this", "I had to hire someone just for this")
 
 SOURCE CREDIBILITY — Weight your assessment by who is speaking:
   A paying customer or decision-maker (CTO, founder, team lead) describing impact \

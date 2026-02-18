@@ -166,7 +166,7 @@ export default function ValidationPage() {
   const via = run.viability;
 
   const highImpactCount = pain
-    ? pain.pain_points.filter(p => p.pain_severity === "critical" || p.pain_severity === "major").length
+    ? pain.pain_points.filter(p => p.pain_severity === "high").length
     : 0;
   const totalPainPoints = pain ? pain.pain_points.length : 0;
 

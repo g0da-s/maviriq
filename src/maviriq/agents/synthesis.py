@@ -265,14 +265,14 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         market_intel = input_data.market_intelligence
         graveyard = input_data.graveyard_research
 
-        severity_counts = {"critical": 0, "major": 0, "moderate": 0, "minor": 0}
+        severity_counts = {"high": 0, "moderate": 0, "mild": 0}
         for p in pain.pain_points:
             severity_counts[p.pain_severity] = severity_counts.get(p.pain_severity, 0) + 1
-        high_impact = severity_counts["critical"] + severity_counts["major"]
+        high_impact = severity_counts["high"]
         pain_signal = (
             f"{high_impact} of {len(pain.pain_points)} high-impact "
-            f"({severity_counts['critical']} critical, {severity_counts['major']} major, "
-            f"{severity_counts['moderate']} moderate, {severity_counts['minor']} minor)"
+            f"({severity_counts['high']} high, {severity_counts['moderate']} moderate, "
+            f"{severity_counts['mild']} mild)"
             if pain.pain_points else "N/A"
         )
 

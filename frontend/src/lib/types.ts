@@ -10,7 +10,7 @@ const GapSizeSchema = z.enum(["large", "medium", "small", "none"]);
 const SignalDirectionSchema = z.enum(["positive", "negative", "neutral"]);
 const ReachabilitySchema = z.enum(["easy", "moderate", "hard"]);
 const ReviewSentimentSchema = z.enum(["positive", "mixed", "negative"]);
-const PainSeveritySchema = z.enum(["critical", "major", "moderate", "minor"]);
+const PainSeveritySchema = z.enum(["high", "moderate", "mild"]);
 
 export type ValidationStatus = z.infer<typeof ValidationStatusSchema>;
 export type Verdict = z.infer<typeof VerdictSchema>;
