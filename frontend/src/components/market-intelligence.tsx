@@ -40,33 +40,43 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
     <div className="space-y-6">
       {/* headline stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-sm font-semibold text-foreground mb-2">how big is this market?</p>
-          <p className="text-sm text-muted">{data.market_size_estimate}</p>
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">how big is this market?</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-sm text-muted">{data.market_size_estimate}</p>
+          </div>
         </div>
-        <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-sm font-semibold text-foreground mb-2">is it growing?</p>
-          <p className={`text-sm ${growthColor[data.growth_direction]}`}>
-            {growthLabel[data.growth_direction]}
-          </p>
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">is it growing?</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className={`text-sm ${growthColor[data.growth_direction]}`}>
+              {growthLabel[data.growth_direction]}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* TAM reasoning */}
-      <div className="rounded-xl border border-card-border bg-card p-5">
-        <p className="text-sm font-semibold text-foreground mb-3">
-          why this size?
-        </p>
-        <p className="text-sm text-muted leading-relaxed">{data.tam_reasoning}</p>
+      <div className="rounded-xl border border-card-border bg-card">
+        <div className="px-5 py-3 border-b border-card-border">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">why this size?</p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-sm text-muted leading-relaxed">{data.tam_reasoning}</p>
+        </div>
       </div>
 
       {/* distribution channels */}
       {data.distribution_channels.length > 0 && (
-        <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-sm font-semibold text-foreground mb-3">
-            how to reach customers
-          </p>
-          <div className="space-y-3">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">how to reach customers</p>
+          </div>
+          <div className="px-5 py-4 space-y-3">
             {data.distribution_channels.map((ch, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -84,11 +94,11 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
 
       {/* funding signals */}
       {data.funding_signals.length > 0 && (
-        <div className="rounded-xl border border-card-border bg-card p-5">
-          <p className="text-sm font-semibold text-foreground mb-3">
-            investor activity in this space
-          </p>
-          <div className="space-y-3">
+        <div className="rounded-xl border border-card-border bg-card">
+          <div className="px-5 py-3 border-b border-card-border">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">investor activity in this space</p>
+          </div>
+          <div className="px-5 py-4 space-y-3">
             {data.funding_signals.map((sig, i) => (
               <div key={i}>
                 <p className="text-sm text-muted">{typeof sig === "string" ? sig : sig.description}</p>
