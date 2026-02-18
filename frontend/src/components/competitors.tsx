@@ -19,21 +19,17 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
             {data.competitors.map((comp, i) => (
               <div key={i} className="px-5 py-4">
                 {/* header row */}
-                <div className="flex items-start justify-between mb-1.5">
-                  <div>
-                    {comp.url && isSafeUrl(comp.url) ? (
-                      <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:underline">
-                        {comp.name}<span className="ml-1 text-muted/40 text-xs">&#8599;</span>
-                      </a>
-                    ) : (
-                      <p className="text-sm font-semibold text-foreground">{comp.name}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-muted/60">
-                      {comp.competitor_type}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  {comp.url && isSafeUrl(comp.url) ? (
+                    <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:underline">
+                      {comp.name}<span className="ml-1 text-muted/40 text-xs">&#8599;</span>
+                    </a>
+                  ) : (
+                    <p className="text-sm font-semibold text-foreground">{comp.name}</p>
+                  )}
+                  <span className="text-[10px] uppercase tracking-wider text-muted/40">
+                    {comp.competitor_type}
+                  </span>
                 </div>
 
                 {/* description */}
