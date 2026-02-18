@@ -63,18 +63,20 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
           <div className="divide-y divide-card-border">
             {sortedQuotes.slice(0, 3).map((pp, i) => (
               <div key={i} className="px-5 py-4">
-                <p className="text-sm text-muted italic leading-relaxed">
-                  &ldquo;{pp.quote}&rdquo;
-                  {pp.source_url && isSafeUrl(pp.source_url) ? (
-                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="not-italic ml-1.5 text-xs text-muted/40 hover:text-muted/60">
-                      {pp.source} &#8599;
-                    </a>
-                  ) : (
-                    <span className="not-italic ml-1.5 text-xs text-muted/40">{pp.source}</span>
-                  )}
-                </p>
-                {pp.author_context && (
-                  <p className="mt-1.5 text-xs text-muted/40">{pp.author_context}</p>
+                {pp.source_url && isSafeUrl(pp.source_url) ? (
+                  <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="block group">
+                    <p className="text-sm text-muted italic leading-relaxed group-hover:text-foreground/70 transition-colors">
+                      &ldquo;{pp.quote}&rdquo;
+                    </p>
+                    <p className="mt-1.5 text-xs text-muted/40">{pp.source} &#8599;</p>
+                  </a>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted italic leading-relaxed">
+                      &ldquo;{pp.quote}&rdquo;
+                    </p>
+                    <p className="mt-1.5 text-xs text-muted/40">{pp.source}</p>
+                  </>
                 )}
               </div>
             ))}

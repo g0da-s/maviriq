@@ -51,7 +51,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   <div className="grid gap-3 sm:grid-cols-2">
                     {comp.strengths.length > 0 && (
                       <div>
-                        <p className="text-sm font-semibold text-foreground mb-1.5">what they do well</p>
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">strengths</p>
                         <ul className="space-y-1">
                           {comp.strengths.slice(0, 3).map((s, j) => (
                             <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
@@ -64,7 +64,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                     )}
                     {comp.weaknesses.length > 0 && (
                       <div>
-                        <p className="text-sm font-semibold text-foreground mb-1.5">where they fall short</p>
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">weaknesses</p>
                         <ul className="space-y-1">
                           {comp.weaknesses.slice(0, 3).map((w, j) => (
                             <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
