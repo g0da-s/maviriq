@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { deleteValidation, listValidations } from "@/lib/api";
+import { ApiError, deleteValidation, listValidations } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationListItem, ValidationListResponse } from "@/lib/types";
 import { VerdictBadge } from "@/components/verdict-badge";
@@ -75,12 +75,18 @@ function HistoryContent() {
     setError("");
     try {
       await deleteValidation(id);
-      load(page);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to delete validation");
-    } finally {
-      setDeleting(null);
+      // 404 means already deleted — treat as success
+      if (err instanceof ApiError && err.status === 404) {
+        // fall through to reload
+      } else {
+        setError(err instanceof Error ? err.message : "failed to delete validation");
+        setDeleting(null);
+        return;
+      }
     }
+    setDeleting(null);
+    load(page);
   }
 
   const totalPages = data ? Math.ceil(data.total / data.per_page) : 0;
