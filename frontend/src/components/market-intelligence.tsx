@@ -107,7 +107,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
                 {typeof sig === "string" ? sig : sig.description}
                 {typeof sig === "object" && sig.source_url && isSafeUrl(sig.source_url) && (
                   <a href={sig.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-baseline gap-1 ml-1 text-xs text-muted/40 hover:text-muted/60">
-                    source<span>&#8599;</span>
+                    <span>&#8599;</span>
                   </a>
                 )}
               </p>
