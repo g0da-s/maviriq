@@ -13,8 +13,8 @@ export default function Home() {
           </span>
         </h1>
         <p className="mt-6 text-lg text-muted">
-          5 agents research your startup idea and deliver a build or skip
-          verdict in minutes
+          stop guessing. know if your idea is worth building
+          before you waste your time on it.
         </p>
 
         {/* form */}
