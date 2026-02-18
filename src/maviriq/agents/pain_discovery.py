@@ -101,6 +101,9 @@ SOURCE CREDIBILITY — Weight your assessment by who is speaking:
   describe themselves). If unclear, say "unknown user".
 
 USER SEGMENTS:
+- Identify 2-4 distinct user segments. If you only found one type of person \
+  complaining, that's fine — report 1. But look for differences in role, company \
+  size, or use case that would make them different buyers.
 - Group complainers by WHO they are, not what they said.
 - For willingness_to_pay, base it on EVIDENCE:
   "high" = they mention paying for alternatives, or their role implies budget
