@@ -59,10 +59,13 @@ const CompetitorPricingSchema = z.object({
   features: z.array(z.string()),
 });
 
+const CompetitorTypeSchema = z.enum(["direct", "indirect", "potential"]);
+
 const CompetitorSchema = z.object({
   name: z.string(),
   url: z.string(),
   one_liner: z.string(),
+  competitor_type: CompetitorTypeSchema,
   pricing: z.array(CompetitorPricingSchema),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
