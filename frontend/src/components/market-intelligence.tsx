@@ -17,10 +17,10 @@ const growthColor = {
 };
 
 const growthLabel = {
-  growing: "market is growing",
-  stable: "market is stable",
-  shrinking: "market is shrinking",
-  unknown: "growth unknown",
+  growing: "growing",
+  stable: "stable",
+  shrinking: "shrinking",
+  unknown: "unknown",
 };
 
 const effortLabel = {
@@ -42,7 +42,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">how big is this market?</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">market size</p>
           </div>
           <div className="px-5 py-4">
             <p className="text-sm text-muted">{data.market_size_estimate}</p>
@@ -50,7 +50,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
         </div>
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">is it growing?</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">market growth</p>
           </div>
           <div className="px-5 py-4">
             <p className={`text-sm ${growthColor[data.growth_direction]}`}>

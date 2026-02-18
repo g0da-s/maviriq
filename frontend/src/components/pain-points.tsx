@@ -9,25 +9,6 @@ function isSafeUrl(url: string): boolean {
   }
 }
 
-const sourceLabels: Record<string, { label: string; color: string }> = {
-  reddit: { label: "Reddit", color: "border-orange-500/30 text-orange-400" },
-  hackernews: { label: "Hacker News", color: "border-amber-500/30 text-amber-400" },
-  twitter: { label: "X / Twitter", color: "border-sky-500/30 text-sky-400" },
-  youtube: { label: "YouTube", color: "border-red-500/30 text-red-400" },
-  google_news: { label: "News", color: "border-blue-500/30 text-blue-400" },
-  producthunt: { label: "Product Hunt", color: "border-orange-400/30 text-orange-300" },
-};
-
-function SourceBadge({ source }: { source: string }) {
-  const key = source.toLowerCase().replace(/\s+/g, "");
-  const info = sourceLabels[key];
-  return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${info?.color ?? "border-white/10 text-muted/60"}`}>
-      {info?.label ?? source}
-    </span>
-  );
-}
-
 const wtpLabel = {
   high: "willing to pay a lot",
   medium: "willing to pay some",
@@ -38,11 +19,6 @@ const wtpRank = { high: 3, medium: 2, low: 1 } as const;
 
 const severityRank = { high: 3, moderate: 2, mild: 1 } as const;
 
-const severityTextColor: Record<string, string> = {
-  high: "text-skip",
-  moderate: "text-maybe",
-  mild: "text-build",
-};
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
   const allSegments = [data.primary_target_user, ...data.user_segments.filter(seg => seg.label !== data.primary_target_user.label)]
@@ -87,30 +63,19 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
           <div className="divide-y divide-card-border">
             {sortedQuotes.slice(0, 3).map((pp, i) => (
               <div key={i} className="px-5 py-4">
-                <div>
-                  <p className="text-sm text-muted italic leading-relaxed">&ldquo;{pp.quote}&rdquo;</p>
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-xs text-muted/50">
-                  <span className="font-medium text-foreground">pain</span>
-                  <span className={`font-medium ${severityTextColor[pp.pain_severity]}`}>
-                    {pp.pain_severity}
-                  </span>
-                  <span>&middot;</span>
+                <p className="text-sm text-muted italic leading-relaxed">
+                  &ldquo;{pp.quote}&rdquo;
                   {pp.source_url && isSafeUrl(pp.source_url) ? (
-                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:opacity-80">
-                      <SourceBadge source={pp.source} />
-                      <span className="text-muted/40">&#8599;</span>
+                    <a href={pp.source_url} target="_blank" rel="noopener noreferrer" className="not-italic ml-1.5 text-xs text-muted/40 hover:text-muted/60">
+                      {pp.source} &#8599;
                     </a>
                   ) : (
-                    <SourceBadge source={pp.source} />
+                    <span className="not-italic ml-1.5 text-xs text-muted/40">{pp.source}</span>
                   )}
-                  {pp.author_context && (
-                    <>
-                      <span>&middot;</span>
-                      <span>{pp.author_context}</span>
-                    </>
-                  )}
-                </div>
+                </p>
+                {pp.author_context && (
+                  <p className="mt-1.5 text-xs text-muted/40">{pp.author_context}</p>
+                )}
               </div>
             ))}
           </div>
