@@ -54,9 +54,9 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                         <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">strengths</p>
                         <ul className="space-y-1">
                           {comp.strengths.slice(0, 3).map((s, j) => (
-                            <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
-                              <span className="text-build mt-0.5">+</span>
-                              {s}
+                            <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
+                              <span className="text-build shrink-0">+</span>
+                              <span>{s}</span>
                             </li>
                           ))}
                         </ul>
@@ -67,9 +67,9 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                         <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">weaknesses</p>
                         <ul className="space-y-1">
                           {comp.weaknesses.slice(0, 3).map((w, j) => (
-                            <li key={j} className="flex items-start gap-2 text-xs text-foreground/60">
-                              <span className="text-skip mt-0.5">-</span>
-                              {w}
+                            <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
+                              <span className="text-skip shrink-0">-</span>
+                              <span>{w}</span>
                             </li>
                           ))}
                         </ul>
@@ -94,9 +94,9 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
           <div className="px-5 py-4">
             <ul className="space-y-2">
               {data.underserved_needs.map((need, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-muted">
-                  <span className="text-build mt-0.5 font-bold">+</span>
-                  {need}
+                <li key={i} className="flex items-baseline gap-2 text-sm text-muted">
+                  <span className="text-build font-bold shrink-0">+</span>
+                  <span>{need}</span>
                 </li>
               ))}
             </ul>
@@ -115,9 +115,9 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
           <div className="px-5 py-4">
             <ul className="space-y-2">
               {data.common_complaints.map((c, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-muted">
-                  <span className="text-skip mt-0.5 font-bold">-</span>
-                  {c}
+                <li key={i} className="flex items-baseline gap-2 text-sm text-muted">
+                  <span className="text-skip font-bold shrink-0">-</span>
+                  <span>{c}</span>
                 </li>
               ))}
             </ul>
