@@ -228,7 +228,7 @@ export default function ValidationPage() {
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {pain && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">pain level</p>
+            <p className="text-sm font-bold text-foreground mb-1">pain level</p>
             {painLevel ? (
               <p className={`text-sm font-semibold ${painColor[painLevel]}`}>
                 {painLevel}
@@ -240,7 +240,7 @@ export default function ValidationPage() {
         )}
         {comp && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">competition</p>
+            <p className="text-sm font-bold text-foreground mb-1">competition</p>
             <p className={`text-sm font-semibold ${
               comp.market_saturation === "high" ? "text-skip" :
               comp.market_saturation === "medium" ? "text-maybe" : "text-build"
@@ -251,7 +251,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">will pay?</p>
+            <p className="text-sm font-bold text-foreground mb-1">will pay?</p>
             <p className={`text-sm font-semibold ${(s?.people_pay ?? via?.people_pay) ? "text-build" : "text-skip"}`}>
               {(s?.people_pay ?? via?.people_pay) ? "yes" : "no"}
             </p>
@@ -259,7 +259,7 @@ export default function ValidationPage() {
         )}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">market gap</p>
+            <p className="text-sm font-bold text-foreground mb-1">market gap</p>
             {(() => {
               const gapSize = s?.gap_size ?? via?.gap_size;
               return (
@@ -276,7 +276,7 @@ export default function ValidationPage() {
         )}
         {mktIntel && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">growth</p>
+            <p className="text-sm font-bold text-foreground mb-1">growth</p>
             <p className={`text-sm font-semibold ${
               mktIntel.growth_direction === "growing" ? "text-build" :
               mktIntel.growth_direction === "stable" ? "text-maybe" :
@@ -288,10 +288,8 @@ export default function ValidationPage() {
         )}
         {graveyard && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-semibold text-foreground mb-1">dead startups</p>
-            <p className={`text-sm font-semibold ${
-              graveyard.previous_attempts.length > 0 ? "text-skip" : "text-muted"
-            }`}>
+            <p className="text-sm font-bold text-foreground mb-1">dead startups</p>
+            <p className="text-sm font-semibold text-muted">
               {graveyard.previous_attempts.length}
             </p>
           </div>
