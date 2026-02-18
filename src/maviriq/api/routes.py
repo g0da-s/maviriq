@@ -223,16 +223,14 @@ async def delete_validation(
     user: dict = Depends(get_current_user),
     repo: ValidationRepository = Depends(get_validation_repo),
 ) -> dict:
-    # Verify ownership at the DB level
-    run = await repo.get_for_user(run_id, user["id"])
-    if not run:
-        raise HTTPException(status_code=404, detail="Validation not found")
-
     # Cancel running pipeline if still active
     task = _running_pipelines.pop(run_id, None)
     if task and not task.done():
         task.cancel()
-    await repo.delete_for_user(run_id, user["id"])
+
+    deleted = await repo.delete_for_user(run_id, user["id"])
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Validation not found")
     return {"status": "deleted"}
 
 
