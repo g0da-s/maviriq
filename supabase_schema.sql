@@ -41,6 +41,8 @@ CREATE TABLE public.validation_runs (
     pain_discovery_output JSONB,
     competitor_research_output JSONB,
     viability_output JSONB,
+    market_intelligence_output JSONB,
+    graveyard_research_output JSONB,
     synthesis_output JSONB,
     total_cost_cents INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
