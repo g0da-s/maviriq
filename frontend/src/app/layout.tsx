@@ -21,6 +21,23 @@ export const metadata: Metadata = {
   title: "maviriq — validate your idea",
   description:
     "5 ai agents research your startup idea and deliver a build or skip verdict",
+  metadataBase: new URL("https://maviriq.com"),
+  openGraph: {
+    title: "maviriq — validate your idea",
+    description:
+      "5 ai agents research your startup idea and deliver a build or skip verdict",
+    url: "https://maviriq.com",
+    siteName: "maviriq",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "maviriq — validate your idea",
+    description:
+      "5 ai agents research your startup idea and deliver a build or skip verdict",
+    images: ["/og-image.png"],
+  },
 };
 
 export default async function RootLayout({
