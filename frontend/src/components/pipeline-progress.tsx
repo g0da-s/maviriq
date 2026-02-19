@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getStreamUrl, getValidation } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { ValidationRun, Verdict } from "@/lib/types";
+import type { ValidationRun } from "@/lib/types";
 
 const AGENTS = [
   { num: 1, name: "pain & user discovery", desc: "finding real complaints and pain severity across reddit, hn, and forums" },
@@ -27,7 +27,6 @@ interface Props {
 export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const [runningAgents, setRunningAgents] = useState<Set<number>>(new Set());
   const [completedAgents, setCompletedAgents] = useState<Set<number>>(new Set());
-  const [verdict, setVerdict] = useState<{ verdict: Verdict; confidence: number } | null>(null);
   const [failed, setFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const esRef = useRef<EventSource | null>(null);
@@ -82,7 +81,6 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           onError("something went wrong");
           return;
         }
-        setVerdict({ verdict: data.verdict as Verdict, confidence: data.confidence as number });
         setCompletedAgents(new Set([1, 2, 3, 4, 5]));
         setRunningAgents(new Set());
         es.close();
@@ -147,26 +145,6 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {verdict && (
-        <div className="mb-8 text-center">
-          <p className="text-sm text-muted mb-2">verdict</p>
-          <p
-            className={`font-display text-4xl font-bold ${
-              verdict.verdict === "BUILD"
-                ? "text-build"
-                : verdict.verdict === "SKIP"
-                  ? "text-skip"
-                  : "text-maybe"
-            }`}
-          >
-            {verdict.verdict.toLowerCase()}
-          </p>
-          <p className="mt-1 text-muted">
-            {Math.round(verdict.confidence * 100)}% confidence
-          </p>
-        </div>
-      )}
-
       {/* parallel agents in a 2x2 grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-3">
         {parallelAgents.map((agent) => {
