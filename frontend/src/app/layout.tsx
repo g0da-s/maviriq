@@ -28,7 +28,7 @@ export const metadata: Metadata = {
       "5 ai agents research your startup idea and deliver a build or skip verdict",
     url: "https://maviriq.com",
     siteName: "maviriq",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "maviriq — validate your idea",
     description:
       "5 ai agents research your startup idea and deliver a build or skip verdict",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
