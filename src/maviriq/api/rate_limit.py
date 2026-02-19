@@ -118,6 +118,11 @@ _limiter = _create_limiter()
 # ---------------------------------------------------------------------------
 
 
+def rate_limit_idea_check(user_id: str) -> None:
+    """Limit idea coherence checks: 20 per hour per user."""
+    _limiter.check(f"idea_check:{user_id}", 20, 3600)
+
+
 def rate_limit_validation(user_id: str) -> None:
-    """Limit validations: 5 per hour per user to protect LLM API costs."""
+    """Limit full validations: 5 per hour per user to protect LLM API costs."""
     _limiter.check(f"validation:{user_id}", 5, 3600)

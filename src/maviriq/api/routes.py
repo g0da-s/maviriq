@@ -50,9 +50,10 @@ async def create_validation(
     user: dict = Depends(get_current_user),
     runner: PipelineGraph = Depends(get_pipeline_runner),
 ) -> CreateValidationResponse:
-    from maviriq.api.rate_limit import rate_limit_validation
+    from maviriq.api.rate_limit import rate_limit_idea_check, rate_limit_validation
 
-    rate_limit_validation(user["id"])
+    # Lighter rate limit for the coherence check (20/hr)
+    rate_limit_idea_check(user["id"])
 
     # LLM coherence check — runs before credit deduction
     from maviriq.services.llm import LLMService
@@ -82,6 +83,9 @@ async def create_validation(
             status_code=503,
             detail="Validation service temporarily unavailable. Please try again in a moment.",
         )
+
+    # Full validation rate limit — only counted for ideas that passed the check (5/hr)
+    rate_limit_validation(user["id"])
 
     # Normalize idea — fix typos, grammar, abbreviations before pipeline
     from maviriq.services.input_validation import normalize_idea
