@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -9,6 +10,7 @@ export function Nav() {
   const isHome = pathname === "/";
   const isHistory = pathname.startsWith("/validations");
   const { user, loading, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
@@ -16,7 +18,9 @@ export function Nav() {
         <Link href="/" className="font-display text-2xl font-bold tracking-tight">
           maviriq
         </Link>
-        <div className="flex items-center gap-1">
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-1">
           {loading ? (
             <div className="h-4 w-20 animate-pulse rounded bg-white/5" />
           ) : user ? (
@@ -76,7 +80,87 @@ export function Nav() {
             </>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden flex flex-col justify-center gap-1.5 p-2"
+          aria-label="Toggle menu"
+        >
+          <span className={`block h-px w-5 bg-foreground transition-all ${open ? "translate-y-[3.5px] rotate-45" : ""}`} />
+          <span className={`block h-px w-5 bg-foreground transition-all ${open ? "opacity-0" : ""}`} />
+          <span className={`block h-px w-5 bg-foreground transition-all ${open ? "-translate-y-[3.5px] -rotate-45" : ""}`} />
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden border-t border-card-border px-8 py-4 space-y-1">
+          {loading ? (
+            <div className="h-4 w-20 animate-pulse rounded bg-white/5" />
+          ) : user ? (
+            <>
+              <Link
+                href="/"
+                onClick={() => setOpen(false)}
+                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                  isHome
+                    ? "bg-white/10 text-foreground"
+                    : "text-muted hover:bg-white/5 hover:text-foreground"
+                }`}
+              >
+                new
+              </Link>
+              <Link
+                href="/validations"
+                onClick={() => setOpen(false)}
+                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                  isHistory
+                    ? "bg-white/10 text-foreground"
+                    : "text-muted hover:bg-white/5 hover:text-foreground"
+                }`}
+              >
+                history
+              </Link>
+              <Link
+                href="/credits"
+                onClick={() => setOpen(false)}
+                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                  pathname === "/credits"
+                    ? "bg-white/10 text-foreground"
+                    : "text-muted hover:bg-white/5 hover:text-foreground"
+                }`}
+              >
+                {user.credits} credit{user.credits !== 1 ? "s" : ""}
+              </Link>
+              <div className="my-2 h-px bg-card-border" />
+              <button
+                onClick={() => { signOut(); setOpen(false); }}
+                className="block w-full text-left rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                log in
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                sign up
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

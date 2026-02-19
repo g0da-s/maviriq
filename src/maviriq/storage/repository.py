@@ -182,6 +182,30 @@ class ValidationRepository:
             raise DatabaseError(str(e)) from e
         return len(result.data) > 0
 
+    async def fail_orphaned_runs(self) -> int:
+        """Mark any 'running' or 'pending' runs as failed (e.g. after server restart)."""
+        sb = await get_supabase()
+        try:
+            result = await (
+                sb.table("validation_runs")
+                .update(
+                    {
+                        "status": "failed",
+                        "error": "Server restarted while validation was in progress",
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
+                .in_("status", ["running", "pending"])
+                .execute()
+            )
+            count = len(result.data) if result.data else 0
+            if count:
+                logger.info("Marked %d orphaned validation run(s) as failed", count)
+            return count
+        except Exception as e:
+            logger.exception("Failed to clean up orphaned runs")
+            raise DatabaseError(str(e)) from e
+
     def _row_to_run(self, row: dict) -> ValidationRun:
         return ValidationRun(
             id=row["id"],

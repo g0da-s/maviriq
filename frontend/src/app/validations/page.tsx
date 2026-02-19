@@ -179,7 +179,7 @@ function HistoryContent() {
                 <button
                   onClick={() => setConfirmId(item.id)}
                   disabled={deleting === item.id}
-                  className="shrink-0 rounded-lg p-2 text-muted/30 opacity-0 transition-all hover:bg-skip/10 hover:text-skip group-hover:opacity-100"
+                  className="shrink-0 rounded-lg p-2 text-muted/30 opacity-100 md:opacity-0 transition-all hover:bg-skip/10 hover:text-skip md:group-hover:opacity-100"
                 >
                   {deleting === item.id ? (
                     <div className="h-4 w-4 animate-spin rounded-full border border-skip border-t-transparent" />

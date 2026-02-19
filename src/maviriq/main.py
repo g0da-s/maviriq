@@ -12,6 +12,7 @@ from maviriq.api.routes import router
 from maviriq.api.stripe_routes import router as stripe_router
 from maviriq.config import settings
 from maviriq.storage import DatabaseError
+from maviriq.storage.repository import ValidationRepository
 
 _MAX_BODY_SIZE = 1_048_576  # 1 MB
 
@@ -39,6 +40,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Maviriq backend starting...")
+    try:
+        repo = ValidationRepository()
+        await repo.fail_orphaned_runs()
+    except Exception:
+        logger.warning("Could not clean up orphaned runs on startup", exc_info=True)
     yield
     logger.info("Shutting down...")
 
