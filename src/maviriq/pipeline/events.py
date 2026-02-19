@@ -14,15 +14,12 @@ class AgentStartedEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int) -> "AgentStartedEvent":
-        return cls(data={"agent": agent_num, "timestamp": datetime.now(timezone.utc).isoformat()})
-
-
-class AgentProgressEvent(SSEEvent):
-    event: str = "agent_progress"
-
-    @classmethod
-    def create(cls, agent_num: int, message: str, progress: float) -> "AgentProgressEvent":
-        return cls(data={"agent": agent_num, "message": message, "progress": progress})
+        return cls(
+            data={
+                "agent": agent_num,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
 
 class AgentCompletedEvent(SSEEvent):
@@ -30,15 +27,30 @@ class AgentCompletedEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int, output: dict) -> "AgentCompletedEvent":
-        return cls(data={"agent": agent_num, "output": output, "timestamp": datetime.now(timezone.utc).isoformat()})
+        return cls(
+            data={
+                "agent": agent_num,
+                "output": output,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
 
 class PipelineCompletedEvent(SSEEvent):
     event: str = "pipeline_completed"
 
     @classmethod
-    def create(cls, run_id: str, verdict: str, confidence: float) -> "PipelineCompletedEvent":
-        return cls(data={"id": run_id, "verdict": verdict, "confidence": confidence, "timestamp": datetime.now(timezone.utc).isoformat()})
+    def create(
+        cls, run_id: str, verdict: str, confidence: float
+    ) -> "PipelineCompletedEvent":
+        return cls(
+            data={
+                "id": run_id,
+                "verdict": verdict,
+                "confidence": confidence,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
 
 class PipelineErrorEvent(SSEEvent):
@@ -46,4 +58,10 @@ class PipelineErrorEvent(SSEEvent):
 
     @classmethod
     def create(cls, agent_num: int, error: str) -> "PipelineErrorEvent":
-        return cls(data={"agent": agent_num, "error": error, "timestamp": datetime.now(timezone.utc).isoformat()})
+        return cls(
+            data={
+                "agent": agent_num,
+                "error": error,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )

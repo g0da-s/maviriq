@@ -32,7 +32,9 @@ class ValidationRepository:
                         "idea": run.idea,
                         "status": run.status.value,
                         "current_agent": run.current_agent,
-                        "started_at": run.started_at.isoformat() if run.started_at else None,
+                        "started_at": run.started_at.isoformat()
+                        if run.started_at
+                        else None,
                         "created_at": datetime.now(timezone.utc).isoformat(),
                     }
                 )
@@ -51,15 +53,31 @@ class ValidationRepository:
                     {
                         "status": run.status.value,
                         "current_agent": run.current_agent,
-                        "started_at": run.started_at.isoformat() if run.started_at else None,
-                        "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+                        "started_at": run.started_at.isoformat()
+                        if run.started_at
+                        else None,
+                        "completed_at": run.completed_at.isoformat()
+                        if run.completed_at
+                        else None,
                         "error": run.error,
-                        "pain_discovery_output": run.pain_discovery.model_dump() if run.pain_discovery else None,
-                        "competitor_research_output": run.competitor_research.model_dump() if run.competitor_research else None,
-                        "market_intelligence_output": run.market_intelligence.model_dump() if run.market_intelligence else None,
-                        "graveyard_research_output": run.graveyard_research.model_dump() if run.graveyard_research else None,
-                        "viability_output": run.viability.model_dump() if run.viability else None,
-                        "synthesis_output": run.synthesis.model_dump() if run.synthesis else None,
+                        "pain_discovery_output": run.pain_discovery.model_dump()
+                        if run.pain_discovery
+                        else None,
+                        "competitor_research_output": run.competitor_research.model_dump()
+                        if run.competitor_research
+                        else None,
+                        "market_intelligence_output": run.market_intelligence.model_dump()
+                        if run.market_intelligence
+                        else None,
+                        "graveyard_research_output": run.graveyard_research.model_dump()
+                        if run.graveyard_research
+                        else None,
+                        "viability_output": run.viability.model_dump()
+                        if run.viability
+                        else None,
+                        "synthesis_output": run.synthesis.model_dump()
+                        if run.synthesis
+                        else None,
                         "total_cost_cents": run.total_cost_cents,
                     }
                 )
@@ -73,7 +91,13 @@ class ValidationRepository:
     async def get(self, run_id: str) -> ValidationRun | None:
         sb = await get_supabase()
         try:
-            result = await sb.table("validation_runs").select("*").eq("id", run_id).maybe_single().execute()
+            result = (
+                await sb.table("validation_runs")
+                .select("*")
+                .eq("id", run_id)
+                .maybe_single()
+                .execute()
+            )
         except Exception as e:
             logger.exception("Failed to get validation run %s", run_id)
             raise DatabaseError(str(e)) from e
@@ -112,7 +136,11 @@ class ValidationRepository:
 
         offset = (page - 1) * per_page
         try:
-            result = await query.order("created_at", desc=True).range(offset, offset + per_page - 1).execute()
+            result = (
+                await query.order("created_at", desc=True)
+                .range(offset, offset + per_page - 1)
+                .execute()
+            )
         except Exception as e:
             logger.exception("Failed to list validation runs")
             raise DatabaseError(str(e)) from e
@@ -138,15 +166,6 @@ class ValidationRepository:
             )
         return items, total
 
-    async def delete(self, run_id: str) -> bool:
-        sb = await get_supabase()
-        try:
-            result = await sb.table("validation_runs").delete().eq("id", run_id).execute()
-        except Exception as e:
-            logger.exception("Failed to delete validation run %s", run_id)
-            raise DatabaseError(str(e)) from e
-        return len(result.data) > 0
-
     async def delete_for_user(self, run_id: str, user_id: str) -> bool:
         """Delete a validation run, enforcing ownership at the DB level."""
         sb = await get_supabase()
@@ -169,15 +188,39 @@ class ValidationRepository:
             idea=row["idea"],
             status=ValidationStatus(row["status"]),
             current_agent=row.get("current_agent", 0),
-            started_at=datetime.fromisoformat(row["started_at"]) if row.get("started_at") else None,
-            completed_at=datetime.fromisoformat(row["completed_at"]) if row.get("completed_at") else None,
+            started_at=datetime.fromisoformat(row["started_at"])
+            if row.get("started_at")
+            else None,
+            completed_at=datetime.fromisoformat(row["completed_at"])
+            if row.get("completed_at")
+            else None,
             error=row.get("error"),
-            pain_discovery=PainDiscoveryOutput.model_validate(row["pain_discovery_output"]) if row.get("pain_discovery_output") else None,
-            competitor_research=CompetitorResearchOutput.model_validate(row["competitor_research_output"]) if row.get("competitor_research_output") else None,
-            market_intelligence=MarketIntelligenceOutput.model_validate(row["market_intelligence_output"]) if row.get("market_intelligence_output") else None,
-            graveyard_research=GraveyardResearchOutput.model_validate(row["graveyard_research_output"]) if row.get("graveyard_research_output") else None,
-            viability=ViabilityOutput.model_validate(row["viability_output"]) if row.get("viability_output") else None,
-            synthesis=SynthesisOutput.model_validate(row["synthesis_output"]) if row.get("synthesis_output") else None,
+            pain_discovery=PainDiscoveryOutput.model_validate(
+                row["pain_discovery_output"]
+            )
+            if row.get("pain_discovery_output")
+            else None,
+            competitor_research=CompetitorResearchOutput.model_validate(
+                row["competitor_research_output"]
+            )
+            if row.get("competitor_research_output")
+            else None,
+            market_intelligence=MarketIntelligenceOutput.model_validate(
+                row["market_intelligence_output"]
+            )
+            if row.get("market_intelligence_output")
+            else None,
+            graveyard_research=GraveyardResearchOutput.model_validate(
+                row["graveyard_research_output"]
+            )
+            if row.get("graveyard_research_output")
+            else None,
+            viability=ViabilityOutput.model_validate(row["viability_output"])
+            if row.get("viability_output")
+            else None,
+            synthesis=SynthesisOutput.model_validate(row["synthesis_output"])
+            if row.get("synthesis_output")
+            else None,
             total_cost_cents=row.get("total_cost_cents", 0),
             user_id=row.get("user_id"),
         )
@@ -201,17 +244,21 @@ class SearchCacheRepository:
                 .execute()
             )
         except Exception:
-            logger.warning("Search cache read failed for query hash %s", key[:12], exc_info=True)
+            logger.warning(
+                "Search cache read failed for query hash %s", key[:12], exc_info=True
+            )
             return None
         if result is None or not result.data:
             return None
         return result.data[0]["response"]
 
-    async def set(self, query: str, source: str, response: dict, ttl_seconds: int = 86400) -> None:
+    async def set(
+        self, query: str, source: str, response: dict, ttl_seconds: int = 86400
+    ) -> None:
         key = self._hash(query, source)
-        expires = (datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)).strftime(
-            "%Y-%m-%dT%H:%M:%S"
-        )
+        expires = (
+            datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
+        ).strftime("%Y-%m-%dT%H:%M:%S")
         sb = await get_supabase()
         try:
             await (
@@ -229,17 +276,9 @@ class SearchCacheRepository:
                 .execute()
             )
         except Exception:
-            logger.warning("Search cache write failed for query hash %s", key[:12], exc_info=True)
-
-    async def cleanup_expired(self) -> int:
-        now = self._utcnow_iso()
-        sb = await get_supabase()
-        try:
-            result = await sb.table("search_cache").delete().lte("expires_at", now).execute()
-        except Exception:
-            logger.warning("Search cache cleanup failed", exc_info=True)
-            return 0
-        return len(result.data)
+            logger.warning(
+                "Search cache write failed for query hash %s", key[:12], exc_info=True
+            )
 
     def _hash(self, query: str, source: str) -> str:
         return hashlib.sha256(f"{source}:{query}".encode()).hexdigest()

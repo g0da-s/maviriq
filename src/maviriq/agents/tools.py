@@ -6,7 +6,6 @@ the model can reason over. Agents pick a subset of tools from TOOL_CATALOG.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Callable, Awaitable
 
@@ -55,19 +54,9 @@ TOOL_CATALOG: list[tuple[str, str, str]] = [
         "search_capterra",
     ),
     (
-        "search_twitter",
-        "Search Twitter/X for real-time opinions, complaints, and trends.",
-        "search_twitter",
-    ),
-    (
         "search_producthunt",
         "Search Product Hunt for product launches and maker discussions.",
         "search_producthunt",
-    ),
-    (
-        "search_linkedin_jobs",
-        "Search LinkedIn Jobs to gauge hiring activity and demand signals.",
-        "search_linkedin_jobs",
     ),
     (
         "search_indiehackers",
@@ -78,11 +67,6 @@ TOOL_CATALOG: list[tuple[str, str, str]] = [
         "search_crunchbase",
         "Search Crunchbase for startup funding, company info, and market data.",
         "search_crunchbase",
-    ),
-    (
-        "search_youtube",
-        "Search YouTube for video reviews, tutorials, and product demos.",
-        "search_youtube",
     ),
     (
         "search_news",
@@ -117,24 +101,26 @@ def build_tools_for_agent(
     for name in tool_names:
         # Handle scrape_url separately — different schema and executor
         if name == _SCRAPE_TOOL:
-            schemas.append({
-                "name": _SCRAPE_TOOL,
-                "description": (
-                    "Scrape a webpage and return its text content. Use this to visit "
-                    "pricing pages, product pages, or any URL to get accurate, current data. "
-                    "Pass the full URL (e.g. https://example.com/pricing)."
-                ),
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "url": {
-                            "type": "string",
-                            "description": "The full URL to scrape.",
-                        }
+            schemas.append(
+                {
+                    "name": _SCRAPE_TOOL,
+                    "description": (
+                        "Scrape a webpage and return its text content. Use this to visit "
+                        "pricing pages, product pages, or any URL to get accurate, current data. "
+                        "Pass the full URL (e.g. https://example.com/pricing)."
+                    ),
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "The full URL to scrape.",
+                            }
+                        },
+                        "required": ["url"],
                     },
-                    "required": ["url"],
-                },
-            })
+                }
+            )
 
             async def _scrape_executor(url: str) -> str:
                 try:
@@ -151,26 +137,29 @@ def build_tools_for_agent(
         desc, method_name = _CATALOG_MAP[name]
         search_method = getattr(search, method_name)
 
-        schemas.append({
-            "name": name,
-            "description": desc,
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The search query to run.",
-                    }
+        schemas.append(
+            {
+                "name": name,
+                "description": desc,
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The search query to run.",
+                        }
+                    },
+                    "required": ["query"],
                 },
-                "required": ["query"],
-            },
-        })
+            }
+        )
 
         # Create executor closure — capture search_method by value
         def _make_executor(fn: Callable) -> Callable[[str], Awaitable[str]]:
             async def executor(query: str) -> str:
                 results = await fn(query)
                 return _format_results(results)
+
             return executor
 
         executors[name] = _make_executor(search_method)

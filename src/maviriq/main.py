@@ -28,6 +28,7 @@ class LimitRequestBodyMiddleware(BaseHTTPMiddleware):
             )
         return await call_next(request)
 
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

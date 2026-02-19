@@ -12,6 +12,9 @@ from maviriq.services.search import SerperService
 TInput = TypeVar("TInput", bound=BaseModel)
 TOutput = TypeVar("TOutput", bound=BaseModel)
 
+ToolSchemas = list[dict[str, Any]]
+ToolExecutors = dict[str, Callable[[str], Awaitable[str]]]
+
 
 class BaseAgent(ABC, Generic[TInput, TOutput]):
     """Base class for agentic research agents.
@@ -37,21 +40,19 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
     def get_user_prompt(self, input_data: TInput) -> str: ...
 
     @abstractmethod
-    def get_tools(self) -> list[dict[str, Any]]: ...
-
-    @abstractmethod
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]: ...
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]: ...
 
     def post_process(self, input_data: TInput, result: TOutput) -> TOutput:
         """Optional fixups after the tool loop returns (e.g., setting result.idea)."""
         return result
 
     async def run(self, input_data: TInput) -> TOutput:
+        tools, executors = self.get_tools_and_executors()
         result = await self.llm.run_tool_loop(
             system_prompt=self.get_system_prompt(input_data),
             user_prompt=self.get_user_prompt(input_data),
-            tools=self.get_tools(),
-            tool_executors=self.get_tool_executors(),
+            tools=tools,
+            tool_executors=executors,
             output_schema=self.output_schema,
             max_iterations=settings.agent_max_iterations,
         )

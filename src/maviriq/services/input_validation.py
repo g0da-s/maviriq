@@ -7,9 +7,23 @@ logger = logging.getLogger(__name__)
 
 # Profanity / slur blocklist (matched as whole words, case-insensitive)
 _BLOCKED_WORDS = {
-    "fuck", "shit", "ass", "bitch", "damn", "cunt", "dick", "cock",
-    "pussy", "whore", "slut", "bastard", "nigger", "nigga", "faggot",
-    "retard", "retarded",
+    "fuck",
+    "shit",
+    "ass",
+    "bitch",
+    "damn",
+    "cunt",
+    "dick",
+    "cock",
+    "pussy",
+    "whore",
+    "slut",
+    "bastard",
+    "nigger",
+    "nigga",
+    "faggot",
+    "retard",
+    "retarded",
 }
 
 # 5+ consecutive consonants — catches keyboard mash like "wfkpsdf", "bcdfgh"

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable
 
-from maviriq.agents.base import BaseAgent
+from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
 from maviriq.models.schemas import PainDiscoveryInput, PainDiscoveryOutput
 
@@ -139,7 +138,9 @@ TOOL_NAMES = [
 
 class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
     name = "Pain & User Discovery"
-    description = "Finds evidence that a problem exists and identifies who suffers from it"
+    description = (
+        "Finds evidence that a problem exists and identifies who suffers from it"
+    )
     output_schema = PainDiscoveryOutput
 
     def get_system_prompt(self, input_data: PainDiscoveryInput) -> str:
@@ -157,13 +158,8 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
             f"to this idea. Use multiple search tools and diverse queries."
         )
 
-    def get_tools(self) -> list[dict[str, Any]]:
-        schemas, _ = build_tools_for_agent(self.search, TOOL_NAMES)
-        return schemas
-
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
-        _, executors = build_tools_for_agent(self.search, TOOL_NAMES)
-        return executors
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
+        return build_tools_for_agent(self.search, TOOL_NAMES)
 
     def post_process(
         self, input_data: PainDiscoveryInput, result: PainDiscoveryOutput

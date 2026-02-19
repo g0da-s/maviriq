@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable
 
-from maviriq.agents.base import BaseAgent
+from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
 from maviriq.models.schemas import GraveyardResearchInput, GraveyardResearchOutput
 
@@ -85,7 +84,9 @@ TOOL_NAMES = [
 ]
 
 
-class GraveyardResearchAgent(BaseAgent[GraveyardResearchInput, GraveyardResearchOutput]):
+class GraveyardResearchAgent(
+    BaseAgent[GraveyardResearchInput, GraveyardResearchOutput]
+):
     name = "Graveyard Research"
     description = "Finds failed startups and warning signs in the market"
     output_schema = GraveyardResearchOutput
@@ -101,10 +102,5 @@ class GraveyardResearchAgent(BaseAgent[GraveyardResearchInput, GraveyardResearch
             f"Use multiple search tools and diverse queries."
         )
 
-    def get_tools(self) -> list[dict[str, Any]]:
-        schemas, _ = build_tools_for_agent(self.search, TOOL_NAMES)
-        return schemas
-
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
-        _, executors = build_tools_for_agent(self.search, TOOL_NAMES)
-        return executors
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
+        return build_tools_for_agent(self.search, TOOL_NAMES)

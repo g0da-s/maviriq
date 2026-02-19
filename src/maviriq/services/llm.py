@@ -11,7 +11,13 @@ from anthropic import (
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from pydantic import BaseModel, ValidationError
-from tenacity import before_sleep_log, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from maviriq.config import settings
 
@@ -23,17 +29,30 @@ T = TypeVar("T", bound=BaseModel)
 class SearchUnavailableError(Exception):
     """Raised when all search tool calls failed (e.g. bad API key, service down)."""
 
+
 _ANTHROPIC_RETRY_POLICY = dict(
     stop=stop_after_attempt(6),
     wait=wait_exponential(min=2, max=120),
-    retry=retry_if_exception_type((APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)),
+    retry=retry_if_exception_type(
+        (APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)
+    ),
     before_sleep=before_sleep_log(logger, logging.WARNING),
 )
 
 # Google errors are imported lazily to avoid hard failure if the package isn't installed
 try:
-    from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable, TooManyRequests
-    _GOOGLE_RETRY_EXCEPTIONS: tuple = (ResourceExhausted, ServiceUnavailable, TooManyRequests, ConnectionError)
+    from google.api_core.exceptions import (
+        ResourceExhausted,
+        ServiceUnavailable,
+        TooManyRequests,
+    )
+
+    _GOOGLE_RETRY_EXCEPTIONS: tuple = (
+        ResourceExhausted,
+        ServiceUnavailable,
+        TooManyRequests,
+        ConnectionError,
+    )
 except ImportError:
     _GOOGLE_RETRY_EXCEPTIONS = (ConnectionError,)
 
@@ -81,6 +100,7 @@ class LLMService:
         self.research_model = None
         if settings.google_api_key:
             from langchain_google_genai import ChatGoogleGenerativeAI
+
             self.research_model = ChatGoogleGenerativeAI(
                 model=settings.research_model,
                 google_api_key=settings.google_api_key,
@@ -88,7 +108,10 @@ class LLMService:
             )
             logger.info("Research agents will use Gemini (%s)", settings.research_model)
         else:
-            logger.info("No GOOGLE_API_KEY set — research agents will use Anthropic (%s)", settings.reasoning_model)
+            logger.info(
+                "No GOOGLE_API_KEY set — research agents will use Anthropic (%s)",
+                settings.reasoning_model,
+            )
 
     def _get_model(self, use_cheap_model: bool = False) -> ChatAnthropic:
         return self.cheap_model if use_cheap_model else self.model
@@ -103,10 +126,12 @@ class LLMService:
     ) -> T:
         model = self._get_model(use_cheap_model)
         structured_model = model.with_structured_output(output_schema)
-        return await structured_model.ainvoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt),
-        ])
+        return await structured_model.ainvoke(
+            [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt),
+            ]
+        )
 
     @retry(**_GOOGLE_RETRY_POLICY)
     async def _generate_structured_google(
@@ -116,10 +141,12 @@ class LLMService:
         output_schema: type[T],
     ) -> T:
         structured_model = self.research_model.with_structured_output(output_schema)
-        return await structured_model.ainvoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt),
-        ])
+        return await structured_model.ainvoke(
+            [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt),
+            ]
+        )
 
     async def generate_structured(
         self,
@@ -156,35 +183,14 @@ class LLMService:
     ) -> str:
         model = self._get_model(use_cheap_model)
 
-        response = await model.ainvoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt),
-        ])
+        response = await model.ainvoke(
+            [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt),
+            ]
+        )
 
         return response.content
-
-    async def generate_list(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        use_cheap_model: bool = True,
-    ) -> list[str]:
-        """Generate a list of strings (e.g., search queries).
-
-        Uses Gemini when available, falls back to Anthropic Haiku.
-        """
-
-        class ListOutput(BaseModel):
-            items: list[str]
-
-        result = await self.generate_structured(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            output_schema=ListOutput,
-            use_research_model=True,
-            use_cheap_model=use_cheap_model,
-        )
-        return result.items
 
     @retry(**_GOOGLE_RETRY_POLICY)
     async def _invoke_research(self, model: Any, messages: list) -> AIMessage:
@@ -271,13 +277,17 @@ class LLMService:
                     "Iteration %d: %d search calls [%s]",
                     iteration + 1,
                     len(search_calls),
-                    ", ".join(f"{tc['name']}({(tc['args'].get('query') or tc['args'].get('url', ''))[:50]})" for tc in search_calls),
+                    ", ".join(
+                        f"{tc['name']}({(tc['args'].get('query') or tc['args'].get('url', ''))[:50]})"
+                        for tc in search_calls
+                    ),
                 )
             if submit_call is not None:
                 logger.info("Iteration %d: submit_result called", iteration + 1)
 
             # Execute all search calls in parallel
             if search_calls:
+
                 async def _exec(tc: dict) -> ToolMessage:
                     nonlocal search_successes, search_failures
                     name = tc["name"]
@@ -329,7 +339,10 @@ class LLMService:
             )
 
         # Absolute fallback: use structured output to force a result
-        logger.warning("Tool loop exhausted %d iterations, using structured output fallback", max_iterations)
+        logger.warning(
+            "Tool loop exhausted %d iterations, using structured output fallback",
+            max_iterations,
+        )
         structured_model = base_model.with_structured_output(output_schema)
         result = await invoke_fn(structured_model, messages)
         return result

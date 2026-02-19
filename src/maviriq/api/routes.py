@@ -6,7 +6,13 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
-from maviriq.api.dependencies import get_current_user, get_pipeline_runner, get_validation_repo
+from pydantic import BaseModel as _BM
+
+from maviriq.api.dependencies import (
+    get_current_user,
+    get_pipeline_runner,
+    get_validation_repo,
+)
 from maviriq.api.stream_tokens import stream_token_store
 from maviriq.models.schemas import (
     CreateValidationRequest,
@@ -28,6 +34,11 @@ router = APIRouter(prefix="/api")
 _running_pipelines: dict[str, asyncio.Task] = {}
 
 
+class _IdeaCheck(_BM):
+    is_valid: bool
+    reason: str
+
+
 @router.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
@@ -40,23 +51,11 @@ async def create_validation(
     runner: PipelineGraph = Depends(get_pipeline_runner),
 ) -> CreateValidationResponse:
     from maviriq.api.rate_limit import rate_limit_validation
-    from maviriq.services.input_validation import validate_idea_input
 
     rate_limit_validation(user["id"])
 
-    # Fast regex pre-filter — catches profanity and gibberish before LLM call
-    input_error = validate_idea_input(request.idea)
-    if input_error:
-        logger.info("Input validation rejected idea from user %s: %s", user["id"], input_error)
-        raise HTTPException(status_code=422, detail=input_error)
-
     # LLM coherence check — runs before credit deduction
     from maviriq.services.llm import LLMService
-    from pydantic import BaseModel as _BM
-
-    class _IdeaCheck(_BM):
-        is_valid: bool
-        reason: str
 
     llm = LLMService()
     try:
@@ -76,7 +75,9 @@ async def create_validation(
     except HTTPException:
         raise
     except Exception:
-        logger.warning("LLM idea check failed — rejecting to protect API costs", exc_info=True)
+        logger.warning(
+            "LLM idea check failed — rejecting to protect API costs", exc_info=True
+        )
         raise HTTPException(
             status_code=503,
             detail="Validation service temporarily unavailable. Please try again in a moment.",
@@ -87,7 +88,12 @@ async def create_validation(
 
     clean_idea = await normalize_idea(request.idea)
     if clean_idea != request.idea:
-        logger.info("Idea normalized for user %s: %r -> %r", user["id"], request.idea, clean_idea)
+        logger.info(
+            "Idea normalized for user %s: %r -> %r",
+            user["id"],
+            request.idea,
+            clean_idea,
+        )
 
     # Atomically deduct credit + record transaction in a single DB call
     txn_repo = CreditTransactionRepository()
@@ -135,8 +141,13 @@ async def stream_validation(
     # Validate one-time stream token (not a JWT — short-lived, single-use)
     token_user_id = stream_token_store.consume(token, run_id) if token else None
     if not token_user_id:
+
         async def auth_error():
-            yield {"event": "pipeline_error", "data": json.dumps({"error": "Not authenticated"})}
+            yield {
+                "event": "pipeline_error",
+                "data": json.dumps({"error": "Not authenticated"}),
+            }
+
         return EventSourceResponse(auth_error())
 
     async def event_generator():
@@ -175,10 +186,12 @@ async def stream_validation(
                         sent_agents.add(agent_num)
                         yield {
                             "event": "agent_completed",
-                            "data": json.dumps({
-                                "agent": agent_num,
-                                "output": output.model_dump(),
-                            }),
+                            "data": json.dumps(
+                                {
+                                    "agent": agent_num,
+                                    "output": output.model_dump(),
+                                }
+                            ),
                         }
 
             # Stream live events from pubsub queue
@@ -187,7 +200,10 @@ async def stream_validation(
                 if event is None:
                     break
                 # Skip agent_completed events we already replayed
-                if event.event == "agent_completed" and event.data.get("agent") in sent_agents:
+                if (
+                    event.event == "agent_completed"
+                    and event.data.get("agent") in sent_agents
+                ):
                     continue
                 yield {
                     "event": event.event,
@@ -221,7 +237,9 @@ async def list_validations(
     repo: ValidationRepository = Depends(get_validation_repo),
 ) -> ValidationListResponse:
     items, total = await repo.list(page, per_page, user_id=user["id"])
-    return ValidationListResponse(items=items, total=total, page=page, per_page=per_page)
+    return ValidationListResponse(
+        items=items, total=total, page=page, per_page=per_page
+    )
 
 
 @router.delete("/validations/{run_id}")
@@ -254,20 +272,24 @@ async def _replay_from_db(run: ValidationRun):
         if output is not None:
             yield {
                 "event": "agent_completed",
-                "data": json.dumps({
-                    "agent": agent_num,
-                    "output": output.model_dump(),
-                }),
+                "data": json.dumps(
+                    {
+                        "agent": agent_num,
+                        "output": output.model_dump(),
+                    }
+                ),
             }
 
     if run.status == ValidationStatus.COMPLETED:
         yield {
             "event": "pipeline_completed",
-            "data": json.dumps({
-                "id": run.id,
-                "verdict": run.synthesis.verdict.value if run.synthesis else None,
-                "confidence": run.synthesis.confidence if run.synthesis else None,
-            }),
+            "data": json.dumps(
+                {
+                    "id": run.id,
+                    "verdict": run.synthesis.verdict.value if run.synthesis else None,
+                    "confidence": run.synthesis.confidence if run.synthesis else None,
+                }
+            ),
         }
     elif run.status == ValidationStatus.FAILED:
         yield {
@@ -282,7 +304,7 @@ async def _run_pipeline_background(
     """Run pipeline in background. PipelineGraph.run() handles pubsub internally."""
     try:
         await runner.run(run_id, idea, user_id=user_id)
-    except Exception as e:
+    except Exception:
         logger.exception(f"Background pipeline failed for {run_id}")
     finally:
         _running_pipelines.pop(run_id, None)

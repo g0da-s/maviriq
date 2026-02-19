@@ -8,7 +8,7 @@ import logging
 import time
 from collections import defaultdict
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # In-memory fallback (single-worker / local dev only)
 # ---------------------------------------------------------------------------
+
 
 class _InMemoryLimiter:
     """Sliding window rate limiter stored in process memory."""
@@ -31,7 +32,13 @@ class _InMemoryLimiter:
         self._hits[key] = [t for t in hits if t > cutoff]
 
         if len(self._hits[key]) >= max_requests:
-            logger.warning("Rate limit hit: %s (%d/%d in %ds)", key, max_requests, max_requests, window_seconds)
+            logger.warning(
+                "Rate limit hit: %s (%d/%d in %ds)",
+                key,
+                max_requests,
+                max_requests,
+                window_seconds,
+            )
             raise HTTPException(
                 status_code=429,
                 detail=f"Too many requests. Try again in {window_seconds} seconds.",
@@ -42,6 +49,7 @@ class _InMemoryLimiter:
 # ---------------------------------------------------------------------------
 # Redis-backed limiter (works across workers and survives restarts)
 # ---------------------------------------------------------------------------
+
 
 class _RedisLimiter:
     """Sliding window rate limiter backed by Redis sorted sets."""
@@ -70,7 +78,13 @@ class _RedisLimiter:
         if current_count >= max_requests:
             # Remove the entry we just added since we're rejecting
             self._redis.zrem(rkey, f"{now}")
-            logger.warning("Rate limit hit: %s (%d/%d in %ds)", key, max_requests, max_requests, window_seconds)
+            logger.warning(
+                "Rate limit hit: %s (%d/%d in %ds)",
+                key,
+                max_requests,
+                max_requests,
+                window_seconds,
+            )
             raise HTTPException(
                 status_code=429,
                 detail=f"Too many requests. Try again in {window_seconds} seconds.",
@@ -81,6 +95,7 @@ class _RedisLimiter:
 # Singleton initialisation
 # ---------------------------------------------------------------------------
 
+
 def _create_limiter() -> _InMemoryLimiter | _RedisLimiter:
     from maviriq.config import settings
 
@@ -88,7 +103,10 @@ def _create_limiter() -> _InMemoryLimiter | _RedisLimiter:
         try:
             return _RedisLimiter(settings.redis_url)
         except Exception:
-            logger.warning("Failed to connect to Redis — falling back to in-memory rate limiter", exc_info=True)
+            logger.warning(
+                "Failed to connect to Redis — falling back to in-memory rate limiter",
+                exc_info=True,
+            )
     return _InMemoryLimiter()
 
 
@@ -98,26 +116,6 @@ _limiter = _create_limiter()
 # ---------------------------------------------------------------------------
 # Public helpers (unchanged interface)
 # ---------------------------------------------------------------------------
-
-def _get_client_ip(request: Request) -> str:
-    # Railway/Render set the real client IP as the rightmost entry in
-    # X-Forwarded-For. The leftmost entries can be spoofed by the client.
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[-1].strip()
-    return request.client.host if request.client else "unknown"
-
-
-def rate_limit_auth(request: Request) -> None:
-    """Limit auth attempts: 10 per minute per IP to prevent brute force."""
-    ip = _get_client_ip(request)
-    _limiter.check(f"auth:{ip}", 10, 60)
-
-
-def rate_limit_register(request: Request) -> None:
-    """Limit account creation: 1 per IP (all time) to prevent free-credit farming."""
-    ip = _get_client_ip(request)
-    _limiter.check(f"register:{ip}", 1, 315360000)  # 10 years in seconds
 
 
 def rate_limit_validation(user_id: str) -> None:

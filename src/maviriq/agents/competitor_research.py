@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable
 
-from maviriq.agents.base import BaseAgent
+from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
 from maviriq.models.schemas import CompetitorResearchInput, CompetitorResearchOutput
 
@@ -13,25 +12,31 @@ SYSTEM_PROMPT = """\
 You are a competitive intelligence analyst. Your mission is to map the \
 competitive landscape for a business idea.
 
-You have access to search tools. Use them strategically:
-1. FIRST: Search for obvious market leaders and incumbents. Every category has \
-   well-known players — search for "[category] market leaders", "[category] top \
-   companies", "best [category] tools". Missing a household name like Salesforce \
-   in CRM or Mailchimp in email marketing is a critical error.
-2. Search G2 and Capterra for software reviews, ratings, and comparisons.
-3. Search Product Hunt for recent product launches in this space.
-4. Search Indie Hackers for bootstrapped competitors, revenue reports, and founder stories.
-5. Search Crunchbase to discover early-stage startups that may not appear \
-   on review sites yet.
-6. Refine your queries based on what you find — dig deeper on competitors.
-7. IMPORTANT: After finding competitors, you MUST verify pricing by scraping \
-   the actual pricing page. Search snippets often contain outdated prices. \
-   For each top competitor: first search "[name] pricing" to find the URL, \
-   then use scrape_url to visit the actual pricing page and extract current \
-   prices. Do NOT submit until you have scraped pricing pages for your top \
-   competitors. Never rely on search snippets alone for pricing data.
+You have access to search tools. Follow this EXACT two-phase workflow:
 
-You can call multiple search tools in a single turn for parallel execution.
+═══ PHASE 1: DISCOVER COMPETITORS (turns 1-3) ═══
+Use parallel tool calls to search multiple sources at once:
+- Turn 1: Call search_web ("best [category] tools 2025"), search_g2 \
+  ("[category] reviews"), and search_capterra ("[category] software") in parallel.
+- Turn 2: Call search_crunchbase ("[category] startups") and search_web \
+  ("[category] alternatives") in parallel. Also try search_producthunt if relevant.
+- Turn 3: If this is a WELL-KNOWN category (CRM, email, project management, \
+  note-taking, etc.) and you have fewer than 5 competitors, search more broadly — \
+  "[category] top tools", "[category] market leaders". Missing a household name \
+  like Salesforce in CRM or Mailchimp in email marketing is a critical error.
+
+═══ PHASE 2: SCRAPE PRICING (turns 4-6) ═══
+For your top 3-5 competitors, get real pricing data:
+- Call scrape_url on each competitor's pricing page in parallel. \
+  Use the URL pattern: [competitor_url]/pricing or search "[name] pricing page" \
+  first if the URL isn't obvious.
+- Extract plan names, prices, and key features from the scraped page.
+- Do NOT submit with empty pricing arrays. If a competitor has public pricing, \
+  you MUST find it. Empty pricing is only acceptable for products that are \
+  truly invite-only or enterprise-only with no listed prices.
+
+You can call multiple tools in a single turn for parallel execution. \
+Maximize parallel calls to stay within your turn budget.
 
 EXTRACTION RULES:
 - For each competitor: extract name, URL, one-liner description.
@@ -46,7 +51,7 @@ EXTRACTION RULES:
   Notion AI → indirect (different product, but users might use it instead)
   Apple → potential (could add this to Siri but hasn't)
   </example>
-- Extract pricing tiers if mentioned in search results (plan name, price, features).
+- Extract pricing tiers from scraped pages (plan name, price, features).
 - Extract strengths and weaknesses from review snippets.
 - For review_sentiment, use ONLY: "positive", "mixed", or "negative".
 - For review_count, use the number if mentioned, otherwise null.
@@ -71,15 +76,10 @@ EXTRACTION RULES:
   that's a valid finding — it means the market is underserved. Do NOT pad the \
   list with irrelevant companies to hit a number.
 - If zero competitors exist, report that honestly. An empty landscape is signal.
-- However, if the idea targets a WELL-KNOWN category (CRM, email marketing, \
-  project management, note-taking, etc.), there are definitely 5+ competitors. \
-  If you've only found 2-3 in a known category, you haven't searched broadly \
-  enough — try "[category] alternatives", "[category] top tools", or check \
-  G2/Capterra category pages before submitting.
 
-When you have mapped the landscape, call submit_result with your structured \
-findings. Quality matters — each competitor should have strengths, weaknesses, \
-and ideally pricing."""
+When you have mapped the landscape AND scraped pricing, call submit_result with \
+your structured findings. Every competitor should have strengths, weaknesses, \
+and pricing."""
 
 TOOL_NAMES = [
     "search_web",
@@ -92,7 +92,9 @@ TOOL_NAMES = [
 ]
 
 
-class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResearchOutput]):
+class CompetitorResearchAgent(
+    BaseAgent[CompetitorResearchInput, CompetitorResearchOutput]
+):
     name = "Competitor Research"
     description = "Maps the competitive landscape and finds market gaps"
     output_schema = CompetitorResearchOutput
@@ -112,13 +114,8 @@ class CompetitorResearchAgent(BaseAgent[CompetitorResearchInput, CompetitorResea
             f"Use multiple search tools and diverse queries."
         )
 
-    def get_tools(self) -> list[dict[str, Any]]:
-        schemas, _ = build_tools_for_agent(self.search, TOOL_NAMES)
-        return schemas
-
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
-        _, executors = build_tools_for_agent(self.search, TOOL_NAMES)
-        return executors
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
+        return build_tools_for_agent(self.search, TOOL_NAMES)
 
     def post_process(
         self, input_data: CompetitorResearchInput, result: CompetitorResearchOutput

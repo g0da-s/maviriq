@@ -355,27 +355,26 @@ def grade_graveyard_finds_failures(case: GoldenCase, output: Any) -> GradeResult
     )
 
 
-def grade_graveyard_has_lessons(case: GoldenCase, output: Any) -> GradeResult:
-    """Check that lessons_learned is populated and meaningful."""
+def grade_graveyard_has_failure_reasons(case: GoldenCase, output: Any) -> GradeResult:
+    """Check that failure_reasons are populated."""
     if not output:
         return GradeResult(
-            grader="code:graveyard_has_lessons",
+            grader="code:graveyard_has_failure_reasons",
             agent="graveyard_research",
             passed=True,
             score=0.5,
             details="No output",
         )
 
-    has_lessons = bool(output.lessons_learned and len(output.lessons_learned.strip()) > 20)
-    has_reasons = len(output.failure_reasons) >= 1
-    passed = has_lessons or has_reasons
-    score = (int(has_lessons) + int(has_reasons)) / 2
+    count = len(output.failure_reasons)
+    passed = count >= 1
+    score = min(count / 3, 1.0)  # ideally 3+ failure reasons
     return GradeResult(
-        grader="code:graveyard_has_lessons",
+        grader="code:graveyard_has_failure_reasons",
         agent="graveyard_research",
         passed=passed,
         score=score,
-        details=f"lessons_learned: {'yes' if has_lessons else 'no'}, failure_reasons: {len(output.failure_reasons)}",
+        details=f"failure_reasons: {count}",
     )
 
 
@@ -603,7 +602,7 @@ ALL_CODE_GRADERS = {
     ],
     "graveyard_research": [
         grade_graveyard_finds_failures,
-        grade_graveyard_has_lessons,
+        grade_graveyard_has_failure_reasons,
     ],
     "synthesis": [
         grade_verdict_matches,

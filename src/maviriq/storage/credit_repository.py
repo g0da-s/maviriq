@@ -72,6 +72,8 @@ class CreditTransactionRepository:
                 },
             ).execute()
         except Exception as e:
-            logger.exception("Failed to fulfill Stripe payment for session %s", stripe_session_id)
+            logger.exception(
+                "Failed to fulfill Stripe payment for session %s", stripe_session_id
+            )
             raise DatabaseError(str(e)) from e
         return result.data is True

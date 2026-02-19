@@ -27,6 +27,7 @@ def _get_jwks_client() -> PyJWKClient:
         )
     return _jwks_client
 
+
 _pipeline_runner: PipelineGraph | None = None
 _validation_repo: ValidationRepository | None = None
 _user_repo: UserRepository | None = None
@@ -61,7 +62,9 @@ def decode_supabase_jwt(token: str) -> dict:
         signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
     except Exception:
         logger.exception("JWKS key fetch failed")
-        raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable")
+        raise HTTPException(
+            status_code=503, detail="Authentication service temporarily unavailable"
+        )
 
     try:
         payload = pyjwt.decode(

@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from maviriq.agents.base import BaseAgent
+from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.models.schemas import (
     SynthesisInput,
     SynthesisOutput,
     Verdict,
     ViabilitySignal,
+    _normalize_literal,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 # Intermediate schemas (internal to this module)
 # ──────────────────────────────────────────────
+
 
 class _ViabilityAnalysis(BaseModel):
     """Pass 1: Focused quantitative viability analysis."""
@@ -34,33 +36,13 @@ class _ViabilityAnalysis(BaseModel):
 
     @field_validator("reachability", mode="before")
     @classmethod
-    def normalize_reachability(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("easy", "moderate", "hard"):
-            return v_lower
-        if "easy" in v_lower:
-            return "easy"
-        if "hard" in v_lower:
-            return "hard"
-        return "moderate"
+    def normalize_reachability(cls, v: object) -> object:
+        return _normalize_literal(v, ("easy", "moderate", "hard"), "moderate")
 
     @field_validator("gap_size", mode="before")
     @classmethod
-    def normalize_gap_size(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("large", "medium", "small", "none"):
-            return v_lower
-        if "large" in v_lower:
-            return "large"
-        if "small" in v_lower:
-            return "small"
-        if "none" in v_lower:
-            return "none"
-        return "medium"
+    def normalize_gap_size(cls, v: object) -> object:
+        return _normalize_literal(v, ("large", "medium", "small", "none"), "medium")
 
 
 class _VerdictStrategy(BaseModel):
@@ -82,9 +64,18 @@ class _VerdictStrategy(BaseModel):
 
     @field_validator("verdict", mode="before")
     @classmethod
-    def normalize_verdict(cls, v: str) -> str:
+    def normalize_verdict(cls, v: object) -> object:
         if isinstance(v, str) and v.upper().strip() == "CONDITIONAL":
             return "MAYBE"
+        return v
+
+    @field_validator("key_strengths", "key_risks", "next_steps", mode="before")
+    @classmethod
+    def coerce_str_to_list(cls, v: object) -> object:
+        """LLMs sometimes return a bullet-point string instead of a list."""
+        if isinstance(v, str):
+            lines = [ln.lstrip("-•* ").strip() for ln in v.strip().splitlines()]
+            return [ln for ln in lines if ln]
         return v
 
 
@@ -250,6 +241,7 @@ from one founder to another."""
 # Agent
 # ──────────────────────────────────────────────
 
+
 class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     name = "Synthesis & Verdict"
     description = "Combines all research and delivers a BUILD/SKIP/MAYBE verdict"
@@ -262,11 +254,8 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     def get_user_prompt(self, input_data: SynthesisInput) -> str:
         return ""
 
-    def get_tools(self) -> list[dict[str, Any]]:
-        return []
-
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
-        return {}
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
+        return [], {}
 
     async def run(self, input_data: SynthesisInput) -> SynthesisOutput:
         context = self._build_research_context(input_data)
@@ -323,13 +312,16 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
 
         severity_counts = {"high": 0, "moderate": 0, "mild": 0}
         for p in pain.pain_points:
-            severity_counts[p.pain_severity] = severity_counts.get(p.pain_severity, 0) + 1
+            severity_counts[p.pain_severity] = (
+                severity_counts.get(p.pain_severity, 0) + 1
+            )
         high_impact = severity_counts["high"]
         pain_signal = (
             f"{high_impact} of {len(pain.pain_points)} high-impact "
             f"({severity_counts['high']} high, {severity_counts['moderate']} moderate, "
             f"{severity_counts['mild']} mild)"
-            if pain.pain_points else "N/A"
+            if pain.pain_points
+            else "N/A"
         )
 
         context = f"""
@@ -341,10 +333,10 @@ Target user: {pain.primary_target_user.label}
 Pain summary: {pain.pain_summary}
 
 Top pain points{f" (showing top 5 of {len(pain.pain_points)})" if len(pain.pain_points) > 5 else ""}:
-{chr(10).join(f'{i+1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
+{chr(10).join(f'{i + 1}. "{p.quote}" - {p.author_context} (severity: {p.pain_severity}, source: {p.source})' for i, p in enumerate(pain.pain_points[:5])) or "None found"}
 
 User segments found:
-{chr(10).join(f'- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})' for s in pain.user_segments) or "None found"}
+{chr(10).join(f"- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})" for s in pain.user_segments) or "None found"}
 
 ═══ COMPETITIVE LANDSCAPE ═══
 {len(competitors.competitors)} competitors
@@ -352,13 +344,13 @@ Market saturation: {competitors.market_saturation}
 Avg price: {competitors.avg_price_point}
 
 Top competitors{f" (showing top 5 of {len(competitors.competitors)})" if len(competitors.competitors) > 5 else ""}:
-{chr(10).join(f'{i+1}. {c.name} [{c.competitor_type}]: {c.one_liner}' + chr(10) + f'   Pricing: {", ".join(p.price for p in c.pricing)}' + chr(10) + f'   Strengths: {", ".join(c.strengths[:2])}' + chr(10) + f'   Weaknesses: {", ".join(c.weaknesses[:2])}' for i, c in enumerate(competitors.competitors[:5])) or "None found"}
+{chr(10).join(f"{i + 1}. {c.name} [{c.competitor_type}]: {c.one_liner}" + chr(10) + f"   Pricing: {', '.join(p.price for p in c.pricing)}" + chr(10) + f"   Strengths: {', '.join(c.strengths[:2])}" + chr(10) + f"   Weaknesses: {', '.join(c.weaknesses[:2])}" for i, c in enumerate(competitors.competitors[:5])) or "None found"}
 
 Common complaints:
-{chr(10).join(f'- {c}' for c in competitors.common_complaints) or "None found"}
+{chr(10).join(f"- {c}" for c in competitors.common_complaints) or "None found"}
 
 Underserved needs:
-{chr(10).join(f'- {n}' for n in competitors.underserved_needs) or "None found"}
+{chr(10).join(f"- {n}" for n in competitors.underserved_needs) or "None found"}
 """
 
         if market_intel:
@@ -369,20 +361,20 @@ Growth direction: {market_intel.growth_direction}
 TAM reasoning: {market_intel.tam_reasoning}
 
 Distribution channels:
-{chr(10).join(f'- {ch.channel} (reach: {ch.reach_estimate}, effort: {ch.effort})' for ch in market_intel.distribution_channels) or "None found"}
+{chr(10).join(f"- {ch.channel} (reach: {ch.reach_estimate}, effort: {ch.effort})" for ch in market_intel.distribution_channels) or "None found"}
 
 Funding signals:
-{chr(10).join(f'- {sig}' for sig in market_intel.funding_signals) or "None found"}
+{chr(10).join(f"- {sig}" for sig in market_intel.funding_signals) or "None found"}
 """
 
         if graveyard:
             context += f"""
 ═══ GRAVEYARD RESEARCH ═══
 Previous attempts:
-{chr(10).join(f'- {a.name}: {a.what_they_did} → Shut down because: {a.shutdown_reason} ({a.year or "unknown year"})' for a in graveyard.previous_attempts) or "No previous attempts found"}
+{chr(10).join(f"- {a.name}: {a.what_they_did} → Shut down because: {a.shutdown_reason} ({a.year or 'unknown year'})" for a in graveyard.previous_attempts) or "No previous attempts found"}
 
 Failure patterns across attempts:
-{chr(10).join(f'- {r}' for r in graveyard.failure_reasons) or "None identified"}
+{chr(10).join(f"- {r}" for r in graveyard.failure_reasons) or "None identified"}
 
 Lessons learned:
 {graveyard.lessons_learned or "None identified"}
@@ -392,11 +384,14 @@ Lessons learned:
 
     def _format_viability_results(self, viability: _ViabilityAnalysis) -> str:
         """Format Pass 1 viability results as context for Pass 2."""
-        signals_text = "\n".join(
-            f"- [{sig.direction.upper()}] {sig.signal} "
-            f"(confidence: {sig.confidence:.2f}, source: {sig.source})"
-            for sig in viability.signals
-        ) or "None"
+        signals_text = (
+            "\n".join(
+                f"- [{sig.direction.upper()}] {sig.signal} "
+                f"(confidence: {sig.confidence:.2f}, source: {sig.source})"
+                for sig in viability.signals
+            )
+            or "None"
+        )
 
         return f"""
 

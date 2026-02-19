@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable
 
-from maviriq.agents.base import BaseAgent
+from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
 from maviriq.models.schemas import MarketIntelligenceInput, MarketIntelligenceOutput
 
@@ -101,7 +100,9 @@ TOOL_NAMES = [
 ]
 
 
-class MarketIntelligenceAgent(BaseAgent[MarketIntelligenceInput, MarketIntelligenceOutput]):
+class MarketIntelligenceAgent(
+    BaseAgent[MarketIntelligenceInput, MarketIntelligenceOutput]
+):
     name = "Market Intelligence"
     description = "Researches market size, growth trends, distribution channels, and funding activity"
     output_schema = MarketIntelligenceOutput
@@ -122,10 +123,5 @@ class MarketIntelligenceAgent(BaseAgent[MarketIntelligenceInput, MarketIntellige
             f"Use multiple search tools and diverse queries."
         )
 
-    def get_tools(self) -> list[dict[str, Any]]:
-        schemas, _ = build_tools_for_agent(self.search, TOOL_NAMES)
-        return schemas
-
-    def get_tool_executors(self) -> dict[str, Callable[[str], Awaitable[str]]]:
-        _, executors = build_tools_for_agent(self.search, TOOL_NAMES)
-        return executors
+    def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
+        return build_tools_for_agent(self.search, TOOL_NAMES)

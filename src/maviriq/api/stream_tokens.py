@@ -20,6 +20,7 @@ _TOKEN_TTL_SECONDS = 30
 # In-memory fallback (single-worker / local dev only)
 # ---------------------------------------------------------------------------
 
+
 class _InMemoryTokenStore:
     def __init__(self) -> None:
         # token -> (user_id, run_id, expires_at)
@@ -55,6 +56,7 @@ class _InMemoryTokenStore:
 # Redis-backed store (works across workers, auto-expires via TTL)
 # ---------------------------------------------------------------------------
 
+
 class _RedisTokenStore:
     def __init__(self, redis_url: str) -> None:
         import redis
@@ -87,6 +89,7 @@ class _RedisTokenStore:
 # Singleton initialisation
 # ---------------------------------------------------------------------------
 
+
 def _create_store() -> _InMemoryTokenStore | _RedisTokenStore:
     from maviriq.config import settings
 
@@ -94,7 +97,10 @@ def _create_store() -> _InMemoryTokenStore | _RedisTokenStore:
         try:
             return _RedisTokenStore(settings.redis_url)
         except Exception:
-            logger.warning("Failed to connect to Redis — falling back to in-memory stream token store", exc_info=True)
+            logger.warning(
+                "Failed to connect to Redis — falling back to in-memory stream token store",
+                exc_info=True,
+            )
     return _InMemoryTokenStore()
 
 

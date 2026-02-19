@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
@@ -13,6 +13,7 @@ from maviriq.agents.market_intelligence import MarketIntelligenceAgent
 from maviriq.agents.pain_discovery import PainDiscoveryAgent
 from maviriq.agents.synthesis import SynthesisAgent
 from maviriq.config import settings
+from maviriq.agents.base import BaseAgent
 from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
@@ -45,6 +46,7 @@ logger = logging.getLogger(__name__)
 # LangGraph State
 # ──────────────────────────────────────────────
 
+
 class PipelineState(TypedDict):
     idea: str
     user_id: str | None
@@ -59,6 +61,7 @@ class PipelineState(TypedDict):
 # ──────────────────────────────────────────────
 # Pipeline Graph
 # ──────────────────────────────────────────────
+
 
 class PipelineGraph:
     def __init__(self) -> None:
@@ -106,101 +109,70 @@ class PipelineGraph:
     # Node functions
     # ──────────────────────────────────────────
 
-    async def _pain_discovery_node(self, state: PipelineState) -> dict:
+    async def _run_research_node(
+        self,
+        state: PipelineState,
+        agent_num: int,
+        agent: BaseAgent,
+        input_data: Any,
+        state_key: str,
+    ) -> dict:
+        """Shared logic for all 4 research agent nodes."""
         writer = get_stream_writer()
         run_id = state["run_id"]
 
-        # Emit agent_started
         run = await self.repository.get(run_id)
-        run.current_agent = 1
+        run.current_agent = agent_num
         await self.repository.update(run)
-        writer(AgentStartedEvent.create(1).model_dump())
+        writer(AgentStartedEvent.create(agent_num).model_dump())
 
-        # Run agent (retries are handled internally)
         result = await asyncio.wait_for(
-            self.agent1.run(PainDiscoveryInput(idea=state["idea"])),
+            agent.run(input_data),
             timeout=settings.agent_timeout,
         )
 
-        # Persist result to DB
         run = await self.repository.get(run_id)
-        run.pain_discovery = result
+        setattr(run, state_key, result)
         await self.repository.update(run)
-        writer(AgentCompletedEvent.create(1, result.model_dump()).model_dump())
+        writer(AgentCompletedEvent.create(agent_num, result.model_dump()).model_dump())
 
-        return {"pain_discovery": result}
+        return {state_key: result}
+
+    async def _pain_discovery_node(self, state: PipelineState) -> dict:
+        return await self._run_research_node(
+            state,
+            1,
+            self.agent1,
+            PainDiscoveryInput(idea=state["idea"]),
+            "pain_discovery",
+        )
 
     async def _competitor_node(self, state: PipelineState) -> dict:
-        writer = get_stream_writer()
-        run_id = state["run_id"]
-
-        # Emit agent_started
-        run = await self.repository.get(run_id)
-        run.current_agent = 2
-        await self.repository.update(run)
-        writer(AgentStartedEvent.create(2).model_dump())
-
-        # Run agent (retries are handled internally)
-        result = await asyncio.wait_for(
-            self.agent2.run(CompetitorResearchInput(idea=state["idea"])),
-            timeout=settings.agent_timeout,
+        return await self._run_research_node(
+            state,
+            2,
+            self.agent2,
+            CompetitorResearchInput(idea=state["idea"]),
+            "competitor_research",
         )
-
-        # Persist result to DB
-        run = await self.repository.get(run_id)
-        run.competitor_research = result
-        await self.repository.update(run)
-        writer(AgentCompletedEvent.create(2, result.model_dump()).model_dump())
-
-        return {"competitor_research": result}
 
     async def _market_intelligence_node(self, state: PipelineState) -> dict:
-        writer = get_stream_writer()
-        run_id = state["run_id"]
-
-        # Emit agent_started
-        run = await self.repository.get(run_id)
-        run.current_agent = 3
-        await self.repository.update(run)
-        writer(AgentStartedEvent.create(3).model_dump())
-
-        # Run agent (retries are handled internally)
-        result = await asyncio.wait_for(
-            self.agent3.run(MarketIntelligenceInput(idea=state["idea"])),
-            timeout=settings.agent_timeout,
+        return await self._run_research_node(
+            state,
+            3,
+            self.agent3,
+            MarketIntelligenceInput(idea=state["idea"]),
+            "market_intelligence",
         )
-
-        # Persist result to DB
-        run = await self.repository.get(run_id)
-        run.market_intelligence = result
-        await self.repository.update(run)
-        writer(AgentCompletedEvent.create(3, result.model_dump()).model_dump())
-
-        return {"market_intelligence": result}
 
     async def _graveyard_research_node(self, state: PipelineState) -> dict:
-        writer = get_stream_writer()
-        run_id = state["run_id"]
-
-        # Emit agent_started
-        run = await self.repository.get(run_id)
-        run.current_agent = 4
-        await self.repository.update(run)
-        writer(AgentStartedEvent.create(4).model_dump())
-
-        # Run agent (retries are handled internally)
-        result = await asyncio.wait_for(
-            self.agent4.run(GraveyardResearchInput(idea=state["idea"])),
-            timeout=settings.agent_timeout,
+        return await self._run_research_node(
+            state,
+            4,
+            self.agent4,
+            GraveyardResearchInput(idea=state["idea"]),
+            "graveyard_research",
         )
-
-        # Persist result to DB
-        run = await self.repository.get(run_id)
-        run.graveyard_research = result
-        await self.repository.update(run)
-        writer(AgentCompletedEvent.create(4, result.model_dump()).model_dump())
-
-        return {"graveyard_research": result}
 
     async def _synthesis_node(self, state: PipelineState) -> dict:
         writer = get_stream_writer()
@@ -225,13 +197,15 @@ class PipelineGraph:
 
         # Run agent
         result = await asyncio.wait_for(
-            self.agent5.run(SynthesisInput(
-                idea=state["idea"],
-                pain_discovery=state["pain_discovery"],
-                competitor_research=state["competitor_research"],
-                market_intelligence=state["market_intelligence"],
-                graveyard_research=state["graveyard_research"],
-            )),
+            self.agent5.run(
+                SynthesisInput(
+                    idea=state["idea"],
+                    pain_discovery=state["pain_discovery"],
+                    competitor_research=state["competitor_research"],
+                    market_intelligence=state["market_intelligence"],
+                    graveyard_research=state["graveyard_research"],
+                )
+            ),
             timeout=settings.agent_timeout,
         )
 
@@ -249,7 +223,9 @@ class PipelineGraph:
 
     async def run(self, run_id: str, idea: str, user_id: str | None = None) -> None:
         """Run the full pipeline, publishing SSE events to pubsub."""
-        run = ValidationRun(id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id)
+        run = ValidationRun(
+            id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id
+        )
         run.started_at = datetime.now(timezone.utc)
         await self.repository.create(run)
 
@@ -292,19 +268,28 @@ class PipelineGraph:
         except asyncio.TimeoutError:
             run = await self.repository.get(run_id)
             agent_num = run.current_agent if run else 0
-            internal_msg = f"Agent {agent_num} timed out after {settings.agent_timeout}s"
+            internal_msg = (
+                f"Agent {agent_num} timed out after {settings.agent_timeout}s"
+            )
             logger.error("Pipeline failed for run %s: %s", run_id, internal_msg)
             if run:
                 run.status = ValidationStatus.FAILED
                 run.error = internal_msg
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
-            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, "Processing timed out. Please try again."))
+            pubsub.publish(
+                run_id,
+                PipelineErrorEvent.create(
+                    agent_num, "Processing timed out. Please try again."
+                ),
+            )
 
         except SearchUnavailableError as e:
             run = await self.repository.get(run_id)
             agent_num = run.current_agent if run else 0
-            logger.error("Search unavailable for run %s (agent %s): %s", run_id, agent_num, e)
+            logger.error(
+                "Search unavailable for run %s (agent %s): %s", run_id, agent_num, e
+            )
             if run:
                 run.status = ValidationStatus.FAILED
                 run.error = str(e)
@@ -327,7 +312,12 @@ class PipelineGraph:
                 run.error = str(e)
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
-            pubsub.publish(run_id, PipelineErrorEvent.create(agent_num, "Processing failed. Please try again."))
+            pubsub.publish(
+                run_id,
+                PipelineErrorEvent.create(
+                    agent_num, "Processing failed. Please try again."
+                ),
+            )
 
         finally:
             pubsub.publish(run_id, None)  # Signal stream end

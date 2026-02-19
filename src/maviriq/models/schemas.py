@@ -9,62 +9,77 @@ from pydantic import BaseModel, Field, field_validator
 
 
 # ──────────────────────────────────────────────
+# Shared Literal normalizer
+# ──────────────────────────────────────────────
+# LLMs return inconsistent casing and verbose strings (e.g. "Medium to High").
+# This helper normalizes to the exact Literal value Pydantic expects.
+#
+# How it works:
+#   1. Non-strings pass through (Pydantic raises its own error)
+#   2. Exact match against allowed values
+#   3. Substring match in order (first match wins)
+#   4. Falls back to default
+
+
+def _normalize_literal(v: object, allowed: tuple[str, ...], default: str) -> object:
+    if not isinstance(v, str):
+        return v
+    v_lower = v.lower().strip()
+    if v_lower in allowed:
+        return v_lower
+    for option in allowed:
+        if option in v_lower:
+            return option
+    return default
+
+
+# ──────────────────────────────────────────────
 # Agent 1: Pain & User Discovery
 # ──────────────────────────────────────────────
 
+
 class PainPoint(BaseModel):
-    source: str  # "reddit", "hackernews", "forum", "blog"
+    source: str
     source_url: str
     quote: str
-    author_context: str  # Who is this person (role, industry)
+    author_context: str
     pain_severity: Literal["high", "moderate", "mild"]
     date: str | None = None
 
     @field_validator("pain_severity", mode="before")
     @classmethod
-    def normalize_pain_severity(cls, v: object) -> str:
+    def normalize_pain_severity(cls, v: object) -> object:
+        # Backward compat: old DB rows stored severity as 1-5 int
         if isinstance(v, int):
-            # Backward compat: map old 1-5 scale
             if v >= 4:
                 return "high"
             if v >= 3:
                 return "moderate"
             return "mild"
         if not isinstance(v, str):
-            return v  # type: ignore[return-value]
+            return v
         v_lower = v.lower().strip()
         if v_lower in ("high", "moderate", "mild"):
             return v_lower
-        # Map old 4-level values
-        if v_lower in ("critical", "major") or "critical" in v_lower or "existential" in v_lower or "major" in v_lower or "significant" in v_lower:
+        if any(
+            k in v_lower for k in ("critical", "existential", "major", "significant")
+        ):
             return "high"
-        if v_lower == "moderate" or "moderate" in v_lower or "recurring" in v_lower:
+        if any(k in v_lower for k in ("moderate", "recurring")):
             return "moderate"
         return "mild"
 
 
 class UserSegment(BaseModel):
-    label: str  # e.g., "early-stage startup founders"
+    label: str
     description: str
-    frequency: int  # How many pain points mention this segment
+    frequency: int
     willingness_to_pay: Literal["high", "medium", "low"]
 
     @field_validator("willingness_to_pay", mode="before")
     @classmethod
-    def normalize_willingness(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("high", "medium", "low"):
-            return v_lower
-        # LLM sometimes returns verbose strings like "Medium to High - ..."
-        if "high" in v_lower:
-            return "high"
-        if "medium" in v_lower:
-            return "medium"
-        if "low" in v_lower:
-            return "low"
-        return v  # let Pydantic raise the validation error
+    def normalize_willingness(cls, v: object) -> object:
+        return _normalize_literal(v, ("high", "medium", "low"), "medium")
 
 
 class PainDiscoveryInput(BaseModel):
@@ -84,9 +99,10 @@ class PainDiscoveryOutput(BaseModel):
 # Agent 2: Competitor Research
 # ──────────────────────────────────────────────
 
+
 class CompetitorPricing(BaseModel):
     plan_name: str
-    price: str  # "$29/mo", "Free", "Custom"
+    price: str
     features: list[str]
 
 
@@ -100,35 +116,17 @@ class Competitor(BaseModel):
     weaknesses: list[str]
     review_sentiment: Literal["positive", "mixed", "negative"]
     review_count: int | None = None
-    source: str  # "google", "g2", "capterra"
+    source: str
 
     @field_validator("competitor_type", mode="before")
     @classmethod
-    def normalize_competitor_type(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("direct", "indirect", "potential"):
-            return v_lower
-        if "direct" in v_lower:
-            return "direct"
-        if "indirect" in v_lower:
-            return "indirect"
-        return "potential"
+    def normalize_competitor_type(cls, v: object) -> object:
+        return _normalize_literal(v, ("direct", "indirect", "potential"), "potential")
 
     @field_validator("review_sentiment", mode="before")
     @classmethod
-    def normalize_sentiment(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("positive", "mixed", "negative"):
-            return v_lower
-        if "positive" in v_lower:
-            return "positive"
-        if "negative" in v_lower:
-            return "negative"
-        return "mixed"
+    def normalize_sentiment(cls, v: object) -> object:
+        return _normalize_literal(v, ("positive", "negative", "mixed"), "mixed")
 
 
 class CompetitorResearchInput(BaseModel):
@@ -146,24 +144,14 @@ class CompetitorResearchOutput(BaseModel):
 
     @field_validator("market_saturation", mode="before")
     @classmethod
-    def normalize_saturation(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("low", "medium", "high"):
-            return v_lower
-        if "high" in v_lower:
-            return "high"
-        if "medium" in v_lower:
-            return "medium"
-        if "low" in v_lower:
-            return "low"
-        return v
+    def normalize_saturation(cls, v: object) -> object:
+        return _normalize_literal(v, ("high", "medium", "low"), "medium")
 
 
 # ──────────────────────────────────────────────
-# Agent 3: Market Intelligence (NEW)
+# Agent 3: Market Intelligence
 # ──────────────────────────────────────────────
+
 
 class MonetizationSignal(BaseModel):
     signal: str
@@ -172,17 +160,8 @@ class MonetizationSignal(BaseModel):
 
     @field_validator("strength", mode="before")
     @classmethod
-    def normalize_strength(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("strong", "moderate", "weak"):
-            return v_lower
-        if "strong" in v_lower:
-            return "strong"
-        if "weak" in v_lower:
-            return "weak"
-        return "moderate"
+    def normalize_strength(cls, v: object) -> object:
+        return _normalize_literal(v, ("strong", "moderate", "weak"), "moderate")
 
 
 class DistributionChannel(BaseModel):
@@ -192,17 +171,8 @@ class DistributionChannel(BaseModel):
 
     @field_validator("effort", mode="before")
     @classmethod
-    def normalize_effort(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("low", "medium", "high"):
-            return v_lower
-        if "high" in v_lower:
-            return "high"
-        if "low" in v_lower:
-            return "low"
-        return "medium"
+    def normalize_effort(cls, v: object) -> object:
+        return _normalize_literal(v, ("high", "medium", "low"), "medium")
 
 
 class FundingSignal(BaseModel):
@@ -225,12 +195,13 @@ class MarketIntelligenceOutput(BaseModel):
 
     @field_validator("growth_direction", mode="before")
     @classmethod
-    def normalize_growth_direction(cls, v: str) -> str:
+    def normalize_growth_direction(cls, v: object) -> object:
         if not isinstance(v, str):
             return v
         v_lower = v.lower().strip()
         if v_lower in ("growing", "stable", "shrinking", "unknown"):
             return v_lower
+        # "growth" is a synonym the LLM uses for "growing"
         if "growing" in v_lower or "growth" in v_lower:
             return "growing"
         if "shrinking" in v_lower or "declining" in v_lower:
@@ -241,8 +212,9 @@ class MarketIntelligenceOutput(BaseModel):
 
 
 # ──────────────────────────────────────────────
-# Agent 4: Graveyard Research (NEW)
+# Agent 4: Graveyard Research
 # ──────────────────────────────────────────────
+
 
 class PreviousAttempt(BaseModel):
     name: str
@@ -260,17 +232,8 @@ class ChurnSignal(BaseModel):
 
     @field_validator("severity", mode="before")
     @classmethod
-    def normalize_severity(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("high", "medium", "low"):
-            return v_lower
-        if "high" in v_lower:
-            return "high"
-        if "low" in v_lower:
-            return "low"
-        return "medium"
+    def normalize_severity(cls, v: object) -> object:
+        return _normalize_literal(v, ("high", "medium", "low"), "medium")
 
 
 class GraveyardResearchInput(BaseModel):
@@ -289,6 +252,7 @@ class GraveyardResearchOutput(BaseModel):
 # Viability (kept for backward compat with old DB rows)
 # ──────────────────────────────────────────────
 
+
 class ViabilitySignal(BaseModel):
     signal: str
     direction: Literal["positive", "negative", "neutral"]
@@ -297,17 +261,8 @@ class ViabilitySignal(BaseModel):
 
     @field_validator("direction", mode="before")
     @classmethod
-    def normalize_direction(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("positive", "negative", "neutral"):
-            return v_lower
-        if "positive" in v_lower:
-            return "positive"
-        if "negative" in v_lower:
-            return "negative"
-        return "neutral"
+    def normalize_direction(cls, v: object) -> object:
+        return _normalize_literal(v, ("positive", "negative", "neutral"), "neutral")
 
 
 class ViabilityOutput(BaseModel):
@@ -323,38 +278,19 @@ class ViabilityOutput(BaseModel):
 
     @field_validator("reachability", mode="before")
     @classmethod
-    def normalize_reachability(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("easy", "moderate", "hard"):
-            return v_lower
-        if "easy" in v_lower:
-            return "easy"
-        if "hard" in v_lower:
-            return "hard"
-        return "moderate"
+    def normalize_reachability(cls, v: object) -> object:
+        return _normalize_literal(v, ("easy", "moderate", "hard"), "moderate")
 
     @field_validator("gap_size", mode="before")
     @classmethod
-    def normalize_gap_size(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("large", "medium", "small", "none"):
-            return v_lower
-        if "large" in v_lower:
-            return "large"
-        if "small" in v_lower:
-            return "small"
-        if "none" in v_lower:
-            return "none"
-        return "medium"
+    def normalize_gap_size(cls, v: object) -> object:
+        return _normalize_literal(v, ("large", "medium", "small", "none"), "medium")
 
 
 # ──────────────────────────────────────────────
 # Agent 5: Synthesis & Verdict
 # ──────────────────────────────────────────────
+
 
 class Verdict(str, Enum):
     BUILD = "BUILD"
@@ -373,13 +309,6 @@ class SynthesisInput(BaseModel):
 class SynthesisOutput(BaseModel):
     verdict: Verdict
     confidence: float = Field(ge=0.0, le=1.0)
-
-    @field_validator("verdict", mode="before")
-    @classmethod
-    def normalize_verdict(cls, v: str) -> str:
-        if isinstance(v, str) and v.upper().strip() == "CONDITIONAL":
-            return "MAYBE"
-        return v
     one_line_summary: str
     reasoning: str
     key_strengths: list[str]
@@ -399,45 +328,33 @@ class SynthesisOutput(BaseModel):
     gap_size: Literal["large", "medium", "small", "none"]
     signals: list[ViabilitySignal]
 
-    # New fields from new agents
+    # From graveyard research synthesis
     differentiation_strategy: str | None = None
     previous_attempts_summary: str | None = None
     lessons_from_failures: str | None = None
 
+    @field_validator("verdict", mode="before")
+    @classmethod
+    def normalize_verdict(cls, v: object) -> object:
+        if isinstance(v, str) and v.upper().strip() == "CONDITIONAL":
+            return "MAYBE"
+        return v
+
     @field_validator("reachability", mode="before")
     @classmethod
-    def normalize_reachability(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("easy", "moderate", "hard"):
-            return v_lower
-        if "easy" in v_lower:
-            return "easy"
-        if "hard" in v_lower:
-            return "hard"
-        return "moderate"
+    def normalize_reachability(cls, v: object) -> object:
+        return _normalize_literal(v, ("easy", "moderate", "hard"), "moderate")
 
     @field_validator("gap_size", mode="before")
     @classmethod
-    def normalize_gap_size(cls, v: str) -> str:
-        if not isinstance(v, str):
-            return v
-        v_lower = v.lower().strip()
-        if v_lower in ("large", "medium", "small", "none"):
-            return v_lower
-        if "large" in v_lower:
-            return "large"
-        if "small" in v_lower:
-            return "small"
-        if "none" in v_lower:
-            return "none"
-        return "medium"
+    def normalize_gap_size(cls, v: object) -> object:
+        return _normalize_literal(v, ("large", "medium", "small", "none"), "medium")
 
 
 # ──────────────────────────────────────────────
 # Pipeline State
 # ──────────────────────────────────────────────
+
 
 class ValidationStatus(str, Enum):
     PENDING = "pending"
@@ -468,6 +385,7 @@ class ValidationRun(BaseModel):
 # API Models
 # ──────────────────────────────────────────────
 
+
 class CreateValidationRequest(BaseModel):
     idea: str = Field(min_length=10, max_length=500)
 
@@ -478,6 +396,7 @@ class CreateValidationRequest(BaseModel):
         if len(words) < 3:
             raise ValueError("please describe your idea in at least a few words")
         from maviriq.services.input_validation import validate_idea_input
+
         error = validate_idea_input(v)
         if error:
             raise ValueError(error)

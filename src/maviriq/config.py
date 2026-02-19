@@ -37,12 +37,11 @@ class Settings(BaseSettings):
     search_cache_ttl: int = 600  # 10 minutes
 
     # Pipeline
-    max_search_queries_per_agent: int = 8
-    max_pain_points: int = 15
-    max_competitors: int = 10
     agent_timeout: int = 120  # seconds per agent before giving up
     agent_max_iterations: int = 10  # max tool-use loop iterations per agent
-    anthropic_max_concurrent: int = 2  # max concurrent Anthropic API calls to avoid rate limits
+    anthropic_max_concurrent: int = (
+        2  # max concurrent Anthropic API calls (bump after Tier 2)
+    )
 
     # LangSmith
     langsmith_tracing: str = "true"
@@ -61,32 +60,9 @@ class Settings(BaseSettings):
 
 settings = Settings()  # type: ignore[call-arg]
 
-# LangSmith reads directly from os.environ.
-# Force the .env file values so stale shell exports don't interfere.
-_langsmith_vars = {"LANGSMITH_TRACING", "LANGSMITH_API_KEY", "LANGSMITH_PROJECT", "LANGSMITH_ENDPOINT"}
-_dotenv_values: dict[str, str] = {}
-try:
-    with open(".env") as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                k, v = k.strip(), v.strip()
-                if k in _langsmith_vars and v:
-                    _dotenv_values[k] = v
-except FileNotFoundError:
-    pass
-
-os.environ["LANGSMITH_TRACING"] = _dotenv_values.get(
-    "LANGSMITH_TRACING", settings.langsmith_tracing
-)
-if _dotenv_values.get("LANGSMITH_API_KEY") or settings.langsmith_api_key:
-    os.environ["LANGSMITH_API_KEY"] = _dotenv_values.get(
-        "LANGSMITH_API_KEY", settings.langsmith_api_key
-    )
-os.environ["LANGSMITH_PROJECT"] = _dotenv_values.get(
-    "LANGSMITH_PROJECT", settings.langsmith_project
-)
-os.environ["LANGSMITH_ENDPOINT"] = _dotenv_values.get(
-    "LANGSMITH_ENDPOINT", settings.langsmith_endpoint
-)
+# LangSmith reads os.environ directly, so propagate the resolved settings values.
+os.environ["LANGSMITH_TRACING"] = settings.langsmith_tracing
+if settings.langsmith_api_key:
+    os.environ["LANGSMITH_API_KEY"] = settings.langsmith_api_key
+os.environ["LANGSMITH_PROJECT"] = settings.langsmith_project
+os.environ["LANGSMITH_ENDPOINT"] = settings.langsmith_endpoint

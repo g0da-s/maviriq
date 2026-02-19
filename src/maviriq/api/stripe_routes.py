@@ -23,7 +23,9 @@ def _get_price_id(pack: int) -> str:
     }
     price_id = mapping.get(pack)
     if not price_id:
-        raise HTTPException(status_code=400, detail="Invalid pack size. Choose 5, 20, or 50.")
+        raise HTTPException(
+            status_code=400, detail="Invalid pack size. Choose 5, 20, or 50."
+        )
     return price_id
 
 
@@ -58,7 +60,9 @@ async def stripe_webhook(request: Request) -> dict:
     except (stripe.error.SignatureVerificationError, ValueError):
         logger.warning(
             "Stripe webhook signature verification failed (ip=%s)",
-            request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown"),
+            request.headers.get(
+                "x-forwarded-for", request.client.host if request.client else "unknown"
+            ),
         )
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
