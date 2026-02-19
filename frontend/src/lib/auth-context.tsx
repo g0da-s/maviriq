@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import posthog from "posthog-js";
 import { supabase } from "./supabase";
 import type { Session } from "@supabase/supabase-js";
 
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data: User = await res.json();
         setUser(data);
+        posthog.identify(data.id, { email: data.email, credits: data.credits });
       } else if (res.status === 401 && !isRetry) {
         // Token may have expired — try refreshing the session once
         const { data: { session: refreshed } } = await supabase.auth.refreshSession();
@@ -95,12 +97,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) return { error: error.message, needsVerification: false };
+    posthog.capture("user_signed_up", { method: "email" });
     return { error: null, needsVerification: true };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
+    posthog.capture("user_logged_in", { method: "email" });
     return { error: null };
   }, []);
 
@@ -110,10 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { redirectTo: window.location.origin },
     });
     if (error) return { error: error.message };
+    posthog.capture("user_logged_in", { method: "google" });
     return { error: null };
   }, []);
 
   const signOut = useCallback(async () => {
+    posthog.capture("user_logged_out");
+    posthog.reset();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

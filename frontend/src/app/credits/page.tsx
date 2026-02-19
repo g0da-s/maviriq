@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { createCheckout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -37,6 +38,7 @@ function CreditsContent() {
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       setSuccess(true);
+      posthog.capture("credits_purchased");
       refreshUser();
     }
   }, [searchParams, refreshUser]);
@@ -56,6 +58,7 @@ function CreditsContent() {
 
     try {
       const res = await createCheckout(pack);
+      posthog.capture("checkout_started", { credits: pack });
       window.location.href = res.checkout_url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "checkout failed");

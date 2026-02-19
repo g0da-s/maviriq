@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { createValidation, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -71,6 +72,7 @@ export function IdeaForm() {
 
     try {
       const res = await createValidation(idea.trim());
+      posthog.capture("validation_started", { validation_id: res.id });
       router.push(`/validations/${res.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
