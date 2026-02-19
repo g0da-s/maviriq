@@ -27,7 +27,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   ) : (
                     <p className="text-sm font-semibold text-foreground">{comp.name}</p>
                   )}
-                  <span className="text-[10px] uppercase tracking-wider text-muted/40">
+                  <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted/70">
                     {comp.competitor_type}
                   </span>
                 </div>

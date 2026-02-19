@@ -115,9 +115,9 @@ def rate_limit_auth(request: Request) -> None:
 
 
 def rate_limit_register(request: Request) -> None:
-    """Limit account creation: 1 per hour per IP to prevent free-credit farming."""
+    """Limit account creation: 1 per IP (all time) to prevent free-credit farming."""
     ip = _get_client_ip(request)
-    _limiter.check(f"register:{ip}", 1, 3600)
+    _limiter.check(f"register:{ip}", 1, 315360000)  # 10 years in seconds
 
 
 def rate_limit_validation(user_id: str) -> None:
