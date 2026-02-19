@@ -55,5 +55,11 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+# Pytest
+.pytest_cache/
+
+# LangGraph runtime state
+.langgraph_api/
+
 # Eval results (contain full LLM outputs, can be large)
 tests/evals/results/eval_*.json
