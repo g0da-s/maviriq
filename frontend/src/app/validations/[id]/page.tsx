@@ -396,7 +396,7 @@ export default function ValidationPage() {
 
             {s.recommended_mvp && (
               <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-                <p className="text-sm font-semibold text-foreground mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted/50 mb-3">
                   what to build first
                 </p>
                 <p className="text-sm text-muted leading-relaxed">{s.recommended_mvp}</p>
@@ -405,7 +405,7 @@ export default function ValidationPage() {
 
             {s.differentiation_strategy && (
               <div className="mb-4 rounded-2xl border border-card-border bg-card p-6">
-                <p className="text-sm font-semibold text-foreground mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted/50 mb-3">
                   differentiation strategy
                 </p>
                 <p className="text-sm text-muted leading-relaxed">{s.differentiation_strategy}</p>
@@ -416,7 +416,7 @@ export default function ValidationPage() {
 
             {s.next_steps.length > 0 && (
               <div className="rounded-2xl border border-card-border bg-card p-6">
-                <p className="text-sm font-semibold text-foreground mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted/50 mb-3">
                   next steps
                 </p>
                 <ol className="space-y-2.5">
