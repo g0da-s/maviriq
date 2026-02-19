@@ -263,8 +263,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           }`}
         >
           {synthesisStatus === "running" ? (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-build" />
+            <span>
               {synthesisAgent.desc}
             </span>
           ) : synthesisStatus === "done" ? (

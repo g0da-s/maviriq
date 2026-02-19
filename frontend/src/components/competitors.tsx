@@ -55,7 +55,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                         <ul className="space-y-1">
                           {comp.strengths.slice(0, 3).map((s, j) => (
                             <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
-                              <span className="text-build shrink-0">+</span>
+                              <span className="text-build shrink-0 w-3 text-center">+</span>
                               <span>{s}</span>
                             </li>
                           ))}
@@ -68,7 +68,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                         <ul className="space-y-1">
                           {comp.weaknesses.slice(0, 3).map((w, j) => (
                             <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
-                              <span className="text-skip shrink-0">-</span>
+                              <span className="text-skip shrink-0 w-3 text-center">-</span>
                               <span>{w}</span>
                             </li>
                           ))}
@@ -95,7 +95,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
             <ul className="space-y-2">
               {data.underserved_needs.map((need, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-sm text-muted">
-                  <span className="text-build font-bold shrink-0">+</span>
+                  <span className="text-build font-bold shrink-0 w-3 text-center">+</span>
                   <span>{need}</span>
                 </li>
               ))}
@@ -116,7 +116,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
             <ul className="space-y-2">
               {data.common_complaints.map((c, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-sm text-muted">
-                  <span className="text-skip font-bold shrink-0">-</span>
+                  <span className="text-skip font-bold shrink-0 w-3 text-center">-</span>
                   <span>{c}</span>
                 </li>
               ))}

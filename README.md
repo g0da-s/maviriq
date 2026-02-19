@@ -2,26 +2,31 @@
 
 **AI-powered startup idea validator** — a multi-agent research system that tells you whether your idea is worth building before you write a single line of code.
 
-Maviriq takes a business idea (e.g., "AI-powered pitch deck generator"), runs 4 specialized AI agents that search the real web for evidence, and delivers a BUILD / SKIP / MAYBE verdict backed by data — pain points from Reddit and HN, competitor analysis from G2 and Capterra, viability signals, and a final synthesis with confidence scoring.
+Maviriq takes a business idea (e.g., "AI-powered pitch deck generator"), runs 5 specialized AI agents that search the real web for evidence, and delivers a BUILD / SKIP / MAYBE verdict backed by data — pain points from Reddit and HN, competitor maps from G2 and Capterra, market sizing, failed startup analysis, and a final synthesis with calibrated confidence scoring.
 
-**The problem it solves:** Founders spend weeks or months researching an idea manually. Maviriq does this in under 2 minutes, surfacing real complaints, real competitors, and real market gaps — so you can make an informed decision fast.
+**The problem it solves:** Founders spend weeks or months researching an idea manually — scanning Reddit for complaints, Googling competitors, estimating market size, checking if someone already tried and failed. Maviriq automates all of this in under 2 minutes, surfacing real complaints, real competitors, and real market gaps — so you can make an informed decision fast.
 
 ---
 
 ## How It Works
 
-Maviriq orchestrates 4 AI agents via LangGraph:
+Maviriq orchestrates 5 AI agents via LangGraph in a fan-out/fan-in pattern:
 
 ```
-START --> [Agent 1 + Agent 2] (parallel) --> Agent 3 --> Agent 4 --> END
+            ┌─ Agent 1: Pain Discovery ────────┐
+            ├─ Agent 2: Competitor Research ────┤
+START ──────┤                                   ├──── Agent 5: Synthesis ──── END
+            ├─ Agent 3: Market Intelligence ────┤
+            └─ Agent 4: Graveyard Research ─────┘
 ```
 
-1. **Pain & User Discovery** — Searches Reddit, Hacker News, Twitter, YouTube, and forums for real complaints. Extracts pain points with severity scores, identifies target user segments.
-2. **Competitor Research** — Maps the competitive landscape using Google, G2, Capterra, Product Hunt, and Crunchbase. Scrapes pricing pages, analyzes strengths/weaknesses, finds market gaps.
-3. **Viability Analysis** — Evaluates willingness to pay, user reachability, market gap size, and opportunity score based on data from agents 1 and 2.
-4. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/MAYBE verdict with confidence score, reasoning, key strengths/risks, and recommended next steps.
+1. **Pain & User Discovery** — Searches Reddit, Hacker News, Twitter, and Google News for real complaints. Extracts pain points with severity scores, identifies the primary target user.
+2. **Competitor Research** — Maps the competitive landscape using Google, G2, Capterra, Product Hunt, Indie Hackers, and Crunchbase. Analyzes pricing, strengths/weaknesses, and market saturation.
+3. **Market Intelligence** — Estimates TAM (with explicit narrowing from broad market to specific niche), growth direction, distribution channels, and funding signals.
+4. **Graveyard Research** — Finds failed startups in the same space, extracts failure reasons, and identifies churn signals.
+5. **Synthesis & Verdict** — Combines all research into a BUILD/SKIP/MAYBE verdict with calibrated confidence score, reasoning, key strengths/risks, and recommended next steps.
 
-Agents 1 and 2 run **in parallel** (saving ~15-20 seconds), then results feed into agents 3 and 4 sequentially. Each agent has automatic retry logic — if data quality is insufficient, it generates broader queries and searches again.
+Agents 1–4 run **in parallel** (fan-out), cutting pipeline time by ~70%. All four results then fan-in to Agent 5 (Synthesis). Each research agent runs an autonomous tool-use loop — the LLM decides what to search, analyzes results, and calls more tools until it has enough data.
 
 ---
 
@@ -31,9 +36,9 @@ Agents 1 and 2 run **in parallel** (saving ~15-20 seconds), then results feed in
 |-------|-----------|
 | **Backend** | Python 3.12, FastAPI (async) |
 | **Frontend** | Next.js 16, React 19, Tailwind CSS 4 |
-| **LLM** | Claude Sonnet 4.5 (reasoning) + Claude Haiku 4.5 (cheap tasks) via `langchain-anthropic` |
-| **Orchestration** | LangGraph (parallel fan-out/fan-in, conditional retry edges) |
-| **Search** | Serper API (Google, Reddit, HN, G2, Capterra, Product Hunt, Crunchbase, YouTube, Twitter, LinkedIn) |
+| **LLM** | Claude Sonnet (reasoning + tool-use loops) + Claude Haiku (eval grading, cheap tasks) via `langchain-anthropic` |
+| **Orchestration** | LangGraph (parallel fan-out/fan-in StateGraph) |
+| **Search** | Serper API (Google, Reddit, HN, G2, Capterra, Product Hunt, Crunchbase, Indie Hackers, Twitter, Google News) |
 | **Database** | Supabase (PostgreSQL + Auth) |
 | **Auth** | Email/password via Supabase Auth, JWT verification |
 | **Payments** | Stripe Checkout (credit packs: 5/$5, 20/$15, 50/$30) |
@@ -44,14 +49,16 @@ Agents 1 and 2 run **in parallel** (saving ~15-20 seconds), then results feed in
 
 ## Features
 
-- **Parallel agent execution** — Agents 1 and 2 run simultaneously via LangGraph fan-out
+- **Parallel agent execution** — Agents 1–4 run simultaneously via LangGraph fan-out, cutting pipeline time by ~70%
+- **Agentic tool-use loops** — Each research agent autonomously decides what to search and when to stop (not hardcoded query lists)
 - **Real-time streaming** — Watch each agent complete in real-time via SSE
-- **Automatic retries** — Agents retry with broader queries if data is insufficient
+- **Calibrated prompts** — Few-shot examples, severity calibration, saturation thresholds, and debiased synthesis to prevent systematic pessimism
 - **Input validation** — 3-layer protection: regex (profanity + gibberish), Pydantic validators, LLM coherence check
 - **Credit system** — 1 free credit on signup, purchase more via Stripe
 - **Search caching** — 24-hour TTL on search results to reduce API costs
-- **LangSmith tracing** — Full observability into every LLM call
+- **LangSmith tracing** — Full observability into every LLM call and tool usage
 - **Rate limiting** — Sliding window limiter on auth endpoints
+- **Eval framework** — 25 golden test cases with 29 automated graders (code + LLM-as-judge + consistency)
 
 ---
 
@@ -106,18 +113,22 @@ src/maviriq/
   supabase_client.py            # Async Supabase client
   models/
     schemas.py                  # All Pydantic models (agents, API, validation)
+    auth.py                     # Auth request/response models
   agents/
     base.py                     # BaseAgent[I, O] abstract class
+    tools.py                    # Tool catalog and builder for agent tool-use
     pain_discovery.py           # Agent 1: search + extract pain points
     competitor_research.py      # Agent 2: search + competitor analysis
-    viability_analysis.py       # Agent 3: viability scoring
-    synthesis.py                # Agent 4: final verdict
+    market_intelligence.py      # Agent 3: TAM, growth, distribution, funding signals
+    graveyard_research.py       # Agent 4: failed startups + churn signals
+    synthesis.py                # Agent 5: final verdict (reasoning only, no search tools)
   services/
-    llm.py                      # ChatAnthropic wrapper (structured output, text, lists)
-    search.py                   # Serper API wrapper (10+ search types)
+    llm.py                      # LLMService wrapper (ChatAnthropic, structured output, tool-use loops)
+    search.py                   # SerperService with 10+ site-specific search methods
     input_validation.py         # Profanity blocklist + gibberish detection
   pipeline/
-    runner.py                   # LangGraph state machine (parallel topology)
+    runner.py                   # LangGraph StateGraph (fan-out/fan-in topology)
+    graph.py                    # Entry point for LangGraph Studio
     events.py                   # SSE event types
     pubsub.py                   # In-memory pub/sub for live streaming
   storage/
@@ -128,6 +139,7 @@ src/maviriq/
     routes.py                   # Validation endpoints + SSE streaming
     auth_routes.py              # Auth endpoints
     stripe_routes.py            # Stripe webhook + checkout
+    stream_tokens.py            # SSE token streaming
     rate_limit.py               # Sliding window rate limiter
     dependencies.py             # JWT verification + DI
 
@@ -144,14 +156,30 @@ frontend/src/
     pipeline-progress.tsx       # Real-time agent progress (parallel-aware)
     pain-points.tsx             # Pain discovery results display
     competitors.tsx             # Competitor research results display
-    viability.tsx               # Viability analysis display
+    market-intelligence.tsx     # Market intelligence results display
+    graveyard-research.tsx      # Graveyard research results display
+    viability.tsx               # Viability dashboard display
     verdict-badge.tsx           # BUILD/SKIP/MAYBE badge
+    detail-section.tsx          # Reusable section wrapper
+    confirm-modal.tsx           # Confirmation dialog
     nav.tsx                     # Navigation bar
+    offline-banner.tsx          # Offline state indicator
+    providers.tsx               # React context providers
     error-boundary.tsx          # React error boundary
   lib/
     api.ts                      # Centralized API client
     auth-context.tsx            # Auth context (Supabase session management)
+    supabase.ts                 # Supabase client config
     types.ts                    # Zod schemas + TypeScript types
+
+tests/evals/
+  cases/golden_cases.yaml       # 25 golden test cases across 5 categories
+  harness.py                    # Eval harness and pipeline runner
+  graders/
+    code_graders.py             # 21 deterministic graders
+    model_graders.py            # 6 LLM-as-judge graders
+    consistency.py              # 2 consistency graders
+  test_eval_pipeline.py         # Main eval test file
 ```
 
 ---
