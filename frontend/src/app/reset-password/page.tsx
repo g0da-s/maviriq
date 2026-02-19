@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -11,7 +11,17 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
+  const [expired, setExpired] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for error params from Supabase (e.g. expired link)
+  useEffect(() => {
+    const errorCode = searchParams.get("error_code");
+    if (errorCode === "otp_expired") {
+      setExpired(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const {
@@ -61,6 +71,25 @@ export default function ResetPasswordPage() {
     }
 
     router.push("/");
+  }
+
+  if (expired) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center">
+          <h1 className="font-display text-3xl font-bold">link expired</h1>
+          <p className="mt-4 text-sm text-muted">
+            this reset link has expired. request a new one and try again.
+          </p>
+          <Link
+            href="/forgot-password"
+            className="mt-6 inline-block rounded-full border border-foreground bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:bg-transparent hover:text-foreground"
+          >
+            send new reset link
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (!ready) {
