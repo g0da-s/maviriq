@@ -94,7 +94,7 @@ def _create_store() -> _InMemoryTokenStore | _RedisTokenStore:
         try:
             return _RedisTokenStore(settings.redis_url)
         except Exception:
-            logger.warning("Failed to connect to Redis — falling back to in-memory stream token store")
+            logger.warning("Failed to connect to Redis — falling back to in-memory stream token store", exc_info=True)
     return _InMemoryTokenStore()
 
 
