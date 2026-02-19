@@ -13,13 +13,20 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
   const router = useRouter();
 
-  // Supabase automatically picks up the recovery token from the URL hash
-  // and fires a PASSWORD_RECOVERY event when the session is established.
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
+        setReady(true);
+      }
+    });
+
+    // The PASSWORD_RECOVERY event may have already fired before this
+    // component mounted (caught by auth-context). If there's already
+    // a session, show the form immediately.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         setReady(true);
       }
     });
