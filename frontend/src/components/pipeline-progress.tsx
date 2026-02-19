@@ -6,11 +6,11 @@ import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun, Verdict } from "@/lib/types";
 
 const AGENTS = [
-  { num: 1, name: "pain & user discovery", desc: "searching reddit, hn, forums for real pain points" },
-  { num: 2, name: "competitor research", desc: "mapping competitors, pricing, reviews on g2 & capterra" },
-  { num: 3, name: "market intelligence", desc: "researching market size, distribution channels, monetization" },
-  { num: 4, name: "graveyard research", desc: "finding failed startups and warning signs in this space" },
-  { num: 5, name: "synthesis & verdict", desc: "combining all research into a final build/skip verdict" },
+  { num: 1, name: "pain & user discovery", desc: "finding real complaints and pain severity across reddit, hn, and forums" },
+  { num: 2, name: "competitor research", desc: "mapping competitors, scraping pricing pages, and finding market gaps" },
+  { num: 3, name: "market intelligence", desc: "estimating market size, growth trends, and funding activity" },
+  { num: 4, name: "graveyard research", desc: "analyzing failed startups and post-mortems for warning signs" },
+  { num: 5, name: "synthesis & verdict", desc: "assessing viability and delivering a final build/skip verdict" },
 ];
 
 // Agents 1-4 run in parallel, then agent 5 runs after all complete
@@ -205,10 +205,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
                 }`}
               >
                 {status === "running" ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-build shrink-0" />
-                    {agent.desc}
-                  </span>
+                  <span>{agent.desc}</span>
                 ) : status === "done" ? (
                   "complete"
                 ) : (
