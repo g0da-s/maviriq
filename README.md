@@ -40,7 +40,8 @@ Agents 1–4 run **in parallel** (fan-out), cutting pipeline time by ~70%. All f
 | **Orchestration** | LangGraph (parallel fan-out/fan-in StateGraph) |
 | **Search** | Serper API (Google, Reddit, HN, G2, Capterra, Product Hunt, Crunchbase, Indie Hackers, Twitter, Google News) |
 | **Database** | Supabase (PostgreSQL + Auth) |
-| **Auth** | Email/password via Supabase Auth, JWT verification |
+| **Auth** | Supabase Auth (email/password + Google OAuth), password reset, JWT verification |
+| **Analytics** | PostHog (event tracking for signups, logins, purchases) |
 | **Payments** | Stripe Checkout (credit packs: 5/$5, 20/$15, 50/$30) |
 | **Observability** | LangSmith tracing (auto-traced via ChatAnthropic) |
 | **Streaming** | Server-Sent Events (SSE) for real-time progress |
@@ -54,10 +55,13 @@ Agents 1–4 run **in parallel** (fan-out), cutting pipeline time by ~70%. All f
 - **Real-time streaming** — Watch each agent complete in real-time via SSE
 - **Calibrated prompts** — Few-shot examples, severity calibration, saturation thresholds, and debiased synthesis to prevent systematic pessimism
 - **Input validation** — 3-layer protection: regex (profanity + gibberish), Pydantic validators, LLM coherence check
+- **Google OAuth** — Sign in with Google via Supabase OAuth, alongside email/password
+- **Password reset** — Forgot password flow via Supabase email recovery
 - **Credit system** — 1 free credit on signup, purchase more via Stripe
 - **Search caching** — 24-hour TTL on search results to reduce API costs
 - **LangSmith tracing** — Full observability into every LLM call and tool usage
 - **Rate limiting** — Sliding window limiter on auth endpoints
+- **Analytics** — PostHog event tracking for signups, logins, and purchases
 - **Eval framework** — 25 golden test cases with 29 automated graders (code + LLM-as-judge + consistency)
 
 ---
@@ -137,7 +141,7 @@ src/maviriq/
     credit_repository.py        # Credit transaction log
   api/
     routes.py                   # Validation endpoints + SSE streaming
-    auth_routes.py              # Auth endpoints
+    auth_routes.py              # Auth endpoint (GET /me)
     stripe_routes.py            # Stripe webhook + checkout
     stream_tokens.py            # SSE token streaming
     rate_limit.py               # Sliding window rate limiter
@@ -146,8 +150,10 @@ src/maviriq/
 frontend/src/
   app/
     page.tsx                    # Home — idea submission form
-    login/page.tsx              # Email/password login
-    register/page.tsx           # Signup with email verification
+    login/page.tsx              # Email/password + Google OAuth login
+    register/page.tsx           # Signup with email verification + Google OAuth
+    forgot-password/page.tsx    # Password reset request
+    reset-password/page.tsx     # Set new password (from email link)
     credits/page.tsx            # Stripe credit purchase
     validations/page.tsx        # Validation history
     validations/[id]/page.tsx   # Validation detail + live progress
@@ -168,7 +174,8 @@ frontend/src/
     error-boundary.tsx          # React error boundary
   lib/
     api.ts                      # Centralized API client
-    auth-context.tsx            # Auth context (Supabase session management)
+    auth-context.tsx            # Auth context (Supabase session + Google OAuth)
+    posthog.tsx                 # PostHog analytics provider
     supabase.ts                 # Supabase client config
     types.ts                    # Zod schemas + TypeScript types
 
@@ -191,14 +198,14 @@ tests/evals/
 | POST | `/api/validations` | Start a new validation (deducts 1 credit) |
 | GET | `/api/validations/:id` | Get full results |
 | GET | `/api/validations/:id/stream` | Stream progress (SSE) |
+| POST | `/api/validations/:id/stream-token` | Issue single-use stream token |
 | GET | `/api/validations` | List past validations |
 | DELETE | `/api/validations/:id` | Delete a validation |
-| POST | `/api/auth/register` | Register with email/password |
-| POST | `/api/auth/login` | Login |
-| GET | `/api/credits/balance` | Get credit balance |
-| POST | `/api/credits/checkout` | Create Stripe checkout session |
+| GET | `/api/auth/me` | Get authenticated user profile |
+| POST | `/api/stripe/checkout` | Create Stripe checkout session |
 | POST | `/api/stripe/webhook` | Stripe webhook (credit fulfillment) |
 | GET | `/api/health` | Health check |
+| GET | `/api/stats` | Public stats (total validations) |
 
 ---
 
@@ -207,7 +214,7 @@ tests/evals/
 ### Data Privacy
 - User ideas are stored in Supabase (PostgreSQL) and only accessible to the submitting user via JWT-scoped queries. Ideas are not shared, sold, or used for model training.
 - Search data is sourced from publicly available web pages via the Serper API. No private or authenticated data is accessed.
-- Supabase Auth handles password hashing and session management — no raw passwords are stored.
+- Supabase Auth handles password hashing, session management, and OAuth — no raw passwords are stored.
 
 ### Bias and Fairness
 - LLM verdicts may carry biases from Claude's training data. The system is designed as a research accelerator, not a definitive business oracle. Users should treat verdicts as starting points for further investigation, not final decisions.
