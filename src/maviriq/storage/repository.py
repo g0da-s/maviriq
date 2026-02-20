@@ -124,6 +124,20 @@ class ValidationRepository:
             return None
         return self._row_to_run(result.data)
 
+    async def count_completed(self) -> int:
+        sb = await get_supabase()
+        try:
+            result = (
+                await sb.table("validation_runs")
+                .select("id", count="exact")
+                .eq("status", "completed")
+                .execute()
+            )
+            return result.count or 0
+        except Exception as e:
+            logger.exception("Failed to count completed validations")
+            return 0
+
     async def list(
         self, page: int = 1, per_page: int = 20, user_id: str | None = None
     ) -> tuple[list[ValidationListItem], int]:

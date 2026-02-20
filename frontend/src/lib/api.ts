@@ -106,6 +106,17 @@ export function deleteValidation(id: string) {
   });
 }
 
+// ── Public stats (no auth) ──
+
+const StatsSchema = z.object({ ideas_analyzed: z.number() });
+
+export async function getStats(): Promise<{ ideas_analyzed: number }> {
+  const res = await fetch(`${API_BASE}/stats`);
+  if (!res.ok) return { ideas_analyzed: 0 };
+  const data = await res.json();
+  return StatsSchema.parse(data);
+}
+
 const StreamTokenSchema = z.object({ token: z.string() });
 
 export async function getStreamUrl(id: string): Promise<string> {

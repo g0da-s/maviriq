@@ -44,6 +44,15 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
+@router.get("/stats")
+async def stats(
+    repo: ValidationRepository = Depends(get_validation_repo),
+) -> dict:
+    """Public endpoint — no auth. Returns total completed validations."""
+    count = await repo.count_completed()
+    return {"ideas_analyzed": count}
+
+
 @router.post("/validations", response_model=CreateValidationResponse)
 async def create_validation(
     request: CreateValidationRequest,
