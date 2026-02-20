@@ -12,7 +12,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-6 pt-24">
+    <div className="flex min-h-screen flex-col items-center px-6 pt-32">
       {/* ═══ HERO — vertically centered in viewport ═══ */}
       <div className="flex flex-1 flex-col items-center justify-center w-full max-w-3xl text-center">
         {/* live counter */}
