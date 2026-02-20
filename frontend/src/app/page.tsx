@@ -34,8 +34,9 @@ export default function Home() {
               <span className="cursor-blink h-1.5 sm:h-2 w-full rounded-full bg-build -mt-1"></span>
             </span>
           </h1>
-          <p className="mt-6 text-lg text-muted max-w-md mx-auto">
-            5 AI agents research your startup idea and deliver a build or skip verdict.
+          <p className="mt-6 text-lg text-muted">
+            stop guessing. know if your idea is worth building
+            before you waste your time on it.
           </p>
 
           <div className="mt-10">
@@ -49,20 +50,20 @@ export default function Home() {
         <div className="mx-auto max-w-2xl">
           {/* HOW IT WORKS */}
           <div className="py-16">
-            <div className="grid grid-cols-3 gap-6 text-center">
-              <div>
-                <p className="text-2xl font-bold font-display text-build">1</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">describe</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+                <p className="text-xs font-bold text-build mb-1">01</p>
+                <p className="text-sm font-semibold text-foreground">describe</p>
                 <p className="mt-0.5 text-xs text-muted">your idea in plain english</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold font-display text-build">2</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">research</p>
+              <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+                <p className="text-xs font-bold text-build mb-1">02</p>
+                <p className="text-sm font-semibold text-foreground">research</p>
                 <p className="mt-0.5 text-xs text-muted">5 agents dig into the market</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold font-display text-build">3</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">verdict</p>
+              <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+                <p className="text-xs font-bold text-build mb-1">03</p>
+                <p className="text-sm font-semibold text-foreground">verdict</p>
                 <p className="mt-0.5 text-xs text-muted">build, skip, or maybe — with data</p>
               </div>
             </div>

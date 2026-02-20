@@ -63,8 +63,14 @@
 **Payments**: Stripe Checkout
 - Credit pack purchases with webhook verification
 
-**Auth**: Supabase Auth (email/password)
+**Auth**: Supabase Auth (email/password + Google OAuth)
 - JWT verification via JWKS endpoint
+- Google OAuth via Supabase `signInWithOAuth`
+- Password reset via Supabase email recovery flow
+
+**Analytics**: PostHog
+- Event tracking: signups, logins (email + Google), purchases, checkout starts
+- User identification after authentication
 
 **Observability**: LangSmith
 - Full tracing of agent runs, LLM calls, and tool usage
@@ -125,12 +131,13 @@
   - Graveyard research with failed startups and lessons learned
   - Viability dashboard (opportunity signals, risk factors, reachability, market gap)
   - Final verdict (BUILD/SKIP/MAYBE) with confidence, reasoning, and next steps
-- Auth flow (signup, login, credit purchase)
+- Auth flow (signup, login, Google OAuth, password reset, credit purchase)
 
 **Backend**: FastAPI
-- REST endpoints for validation CRUD, auth, credits
-- SSE streaming endpoint for real-time progress
+- REST endpoints for validation CRUD, auth (`GET /me`), credits
+- SSE streaming endpoint for real-time progress with single-use stream tokens
 - Stripe webhook endpoint for payment processing
+- Public stats endpoint (`GET /api/stats`)
 
 **Deployment**: [TODO: Note where you deployed — e.g., Vercel + Railway, or local demo]
 
@@ -416,4 +423,8 @@ Key files for understanding the codebase:
 
 **Frontend**:
 - `frontend/src/lib/types.ts` — TypeScript types (mirrors Pydantic schemas)
+- `frontend/src/lib/auth-context.tsx` — Auth context (Supabase session + Google OAuth)
+- `frontend/src/lib/posthog.tsx` — PostHog analytics provider
+- `frontend/src/app/forgot-password/page.tsx` — Password reset request page
+- `frontend/src/app/reset-password/page.tsx` — Set new password page
 - `frontend/src/components/` — Result display components
