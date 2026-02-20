@@ -50,6 +50,9 @@ export default function Home() {
         <div className="mx-auto max-w-2xl">
           {/* HOW IT WORKS */}
           <div className="py-16">
+            <p className="text-center text-xs uppercase tracking-widest text-muted/50 mb-6">
+              how it works
+            </p>
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl border border-card-border bg-card p-4 text-center">
                 <p className="text-xs font-bold text-build mb-1">01</p>
