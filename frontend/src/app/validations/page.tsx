@@ -151,7 +151,7 @@ function HistoryContent() {
                 key={item.id}
                 className="group flex items-center gap-4 rounded-2xl border border-card-border bg-card p-5 transition-colors hover:border-white/10"
               >
-                <Link href={`/validations/${item.id}`} className="flex flex-1 items-center gap-4">
+                <Link href={`/validations/${item.id}`} className="flex flex-1 min-w-0 items-center gap-4">
                   {/* verdict */}
                   <div className="w-28 shrink-0">
                     {item.verdict ? (
