@@ -142,11 +142,18 @@ export default function ValidationPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6">
         <div className="w-full max-w-2xl">
-          <div className="mb-8 text-center">
-            <h1 className="font-display text-3xl font-bold">
+          <div className="mb-10 text-center">
+            {/* animated working indicator */}
+            <div className="mb-5 flex items-center justify-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:0ms]" />
+              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:150ms]" />
+              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:300ms]" />
+            </div>
+            <h1 className="font-display text-xl sm:text-3xl font-bold leading-snug">
               {run?.idea || "validating..."}
             </h1>
             <p className="mt-2 text-sm text-muted">researching your idea across the internet</p>
+            <p className="mt-1 text-xs text-muted/40">this usually takes 30–60 seconds</p>
           </div>
           <PipelineProgress
             runId={id}

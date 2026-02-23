@@ -145,14 +145,19 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* parallel agents in a 2x2 grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-3">
+      {/* parallel agents — vertical list on mobile, 4-col grid on desktop */}
+      <div className="flex flex-col gap-3 sm:grid sm:grid-cols-4 sm:gap-3">
         {parallelAgents.map((agent) => {
           const status = getStatus(agent.num);
           return (
-            <div key={agent.num} className="flex flex-col items-center text-center">
+            <div
+              key={agent.num}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
+                status === "running" ? "bg-build/5" : ""
+              }`}
+            >
               <div
-                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
+                className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
                   status === "done"
                     ? "border-build bg-build/20 text-build"
                     : status === "running"
@@ -168,46 +173,56 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
                   agent.num
                 )}
               </div>
-              <p
-                className={`mt-2 font-display text-sm font-semibold leading-tight transition-colors duration-300 ${
-                  status === "done" || status === "running"
-                    ? "text-foreground"
-                    : "text-muted/40"
-                }`}
-              >
-                {agent.name}
-              </p>
-              <p
-                className={`mt-1 text-xs leading-snug transition-colors duration-300 ${
-                  status === "running" ? "text-muted" : "text-muted/30"
-                }`}
-              >
-                {status === "running" ? (
-                  <span>{agent.desc}</span>
-                ) : status === "done" ? (
-                  "complete"
-                ) : (
-                  "waiting"
-                )}
-              </p>
+              <div className="min-w-0 sm:mt-2">
+                <p
+                  className={`font-display text-sm font-semibold leading-tight transition-colors duration-300 ${
+                    status === "done" || status === "running"
+                      ? "text-foreground"
+                      : "text-muted/40"
+                  }`}
+                >
+                  {agent.name}
+                </p>
+                <p
+                  className={`mt-0.5 sm:mt-1 text-xs leading-snug transition-colors duration-300 ${
+                    status === "running" ? "text-muted" : "text-muted/30"
+                  }`}
+                >
+                  {status === "running" ? (
+                    <span>{agent.desc}</span>
+                  ) : status === "done" ? (
+                    "complete"
+                  ) : (
+                    "waiting"
+                  )}
+                </p>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* connector lines merging down to synthesis */}
-      <div className="flex justify-center py-3">
+      {/* connector line — hidden on mobile (vertical list), visible on desktop (grid) */}
+      <div className="hidden sm:flex justify-center py-3">
         <div
           className={`w-0.5 h-8 transition-colors duration-500 ${
             allParallelDone ? "bg-build/40" : "bg-card-border"
           }`}
         />
       </div>
+      {/* mobile separator */}
+      <div className="sm:hidden flex justify-center py-1">
+        <div className={`w-8 h-0.5 rounded transition-colors duration-500 ${allParallelDone ? "bg-build/40" : "bg-card-border"}`} />
+      </div>
 
       {/* synthesis agent */}
-      <div className="flex flex-col items-center text-center">
+      <div
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
+          synthesisStatus === "running" ? "bg-build/5" : ""
+        }`}
+      >
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
+          className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
             synthesisStatus === "done"
               ? "border-build bg-build/20 text-build"
               : synthesisStatus === "running"
@@ -223,30 +238,30 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
             synthesisAgent.num
           )}
         </div>
-        <p
-          className={`mt-2 font-display text-sm font-semibold transition-colors duration-300 ${
-            synthesisStatus === "done" || synthesisStatus === "running"
-              ? "text-foreground"
-              : "text-muted/40"
-          }`}
-        >
-          {synthesisAgent.name}
-        </p>
-        <p
-          className={`mt-1 text-xs transition-colors duration-300 ${
-            synthesisStatus === "running" ? "text-muted" : "text-muted/30"
-          }`}
-        >
-          {synthesisStatus === "running" ? (
-            <span>
-              {synthesisAgent.desc}
-            </span>
-          ) : synthesisStatus === "done" ? (
-            "complete"
-          ) : (
-            "waiting"
-          )}
-        </p>
+        <div className="min-w-0 sm:mt-2">
+          <p
+            className={`font-display text-sm font-semibold transition-colors duration-300 ${
+              synthesisStatus === "done" || synthesisStatus === "running"
+                ? "text-foreground"
+                : "text-muted/40"
+            }`}
+          >
+            {synthesisAgent.name}
+          </p>
+          <p
+            className={`mt-0.5 sm:mt-1 text-xs transition-colors duration-300 ${
+              synthesisStatus === "running" ? "text-muted" : "text-muted/30"
+            }`}
+          >
+            {synthesisStatus === "running" ? (
+              <span>{synthesisAgent.desc}</span>
+            ) : synthesisStatus === "done" ? (
+              "complete"
+            ) : (
+              "waiting"
+            )}
+          </p>
+        </div>
       </div>
 
       {reconnecting && (
