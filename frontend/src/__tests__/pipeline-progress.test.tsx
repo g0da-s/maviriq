@@ -136,7 +136,7 @@ describe("PipelineProgress", () => {
       es.emit("pipeline_completed", { id: "run-123", verdict: "BUILD", confidence: 0.78 });
     });
 
-    expect(screen.getByText("build")).toBeInTheDocument();
+    expect(screen.getByText("worth it")).toBeInTheDocument();
     expect(screen.getByText("78% confidence")).toBeInTheDocument();
   });
 

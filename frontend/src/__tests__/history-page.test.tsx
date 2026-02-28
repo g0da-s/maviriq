@@ -65,8 +65,8 @@ describe("HistoryPage", () => {
     vi.mocked(listValidations).mockResolvedValue(mockValidationList);
     render(<HistoryPage />);
 
-    expect(await screen.findByText("build")).toBeInTheDocument();
-    expect(screen.getByText("skip")).toBeInTheDocument();
+    expect(await screen.findByText("worth it")).toBeInTheDocument();
+    expect(screen.getByText("not worth it")).toBeInTheDocument();
     expect(screen.getByText("maybe")).toBeInTheDocument();
   });
 

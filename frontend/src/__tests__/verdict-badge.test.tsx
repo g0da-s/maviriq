@@ -3,17 +3,17 @@ import { describe, it, expect } from "vitest";
 import { VerdictBadge } from "@/components/verdict-badge";
 
 describe("VerdictBadge", () => {
-  it("renders BUILD verdict as lowercase", () => {
+  it("renders BUILD verdict label", () => {
     render(<VerdictBadge verdict="BUILD" />);
-    expect(screen.getByText("build")).toBeInTheDocument();
+    expect(screen.getByText("worth it")).toBeInTheDocument();
   });
 
-  it("renders SKIP verdict as lowercase", () => {
+  it("renders SKIP verdict label", () => {
     render(<VerdictBadge verdict="SKIP" />);
-    expect(screen.getByText("skip")).toBeInTheDocument();
+    expect(screen.getByText("not worth it")).toBeInTheDocument();
   });
 
-  it("renders MAYBE verdict as lowercase", () => {
+  it("renders MAYBE verdict label", () => {
     render(<VerdictBadge verdict="MAYBE" />);
     expect(screen.getByText("maybe")).toBeInTheDocument();
   });
