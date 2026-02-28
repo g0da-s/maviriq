@@ -191,7 +191,7 @@
     "agent3Name": "rinkos žvalgyba",
     "agent3Desc": "vertiname rinkos dydį, augimo tendencijas ir finansavimo aktyvumą",
     "agent4Name": "žlugusių startuolių tyrimas",
-    "agent4Desc": "analizuojame žlugusias startuolius ir post-mortem dėl įspėjamųjų ženklų",
+    "agent4Desc": "analizuojame žlugusias startuolius ir ieškome įspėjamųjų ženklų",
     "agent5Name": "sintezė ir verdiktas",
     "agent5Desc": "vertiname gyvybingumą ir pateikiame galutinį verdiktą",
     "complete": "baigta",
