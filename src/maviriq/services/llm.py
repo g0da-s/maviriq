@@ -95,6 +95,13 @@ class LLMService:
             model=settings.cheap_model,
             max_tokens=4096,
         )
+        # Low-temperature model for synthesis — reduces scoring variance
+        # without killing text quality (0.3 gives ~3-5pt spread vs ~20pt at default)
+        self.synthesis_model = ChatAnthropic(
+            model=settings.reasoning_model,
+            max_tokens=4096,
+            temperature=0.3,
+        )
 
         # Gemini model — used for research agent tool loops
         self.research_model = None
@@ -113,7 +120,13 @@ class LLMService:
                 settings.reasoning_model,
             )
 
-    def _get_model(self, use_cheap_model: bool = False) -> ChatAnthropic:
+    def _get_model(
+        self,
+        use_cheap_model: bool = False,
+        use_synthesis_model: bool = False,
+    ) -> ChatAnthropic:
+        if use_synthesis_model:
+            return self.synthesis_model
         return self.cheap_model if use_cheap_model else self.model
 
     @retry(**_ANTHROPIC_RETRY_POLICY)
@@ -123,8 +136,9 @@ class LLMService:
         user_prompt: str,
         output_schema: type[T],
         use_cheap_model: bool = False,
+        use_synthesis_model: bool = False,
     ) -> T:
-        model = self._get_model(use_cheap_model)
+        model = self._get_model(use_cheap_model, use_synthesis_model=use_synthesis_model)
         structured_model = model.with_structured_output(output_schema)
         return await structured_model.ainvoke(
             [
@@ -155,11 +169,13 @@ class LLMService:
         output_schema: type[T],
         use_cheap_model: bool = False,
         use_research_model: bool = False,
+        use_synthesis_model: bool = False,
     ) -> T:
         """Generate structured output.
 
         Uses Gemini when use_research_model=True and a Google API key is configured,
         otherwise falls back to Anthropic (Sonnet or Haiku).
+        use_synthesis_model=True uses a low-temperature model for scoring determinism.
         """
         if use_research_model and self.research_model is not None:
             return await self._generate_structured_google(
@@ -172,6 +188,7 @@ class LLMService:
             user_prompt=user_prompt,
             output_schema=output_schema,
             use_cheap_model=use_cheap_model,
+            use_synthesis_model=use_synthesis_model,
         )
 
     @retry(**_ANTHROPIC_RETRY_POLICY)

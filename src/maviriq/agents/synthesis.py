@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.models.schemas import (
@@ -49,7 +49,6 @@ class _VerdictStrategy(BaseModel):
     """Pass 2: Verdict, narrative, and strategy synthesis."""
 
     verdict: Verdict
-    confidence: float = Field(ge=0.0, le=1.0)
     one_line_summary: str
     reasoning: str
     key_strengths: list[str]
@@ -162,21 +161,23 @@ IMPORTANT — Be evidence-driven, not encouraging AND not artificially pessimist
   just because risks exist — every real business has risks.
 - Your job is an HONEST assessment — not a pitch deck, not a death sentence.
 
-**Confidence calibration (be precise, avoid clustering around 0.55-0.65):**
-- 0.85+: BUILD — overwhelming evidence across all dimensions
-- 0.65-0.84: MAYBE leaning BUILD — strong signals but 1-2 real concerns
-- 0.45-0.64: MAYBE leaning SKIP — some positive signals but significant gaps or risks
-- 0.25-0.44: SKIP — weak pain, crowded market, or hard to reach users
-- Below 0.25: SKIP — no evidence of pain, no gap, or major red flags
-The confidence score should MATCH the verdict. A BUILD below 0.65 or a SKIP above 0.65 needs explicit justification in your reasoning.
-Think carefully about where THIS SPECIFIC idea falls. Different ideas should get meaningfully different scores.
+**Verdict calibration — use the evidence, not your gut:**
+- BUILD means you would tell a friend to quit their job for this. Pain is screaming, \
+  people are paying competitors, the gap is real, and users are reachable.
+- SKIP means you would tell a friend to save their time. Pain is weak or fabricated, \
+  the market is locked down by incumbents, or there is no viable path to users.
+- MAYBE means the signal is mixed — some dimensions are strong but others have real holes. \
+  Always specify WHAT would need to be true to flip this to BUILD.
 
-VERDICT CALIBRATION EXAMPLES — use these as anchors:
-- "AI code review tool" with 8 high-severity pain points, 4 funded competitors, $500M market → BUILD, 0.78
-- "Social network for pets" with 0 pain points, failed predecessors, no monetization path → SKIP, 0.15
-- "On-demand barber app" with moderate pain, 1 failed predecessor, real but risky market → MAYBE, 0.48
-- "Generic CRM for small businesses" with pain but Salesforce/HubSpot dominate → SKIP, 0.30
-- "API docs from code" with strong developer pain, 2-3 competitors, growing market → BUILD, 0.72
+VERDICT CALIBRATION EXAMPLES:
+- "AI code review tool" with 8 high-severity pain points, 4 funded competitors, $500M market → BUILD
+- "Social network for pets" with 0 pain points, failed predecessors, no monetization path → SKIP
+- "On-demand barber app" with moderate pain, 1 failed predecessor, real but risky market → MAYBE
+- "Generic CRM for small businesses" with pain but Salesforce/HubSpot dominate → SKIP
+- "API docs from code" with strong developer pain, 2-3 competitors, growing market → BUILD
+
+The confidence score is computed separately from your verdict. \
+Focus on getting the verdict and reasoning right — be honest about what the data says.
 
 TONE — write like a sharp founder advising another founder:
 - No corporate speak, no filler, no hedging with "it appears that" or "based on the analysis."
@@ -186,7 +187,7 @@ TONE — write like a sharp founder advising another founder:
 - BAD: "The analysis suggests that there is a meaningful market opportunity with several positive indicators."
 
 **What to provide (with length guidance):**
-- Verdict + confidence (0.0-1.0, calibrated per the scale above)
+- Verdict (BUILD / SKIP / MAYBE)
 - one_line_summary: 1 sentence, max 20 words. Explain WHY this verdict, don't restate the idea. \
   GOOD: "Strong pain but saturated market with entrenched players makes differentiation difficult" \
   BAD: "An AI code review tool for Python security vulnerabilities"
@@ -238,6 +239,98 @@ from one founder to another."""
 
 
 # ──────────────────────────────────────────────
+# Deterministic confidence scoring
+# ──────────────────────────────────────────────
+
+
+def _compute_confidence(
+    viability: _ViabilityAnalysis,
+    input_data: SynthesisInput,
+) -> float:
+    """Compute confidence from structured research data — no LLM involved.
+
+    Scores 6 dimensions from categorical/countable data already extracted
+    by the research agents and Pass 1 viability analysis.  Returns a
+    weighted average clamped to [0.05, 0.95].
+    """
+    pain = input_data.pain_discovery
+    comp = input_data.competitor_research
+    market = input_data.market_intelligence
+    graveyard = input_data.graveyard_research
+
+    # {dimension: (score, weight)}
+    scores: dict[str, tuple[float, float]] = {}
+
+    # 1. Pain evidence (weight 0.25) — count + severity of pain points
+    high = sum(1 for p in pain.pain_points if p.pain_severity == "high")
+    mod = sum(1 for p in pain.pain_points if p.pain_severity == "moderate")
+    total = len(pain.pain_points)
+    if total == 0:
+        pain_score = 0.1
+    else:
+        pain_score = min(1.0, (high * 1.0 + mod * 0.5) / 5.0)
+        pain_score = min(1.0, pain_score + (total / 20.0) * 0.2)
+    scores["pain"] = (pain_score, 0.25)
+
+    # 2. Willingness to pay (weight 0.20) — people_pay bool + segment WTP
+    wtp_score = 0.7 if viability.people_pay else 0.2
+    high_wtp = sum(1 for s in pain.user_segments if s.willingness_to_pay == "high")
+    if high_wtp >= 2:
+        wtp_score = min(1.0, wtp_score + 0.2)
+    elif high_wtp == 1:
+        wtp_score = min(1.0, wtp_score + 0.1)
+    scores["willingness_to_pay"] = (wtp_score, 0.20)
+
+    # 3. Market gap (weight 0.20) — gap_size from viability analysis
+    gap_map = {"large": 0.9, "medium": 0.6, "small": 0.3, "none": 0.05}
+    scores["market_gap"] = (gap_map.get(viability.gap_size, 0.5), 0.20)
+
+    # 4. Reachability (weight 0.15) — reachability from viability analysis
+    reach_map = {"easy": 0.9, "moderate": 0.55, "hard": 0.2}
+    scores["reachability"] = (reach_map.get(viability.reachability, 0.5), 0.15)
+
+    # 5. Competition health (weight 0.10) — saturation + unserved needs
+    sat_map = {"low": 0.75, "medium": 0.65, "high": 0.3}
+    comp_score = sat_map.get(comp.market_saturation, 0.5)
+    if comp.underserved_needs:
+        comp_score = min(1.0, comp_score + len(comp.underserved_needs) * 0.05)
+    scores["competition"] = (comp_score, 0.10)
+
+    # 6. Market momentum (weight 0.10) — growth direction
+    if market:
+        growth_map = {"growing": 0.85, "stable": 0.5, "shrinking": 0.15, "unknown": 0.4}
+        scores["momentum"] = (growth_map.get(market.growth_direction, 0.4), 0.10)
+    else:
+        scores["momentum"] = (0.4, 0.10)
+
+    # Weighted average
+    total_score = sum(s * w for s, w in scores.values())
+    total_weight = sum(w for _, w in scores.values())
+    confidence = total_score / total_weight
+
+    # Penalty for graveyard failures with no clear differentiator
+    if graveyard and len(graveyard.previous_attempts) >= 3:
+        confidence *= 0.85  # 15% penalty for crowded graveyard
+
+    return round(max(0.05, min(0.95, confidence)), 2)
+
+
+def _apply_verdict_guardrail(verdict: Verdict | str, confidence: float) -> float:
+    """Soft-clamp confidence so it doesn't contradict the verdict.
+
+    Prevents displaying "BUILD 28%" or "SKIP 85%" — keeps the number
+    directionally consistent with the qualitative assessment.
+    """
+    v = verdict.upper()
+    if v == "BUILD":
+        return max(confidence, 0.55)
+    elif v == "SKIP":
+        return min(confidence, 0.50)
+    else:  # MAYBE
+        return max(0.35, min(0.70, confidence))
+
+
+# ──────────────────────────────────────────────
 # Agent
 # ──────────────────────────────────────────────
 
@@ -273,20 +366,26 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
                 "large/medium/small/none) in English — only translate the free-text prose."
             )
 
-        # Pass 1: Viability Analysis (Anthropic Sonnet — better calibrated)
+        # Pass 1: Viability Analysis (low-temp Sonnet for stable categoricals)
         viability = await self.llm.generate_structured(
             system_prompt=_VIABILITY_PROMPT + lang_suffix,
             user_prompt=context,
             output_schema=_ViabilityAnalysis,
+            use_synthesis_model=True,
         )
 
-        # Pass 2: Verdict & Strategy (Anthropic Sonnet)
+        # Pass 2: Verdict & Strategy (low-temp Sonnet)
         verdict_context = context + self._format_viability_results(viability)
         verdict = await self.llm.generate_structured(
             system_prompt=_VERDICT_PROMPT + lang_suffix,
             user_prompt=verdict_context,
             output_schema=_VerdictStrategy,
+            use_synthesis_model=True,
         )
+
+        # Confidence computed algorithmically from structured data
+        confidence = _compute_confidence(viability, input_data)
+        confidence = _apply_verdict_guardrail(verdict.verdict, confidence)
 
         # Merge into final SynthesisOutput
         return SynthesisOutput(
@@ -299,9 +398,9 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
             gap_size=viability.gap_size,
             signals=viability.signals,
             estimated_market_size=viability.estimated_market_size,
-            # From Pass 2
+            # From Pass 2 (confidence from _compute_confidence above)
             verdict=verdict.verdict,
-            confidence=verdict.confidence,
+            confidence=confidence,
             one_line_summary=verdict.one_line_summary,
             reasoning=verdict.reasoning,
             key_strengths=verdict.key_strengths,
