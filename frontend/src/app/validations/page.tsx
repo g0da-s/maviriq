@@ -56,7 +56,7 @@ function HistoryContent() {
       const res = await listValidations(p, 20);
       setData(res);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed to load validations");
+      setError(t("failedToLoad"));
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ function HistoryContent() {
       if (err instanceof ApiError && err.status === 404) {
         // fall through to reload
       } else {
-        setError(err instanceof Error ? err.message : "failed to delete validation");
+        setError(t("failedToDelete"));
         setDeleting(null);
         return;
       }
@@ -171,7 +171,7 @@ function HistoryContent() {
                     <p className="truncate text-sm font-medium uppercase">{item.idea}</p>
                     <p className="mt-0.5 text-xs text-muted/50">
                       {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString()
+                        ? new Date(item.created_at).toLocaleDateString("lt-LT")
                         : item.id}
                     </p>
                   </div>

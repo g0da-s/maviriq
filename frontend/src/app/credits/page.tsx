@@ -77,7 +77,7 @@ function CreditsContent() {
       posthog.capture("checkout_started", { credits: pack });
       window.location.href = res.checkout_url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "checkout failed");
+      setError(t("checkoutFailed"));
       setPurchasing(null);
     }
   }

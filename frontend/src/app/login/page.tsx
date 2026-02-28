@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+import { mapSupabaseError } from "@/lib/supabase-error";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,12 @@ export default function LoginPage() {
 
     const { error: signInError } = await signIn(email, password);
     if (signInError) {
-      setError(signInError);
+      const key = mapSupabaseError(signInError, {
+        "invalid login credentials": "invalidCredentials",
+        "invalid email": "invalidCredentials",
+        "email not confirmed": "invalidCredentials",
+      }, "authError");
+      setError(t(key));
       setLoading(false);
       return;
     }

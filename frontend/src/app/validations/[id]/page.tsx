@@ -60,7 +60,7 @@ export default function ValidationPage() {
           if (is404) {
             setError(t("validationNotFound"));
           } else {
-            setError(err instanceof Error ? err.message : t("failedToLoad"));
+            setError(t("failedToLoad"));
           }
           setLoading(false);
           return;
@@ -196,7 +196,7 @@ export default function ValidationPage() {
         </Link>
         {run.completed_at && (
           <span className="text-xs text-muted/40">
-            {new Date(run.completed_at).toLocaleDateString()}
+            {new Date(run.completed_at).toLocaleDateString("lt-LT")}
           </span>
         )}
       </div>

@@ -89,7 +89,9 @@
     "forgotPassword": "pamiršai slaptažodį?",
     "loggingIn": "jungiamasi...",
     "noAccount": "neturi paskyros?",
-    "continueWithGoogle": "tęsti su Google"
+    "continueWithGoogle": "tęsti su Google",
+    "invalidCredentials": "neteisingas el. paštas arba slaptažodis",
+    "authError": "prisijungti nepavyko — bandyk dar kartą"
   },
   "register": {
     "title": "registruotis",
@@ -105,7 +107,9 @@
     "alreadyHaveAccount": "jau turi paskyrą?",
     "checkYourEmail": "patikrink el. paštą",
     "verificationSent": "patvirtinimo nuorodą išsiuntėme adresu {email}. spustelk ją, kad aktyvuotum paskyrą ir gautum nemokamą kreditą.",
-    "goToLogin": "eiti į prisijungimą"
+    "goToLogin": "eiti į prisijungimą",
+    "emailAlreadyRegistered": "šis el. paštas jau užregistruotas",
+    "authError": "registracija nepavyko — bandyk dar kartą"
   },
   "forgotPassword": {
     "title": "atkurti slaptažodį",
@@ -116,7 +120,8 @@
     "rememberPassword": "prisimeni slaptažodį?",
     "checkYourEmail": "patikrink el. paštą",
     "resetLinkSent": "slaptažodžio atkūrimo nuorodą išsiuntėme adresu {email}. tai gali užtrukti minutę.",
-    "backToLogin": "grįžti į prisijungimą"
+    "backToLogin": "grįžti į prisijungimą",
+    "authError": "nepavyko išsiųsti atkūrimo nuorodos — bandyk dar kartą"
   },
   "resetPassword": {
     "title": "naujas slaptažodis",
@@ -131,7 +136,8 @@
     "linkExpiredMessage": "ši atkūrimo nuoroda nebegalioja. užsakyk naują ir bandyk dar kartą.",
     "sendNewResetLink": "siųsti naują atkūrimo nuorodą",
     "verifyingResetLink": "tikrinama atkūrimo nuoroda...",
-    "requestNewLink": "prašyti naujos nuorodos"
+    "requestNewLink": "prašyti naujos nuorodos",
+    "authError": "nepavyko atnaujinti slaptažodžio — bandyk dar kartą"
   },
   "validations": {
     "title": "istorija",
@@ -141,7 +147,9 @@
     "noValidationsYet": "tikrinimų dar nėra",
     "validateFirstIdea": "patikrink savo pirmą idėją",
     "prev": "atgal",
-    "next": "pirmyn"
+    "next": "pirmyn",
+    "failedToLoad": "nepavyko įkelti tikrinimų",
+    "failedToDelete": "nepavyko ištrinti tikrinimo"
   },
   "results": {
     "backToHistory": "grįžti į istoriją",
@@ -257,6 +265,7 @@
     "remainingOther": "liko {count} kreditų",
     "addedSuccessfully": "kreditai sėkmingai pridėti!",
     "checkoutCanceled": "apmokėjimas atšauktas",
+    "checkoutFailed": "apmokėjimas nepavyko",
     "bestValue": "geriausias pasiūlymas",
     "starter": "Pradinis",
     "popular": "Populiarus",

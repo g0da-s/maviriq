@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+import { mapSupabaseError } from "@/lib/supabase-error";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -32,7 +33,12 @@ export default function RegisterPage() {
 
     const { error: signUpError, needsVerification } = await signUp(email, password);
     if (signUpError) {
-      setError(signUpError);
+      const key = mapSupabaseError(signUpError, {
+        "already registered": "emailAlreadyRegistered",
+        "already been registered": "emailAlreadyRegistered",
+        "user already registered": "emailAlreadyRegistered",
+      }, "authError");
+      setError(t(key));
       setLoading(false);
       return;
     }

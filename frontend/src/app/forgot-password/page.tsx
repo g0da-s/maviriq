@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
+import { mapSupabaseError } from "@/lib/supabase-error";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +25,8 @@ export default function ForgotPasswordPage() {
     );
 
     if (resetError) {
-      setError(resetError.message);
+      const key = mapSupabaseError(resetError.message, {}, "authError");
+      setError(t(key));
       setLoading(false);
       return;
     }

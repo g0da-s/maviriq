@@ -89,7 +89,9 @@
     "forgotPassword": "forgot password?",
     "loggingIn": "logging in...",
     "noAccount": "don't have an account?",
-    "continueWithGoogle": "continue with Google"
+    "continueWithGoogle": "continue with Google",
+    "invalidCredentials": "invalid email or password",
+    "authError": "login failed — please try again"
   },
   "register": {
     "title": "sign up",
@@ -105,7 +107,9 @@
     "alreadyHaveAccount": "already have an account?",
     "checkYourEmail": "check your email",
     "verificationSent": "we sent a verification link to {email}. click it to activate your account and get your free credit.",
-    "goToLogin": "go to login"
+    "goToLogin": "go to login",
+    "emailAlreadyRegistered": "this email is already registered",
+    "authError": "sign up failed — please try again"
   },
   "forgotPassword": {
     "title": "reset password",
@@ -116,7 +120,8 @@
     "rememberPassword": "remember your password?",
     "checkYourEmail": "check your email",
     "resetLinkSent": "we sent a password reset link to {email}. it may take a minute to arrive.",
-    "backToLogin": "back to login"
+    "backToLogin": "back to login",
+    "authError": "failed to send reset link — please try again"
   },
   "resetPassword": {
     "title": "new password",
@@ -131,7 +136,8 @@
     "linkExpiredMessage": "this reset link has expired. request a new one and try again.",
     "sendNewResetLink": "send new reset link",
     "verifyingResetLink": "verifying reset link...",
-    "requestNewLink": "request a new link"
+    "requestNewLink": "request a new link",
+    "authError": "failed to update password — please try again"
   },
   "validations": {
     "title": "history",
@@ -141,7 +147,9 @@
     "noValidationsYet": "no validations yet",
     "validateFirstIdea": "validate your first idea",
     "prev": "prev",
-    "next": "next"
+    "next": "next",
+    "failedToLoad": "failed to load validations",
+    "failedToDelete": "failed to delete validation"
   },
   "results": {
     "backToHistory": "back to history",
@@ -257,6 +265,7 @@
     "remainingOther": "you have {count} credits remaining",
     "addedSuccessfully": "credits added successfully!",
     "checkoutCanceled": "checkout was canceled",
+    "checkoutFailed": "checkout failed",
     "bestValue": "best value",
     "starter": "Starter",
     "popular": "Popular",

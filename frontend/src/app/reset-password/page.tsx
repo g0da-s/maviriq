@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
+import { mapSupabaseError } from "@/lib/supabase-error";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -67,7 +68,8 @@ export default function ResetPasswordPage() {
     });
 
     if (updateError) {
-      setError(updateError.message);
+      const key = mapSupabaseError(updateError.message, {}, "authError");
+      setError(t(key));
       setLoading(false);
       return;
     }
