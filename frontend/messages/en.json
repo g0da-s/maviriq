@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "maviriq — validate your idea",
-    "description": "5 ai agents research your startup idea and deliver a build or skip verdict"
+    "description": "5 ai agents research your startup idea and deliver a worth it or not worth it verdict"
   },
   "common": {
     "maviriq": "maviriq",
@@ -37,10 +37,10 @@
     "step2Title": "research",
     "step2Desc": "5 agents dig into the idea",
     "step3Title": "verdict",
-    "step3Desc": "build, skip, or maybe — with data",
+    "step3Desc": "worth it, not worth it, or maybe — with data",
     "exampleOutput": "example output",
     "exampleTitle": "AI-powered meal planning app for busy parents",
-    "exampleBuild": "build",
+    "exampleBuild": "worth it",
     "exampleSummary": "strong pain signal from time-poor parents, but crowded market means you need a sharp wedge — start with dietary restrictions and grocery budget optimization.",
     "painLevel": "pain level",
     "competition": "competition",
@@ -193,7 +193,7 @@
     "agent4Name": "graveyard research",
     "agent4Desc": "analyzing failed startups and post-mortems for warning signs",
     "agent5Name": "synthesis & verdict",
-    "agent5Desc": "assessing viability and delivering a final build/skip verdict",
+    "agent5Desc": "assessing viability and delivering a final worth it/not worth it verdict",
     "complete": "complete",
     "waiting": "waiting",
     "reconnecting": "reconnecting...",

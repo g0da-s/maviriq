@@ -10,7 +10,7 @@ const styles: Record<Verdict, string> = {
 };
 
 const labels: Record<string, Record<Verdict, string>> = {
-  en: { BUILD: "build", SKIP: "skip", MAYBE: "maybe" },
+  en: { BUILD: "worth it", SKIP: "not worth it", MAYBE: "maybe" },
   lt: { BUILD: "verta", SKIP: "neverta", MAYBE: "galbūt" },
 };
 
