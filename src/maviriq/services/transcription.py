@@ -9,11 +9,12 @@ from maviriq.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Hallucination-suppression prompt — gives Whisper domain context so it
-# doesn't invent YouTube-style filler when audio is ambiguous or silent.
+# Whisper prompt — used as a vocabulary/style hint (NOT an instruction).
+# Whisper conditions on this text to bias toward domain-relevant words
+# and away from YouTube-style hallucinations.
 _WHISPER_PROMPT = (
-    "This is a voice recording of someone describing a startup or business idea. "
-    "Transcribe exactly what is said. Do not add filler phrases."
+    "startup, business idea, product, market, customers, revenue, "
+    "SaaS, app, platform, MVP, validation"
 )
 
 # Known Whisper hallucination phrases (English + Lithuanian).
@@ -38,6 +39,11 @@ _HALLUCINATION_PHRASES: list[str] = [
     "iki pasimatymo",
     "subtitrai pagal declips",
     "subtitrai sukurti declips",
+    "džiaugiuosi, džiaugiuosi",
+    "džiaugiuosi džiaugiuosi",
+    # Guard against prompt echo (if prompt text leaks into output)
+    "transcribe exactly what is said",
+    "do not add filler phrases",
 ]
 
 

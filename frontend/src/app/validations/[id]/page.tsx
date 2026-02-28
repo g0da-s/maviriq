@@ -210,8 +210,8 @@ export default function ValidationPage() {
             <div className="flex items-center gap-8">
               <div className="flex flex-col items-start shrink-0">
                 <span className={`font-display text-6xl font-bold leading-none ${
-                  Math.round(s.confidence * 100) >= 70 ? "text-build" :
-                  Math.round(s.confidence * 100) >= 40 ? "text-maybe" : "text-skip"
+                  s.verdict === "BUILD" ? "text-build" :
+                  s.verdict === "MAYBE" ? "text-maybe" : "text-skip"
                 }`}>
                   {Math.round(s.confidence * 100)}<span className="text-3xl">%</span>
                 </span>
