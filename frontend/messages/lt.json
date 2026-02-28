@@ -20,11 +20,14 @@
   "nav": {
     "new": "nauja",
     "history": "istorija",
-    "credits": "{count} kreditas",
-    "creditsPlural": "{count} kreditai"
+    "creditsOne": "{count} kreditas",
+    "creditsFew": "{count} kreditai",
+    "creditsOther": "{count} kreditų"
   },
   "home": {
-    "ideasAnalyzed": "idėjų išanalizuota",
+    "ideasAnalyzedOne": "idėja išanalizuota",
+    "ideasAnalyzedFew": "idėjos išanalizuotos",
+    "ideasAnalyzedOther": "idėjų išanalizuota",
     "title": "patikrink savo",
     "titleHighlight": "idėją",
     "subtitle": "nustok spėlioti. sužinok, ar tavo idėja verta tavo laiko, prieš jį švaistant.",
@@ -249,7 +252,9 @@
   },
   "credits": {
     "title": "kreditai",
-    "remaining": "liko {count} kreditas(-ų)",
+    "remainingOne": "liko {count} kreditas",
+    "remainingFew": "liko {count} kreditai",
+    "remainingOther": "liko {count} kreditų",
     "addedSuccessfully": "kreditai sėkmingai pridėti!",
     "checkoutCanceled": "apmokėjimas atšauktas",
     "bestValue": "geriausias pasiūlymas",
@@ -258,7 +263,9 @@
     "pro": "Pro",
     "creditsUnit": "kreditai",
     "perValidation": "už tikrinimą",
-    "buyCredits": "pirkti {count} kreditų",
+    "buyCreditsOne": "pirkti {count} kreditą",
+    "buyCreditsFew": "pirkti {count} kreditus",
+    "buyCreditsOther": "pirkti {count} kreditų",
     "redirecting": "nukreipiama...",
     "backToValidation": "grįžti į tikrinimą"
   },

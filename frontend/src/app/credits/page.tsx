@@ -4,9 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { createCheckout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ltPlural } from "@/lib/plural";
 
 const PACKS = [
   { credits: 5, price: "$5", pricePerCredit: "$1.00", label: "Starter" },
@@ -36,6 +37,12 @@ function CreditsContent() {
   const [success, setSuccess] = useState(false);
   const t = useTranslations("credits");
   const tc = useTranslations("common");
+  const locale = useLocale();
+
+  const pluralSuffix = (n: number) =>
+    locale === "lt"
+      ? ({ one: "One", few: "Few", other: "Other" } as const)[ltPlural(n)]
+      : n === 1 ? "One" : "Other";
 
   const packLabelMap: Record<string, string> = {
     Starter: t("starter"),
@@ -88,7 +95,7 @@ function CreditsContent() {
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold">{t("title")}</h1>
         <p className="mt-2 text-muted">
-          {t("remaining", { count: user.credits })}
+          {t(`remaining${pluralSuffix(user.credits)}`, { count: user.credits })}
         </p>
       </div>
 
@@ -158,7 +165,7 @@ function CreditsContent() {
                   {t("redirecting")}
                 </span>
               ) : (
-                t("buyCredits", { count: pack.credits })
+                t(`buyCredits${pluralSuffix(pack.credits)}`, { count: pack.credits })
               )}
             </button>
           </div>

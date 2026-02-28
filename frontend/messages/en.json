@@ -20,11 +20,14 @@
   "nav": {
     "new": "new",
     "history": "history",
-    "credits": "{count} credit",
-    "creditsPlural": "{count} credits"
+    "creditsOne": "{count} credit",
+    "creditsFew": "{count} credits",
+    "creditsOther": "{count} credits"
   },
   "home": {
-    "ideasAnalyzed": "ideas analyzed",
+    "ideasAnalyzedOne": "idea analyzed",
+    "ideasAnalyzedFew": "ideas analyzed",
+    "ideasAnalyzedOther": "ideas analyzed",
     "title": "validate your",
     "titleHighlight": "idea",
     "subtitle": "stop guessing. know if your idea is worth building before you waste your time on it.",
@@ -249,7 +252,9 @@
   },
   "credits": {
     "title": "credits",
-    "remaining": "you have {count} credit(s) remaining",
+    "remainingOne": "you have {count} credit remaining",
+    "remainingFew": "you have {count} credits remaining",
+    "remainingOther": "you have {count} credits remaining",
     "addedSuccessfully": "credits added successfully!",
     "checkoutCanceled": "checkout was canceled",
     "bestValue": "best value",
@@ -258,7 +263,9 @@
     "pro": "Pro",
     "creditsUnit": "credits",
     "perValidation": "per validation",
-    "buyCredits": "buy {count} credits",
+    "buyCreditsOne": "buy {count} credit",
+    "buyCreditsFew": "buy {count} credits",
+    "buyCreditsOther": "buy {count} credits",
     "redirecting": "redirecting...",
     "backToValidation": "back to validation"
   },

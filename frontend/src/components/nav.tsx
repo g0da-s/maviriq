@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+import { ltPlural } from "@/lib/plural";
 
 function switchLocale(newLocale: string) {
   document.cookie = `locale=${newLocale};path=/;max-age=31536000`;
@@ -50,7 +51,7 @@ export function Nav() {
   const locale = useLocale();
 
   const creditsText = user
-    ? `${user.credits} ${user.credits !== 1 ? (locale === "lt" ? "kreditai" : "credits") : (locale === "lt" ? "kreditas" : "credit")}`
+    ? t(`credits${locale === "lt" ? ({ one: "One", few: "Few", other: "Other" } as const)[ltPlural(user.credits)] : user.credits === 1 ? "One" : "Other"}`, { count: user.credits })
     : "";
 
   return (

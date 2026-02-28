@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { IdeaForm } from "@/components/idea-form";
 import { getStats } from "@/lib/api";
+import { ltPlural } from "@/lib/plural";
 
 export default function Home() {
   const [count, setCount] = useState<number | null>(null);
   const t = useTranslations('home');
+  const locale = useLocale();
+
+  const ideasLabel = count !== null
+    ? t(`ideasAnalyzed${locale === "lt" ? ({ one: "One", few: "Few", other: "Other" } as const)[ltPlural(count)] : count === 1 ? "One" : "Other"}`)
+    : "";
 
   useEffect(() => {
     getStats()
@@ -24,7 +30,7 @@ export default function Home() {
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-card-border bg-card px-4 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-build animate-pulse" />
               <span className="text-xs text-muted">
-                <span className="font-semibold text-foreground">{count.toLocaleString()}</span> {t('ideasAnalyzed')}
+                <span className="font-semibold text-foreground">{count.toLocaleString()}</span> {ideasLabel}
               </span>
             </div>
           )}
