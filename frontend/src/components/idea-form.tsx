@@ -151,31 +151,33 @@ export function IdeaForm() {
           rows={3}
           className="w-full resize-none rounded-2xl border border-card-border bg-white/[0.03] px-6 py-4 pr-14 text-lg text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none focus:ring-0 transition-colors"
         />
-        {/* Mic button */}
-        <button
-          type="button"
-          onClick={toggleRecording}
-          disabled={isTranscribing || loading}
-          className="absolute bottom-3 left-4 rounded-lg p-1.5 text-muted/50 transition-colors hover:text-foreground disabled:opacity-40"
-          aria-label={isRecording ? t("stopRecording") : t("startRecording")}
-        >
-          {isTranscribing ? (
-            <span className="block h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-transparent" />
-          ) : isRecording ? (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-skip animate-pulse">
-              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
-            </svg>
-          )}
-        </button>
-        <span className="absolute bottom-3 right-4 text-xs text-muted/40">
-          {idea.length}/500
-        </span>
+        <div className="absolute bottom-3 right-4 flex items-center gap-2">
+          {/* Mic button */}
+          <button
+            type="button"
+            onClick={toggleRecording}
+            disabled={isTranscribing || loading}
+            className="rounded-lg p-1 text-muted/50 transition-colors hover:text-foreground disabled:opacity-40"
+            aria-label={isRecording ? t("stopRecording") : t("startRecording")}
+          >
+            {isTranscribing ? (
+              <span className="block h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-transparent" />
+            ) : isRecording ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-skip animate-pulse">
+                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
+              </svg>
+            )}
+          </button>
+          <span className="text-xs text-muted/40">
+            {idea.length}/500
+          </span>
+        </div>
       </div>
 
       {error && <p role="alert" className="mt-3 text-sm text-skip">{error}</p>}
