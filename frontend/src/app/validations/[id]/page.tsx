@@ -208,7 +208,7 @@ export default function ValidationPage() {
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-8 py-7">
             <div className="flex items-center gap-8">
-              <div className="flex flex-col items-start shrink-0">
+              <div className="flex flex-col items-center shrink-0">
                 <span className={`font-display text-6xl font-bold leading-none ${
                   s.verdict === "BUILD" ? "text-build" :
                   s.verdict === "MAYBE" ? "text-maybe" : "text-skip"
