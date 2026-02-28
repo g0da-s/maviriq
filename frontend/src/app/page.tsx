@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <>
       {/* ═══ HERO — full viewport, vertically centered ═══ */}
-      <div className="flex min-h-[75vh] flex-col items-center justify-center px-6">
+      <div className="flex min-h-screen pb-[15vh] flex-col items-center justify-center px-6">
         <div className="w-full max-w-2xl text-center">
           {count !== null && count > 0 && (
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-card-border bg-card px-4 py-1.5">
