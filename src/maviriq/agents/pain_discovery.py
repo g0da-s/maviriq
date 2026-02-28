@@ -142,6 +142,8 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
         "Finds evidence that a problem exists and identifies who suffers from it"
     )
     output_schema = PainDiscoveryOutput
+    min_searches = 5
+    recommended_searches = 8
 
     def get_system_prompt(self, input_data: PainDiscoveryInput) -> str:
         now = datetime.now(timezone.utc)

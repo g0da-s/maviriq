@@ -210,6 +210,8 @@ class LLMService:
         tool_executors: dict[str, Callable[[str], Awaitable[str]]],
         output_schema: type[T],
         max_iterations: int = 10,
+        min_searches: int = 0,
+        recommended_searches: int = 0,
     ) -> T:
         """Run an agentic tool-use loop.
 
@@ -229,8 +231,20 @@ class LLMService:
 
         model_with_tools = base_model.bind_tools(all_tools)
 
+        # Inject search budget context into the system prompt
+        effective_prompt = system_prompt
+        if min_searches > 0:
+            effective_prompt += (
+                f"\n\n## SEARCH BUDGET\n"
+                f"- Minimum searches before you can submit: {min_searches}\n"
+                f"- Recommended searches for thorough research: {recommended_searches}\n"
+                f"- Strategy: first turns → WIDE net, diverse queries across different tools. "
+                f"Later turns → drill deeper into promising leads.\n"
+                f"- DO NOT submit until you have met the minimum. Aim for the recommended number."
+            )
+
         messages: list = [
-            SystemMessage(content=system_prompt),
+            SystemMessage(content=effective_prompt),
             HumanMessage(content=user_prompt),
         ]
 
@@ -284,6 +298,29 @@ class LLMService:
                 )
             if submit_call is not None:
                 logger.info("Iteration %d: submit_result called", iteration + 1)
+
+            # Block early submission if minimum searches not met
+            if (
+                submit_call is not None
+                and iteration < max_iterations - 1
+                and search_successes < min_searches
+            ):
+                logger.info(
+                    "Blocking early submit: %d/%d minimum searches completed",
+                    search_successes,
+                    min_searches,
+                )
+                messages.append(
+                    ToolMessage(
+                        content=(
+                            f"Cannot submit yet. You have completed {search_successes}/{min_searches} "
+                            f"minimum searches. Continue researching — try different query phrasings "
+                            f"and tools you haven't used yet."
+                        ),
+                        tool_call_id=submit_call["id"],
+                    )
+                )
+                submit_call = None
 
             # Execute all search calls in parallel
             if search_calls:

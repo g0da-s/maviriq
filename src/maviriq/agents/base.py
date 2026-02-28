@@ -28,6 +28,8 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
     name: str
     description: str
     output_schema: ClassVar[type[BaseModel]]
+    min_searches: int = 0
+    recommended_searches: int = 0
 
     def __init__(self, llm: LLMService, search: SerperService) -> None:
         self.llm = llm
@@ -55,5 +57,7 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
             tool_executors=executors,
             output_schema=self.output_schema,
             max_iterations=settings.agent_max_iterations,
+            min_searches=self.min_searches,
+            recommended_searches=self.recommended_searches,
         )
         return self.post_process(input_data, result)

@@ -98,6 +98,8 @@ class CompetitorResearchAgent(
     name = "Competitor Research"
     description = "Maps the competitive landscape and finds market gaps"
     output_schema = CompetitorResearchOutput
+    min_searches = 6
+    recommended_searches = 10
 
     def get_system_prompt(self, input_data: CompetitorResearchInput) -> str:
         return SYSTEM_PROMPT

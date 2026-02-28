@@ -106,6 +106,8 @@ class MarketIntelligenceAgent(
     name = "Market Intelligence"
     description = "Researches market size, growth trends, distribution channels, and funding activity"
     output_schema = MarketIntelligenceOutput
+    min_searches = 4
+    recommended_searches = 6
 
     def get_system_prompt(self, input_data: MarketIntelligenceInput) -> str:
         now = datetime.now(timezone.utc)

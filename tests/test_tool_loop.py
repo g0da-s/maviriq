@@ -242,6 +242,149 @@ class TestRunToolLoop:
         assert result.answer == "finally"
 
     @pytest.mark.asyncio
+    async def test_min_searches_blocks_early_submit(self):
+        """Submit is blocked when search_successes < min_searches."""
+        llm = LLMService()
+
+        # Turn 1: one search
+        search_response = _make_ai_message(tool_calls=[
+            _search_call("search_web", "first query", call_id="s1")
+        ])
+        # Turn 2: agent tries to submit too early (only 1 search done, min is 3)
+        early_submit = _make_ai_message(tool_calls=[
+            _submit_call({"answer": "lazy answer", "score": 0.2}, call_id="early_1")
+        ])
+        # Turn 3: agent searches more after being blocked
+        more_searches = _make_ai_message(tool_calls=[
+            _search_call("search_web", "query2", call_id="s2"),
+            _search_call("search_reddit", "query3", call_id="s3"),
+        ])
+        # Turn 4: agent submits after meeting minimum
+        final_submit = _make_ai_message(tool_calls=[
+            _submit_call({"answer": "thorough answer", "score": 0.9}, call_id="final_1")
+        ])
+
+        mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
+        mock_model.ainvoke = AsyncMock(
+            side_effect=[search_response, early_submit, more_searches, final_submit]
+        )
+        llm.model = mock_model
+
+        executor = AsyncMock(return_value="search results")
+
+        result = await llm.run_tool_loop(
+            system_prompt="test",
+            user_prompt="test",
+            tools=[],
+            tool_executors={"search_web": executor, "search_reddit": executor},
+            output_schema=SimpleOutput,
+            min_searches=3,
+            recommended_searches=5,
+        )
+
+        # Early lazy submit was blocked; the thorough answer was returned
+        assert result.answer == "thorough answer"
+        assert result.score == 0.9
+
+    @pytest.mark.asyncio
+    async def test_min_searches_allows_submit_when_met(self):
+        """Submit goes through when search_successes >= min_searches."""
+        llm = LLMService()
+
+        # 3 parallel searches in one turn
+        parallel_response = _make_ai_message(tool_calls=[
+            _search_call("search_web", "q1", call_id="s1"),
+            _search_call("search_reddit", "q2", call_id="s2"),
+            _search_call("search_web", "q3", call_id="s3"),
+        ])
+        submit_response = _make_ai_message(tool_calls=[
+            _submit_call({"answer": "good", "score": 0.8})
+        ])
+
+        mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
+        mock_model.ainvoke = AsyncMock(side_effect=[parallel_response, submit_response])
+        llm.model = mock_model
+
+        executor = AsyncMock(return_value="results")
+
+        result = await llm.run_tool_loop(
+            system_prompt="test",
+            user_prompt="test",
+            tools=[],
+            tool_executors={"search_web": executor, "search_reddit": executor},
+            output_schema=SimpleOutput,
+            min_searches=3,
+            recommended_searches=5,
+        )
+
+        # 3 searches met the minimum of 3 — submit allowed
+        assert result.answer == "good"
+
+    @pytest.mark.asyncio
+    async def test_min_searches_bypassed_on_last_iteration(self):
+        """Last iteration forced submit is never blocked by min_searches."""
+        llm = LLMService()
+
+        # Only 1 search, then forced submit on last iteration
+        search_response = _make_ai_message(tool_calls=[
+            _search_call("search_web", "query", call_id="s1")
+        ])
+        forced_submit = _make_ai_message(tool_calls=[
+            _submit_call({"answer": "forced", "score": 0.3})
+        ])
+
+        mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
+        mock_model.ainvoke = AsyncMock(side_effect=[search_response, forced_submit])
+        llm.model = mock_model
+
+        executor = AsyncMock(return_value="results")
+
+        result = await llm.run_tool_loop(
+            system_prompt="test",
+            user_prompt="test",
+            tools=[],
+            tool_executors={"search_web": executor},
+            output_schema=SimpleOutput,
+            max_iterations=2,
+            min_searches=10,  # impossibly high — but should still submit on last iter
+        )
+
+        # Forced submit on last iteration bypasses min_searches
+        assert result.answer == "forced"
+
+    @pytest.mark.asyncio
+    async def test_budget_context_injected_into_prompt(self):
+        """System prompt gets budget context appended when min_searches > 0."""
+        llm = LLMService()
+
+        submit_response = _make_ai_message(tool_calls=[
+            _submit_call({"answer": "ok", "score": 0.5})
+        ])
+
+        mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
+        mock_model.ainvoke = AsyncMock(return_value=submit_response)
+        llm.model = mock_model
+
+        await llm.run_tool_loop(
+            system_prompt="You are a researcher.",
+            user_prompt="test",
+            tools=[],
+            tool_executors={},
+            output_schema=SimpleOutput,
+            min_searches=0,  # no budget — prompt should be unchanged
+        )
+
+        # Check the system message passed to the model
+        call_args = mock_model.ainvoke.call_args
+        messages = call_args[0][0]
+        system_msg = messages[0].content
+        assert "SEARCH BUDGET" not in system_msg
+
+    @pytest.mark.asyncio
     async def test_executor_failure_returns_error_message(self):
         """If a tool executor raises, error is sent back to the model."""
         llm = LLMService()

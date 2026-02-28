@@ -103,6 +103,8 @@ class GraveyardResearchAgent(
     name = "Graveyard Research"
     description = "Finds failed startups and warning signs in the market"
     output_schema = GraveyardResearchOutput
+    min_searches = 4
+    recommended_searches = 7
 
     def get_system_prompt(self, input_data: GraveyardResearchInput) -> str:
         return SYSTEM_PROMPT

@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # Google
     google_api_key: str = ""
 
+    # OpenAI (Whisper STT)
+    openai_api_key: str = ""
+
     # LLM Models
     reasoning_model: str = "claude-sonnet-4-5-20250929"
     cheap_model: str = "claude-haiku-4-5-20251001"
@@ -39,9 +42,7 @@ class Settings(BaseSettings):
     # Pipeline
     agent_timeout: int = 120  # seconds per agent before giving up
     agent_max_iterations: int = 10  # max tool-use loop iterations per agent
-    anthropic_max_concurrent: int = (
-        2  # max concurrent Anthropic API calls (bump after Tier 2)
-    )
+    anthropic_max_concurrent: int = 5  # Tier 2: bumped from 2
 
     # LangSmith
     langsmith_tracing: str = "true"
