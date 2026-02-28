@@ -95,8 +95,15 @@ class LLMService:
             model=settings.cheap_model,
             max_tokens=4096,
         )
-        # Low-temperature model for synthesis — reduces scoring variance
-        # without killing text quality (0.3 gives ~3-5pt spread vs ~20pt at default)
+        # Deterministic model for viability scoring (Pass 1) — temperature=0
+        # ensures categorical outputs (gap_size, reachability, etc.) are stable
+        self.scoring_model = ChatAnthropic(
+            model=settings.reasoning_model,
+            max_tokens=4096,
+            temperature=0,
+        )
+        # Low-temperature model for verdict prose (Pass 2) — 0.3 keeps
+        # text natural while reducing verdict flip-flopping
         self.synthesis_model = ChatAnthropic(
             model=settings.reasoning_model,
             max_tokens=4096,
@@ -124,7 +131,10 @@ class LLMService:
         self,
         use_cheap_model: bool = False,
         use_synthesis_model: bool = False,
+        use_scoring_model: bool = False,
     ) -> ChatAnthropic:
+        if use_scoring_model:
+            return self.scoring_model
         if use_synthesis_model:
             return self.synthesis_model
         return self.cheap_model if use_cheap_model else self.model
@@ -137,8 +147,13 @@ class LLMService:
         output_schema: type[T],
         use_cheap_model: bool = False,
         use_synthesis_model: bool = False,
+        use_scoring_model: bool = False,
     ) -> T:
-        model = self._get_model(use_cheap_model, use_synthesis_model=use_synthesis_model)
+        model = self._get_model(
+            use_cheap_model,
+            use_synthesis_model=use_synthesis_model,
+            use_scoring_model=use_scoring_model,
+        )
         structured_model = model.with_structured_output(output_schema)
         return await structured_model.ainvoke(
             [
@@ -170,12 +185,14 @@ class LLMService:
         use_cheap_model: bool = False,
         use_research_model: bool = False,
         use_synthesis_model: bool = False,
+        use_scoring_model: bool = False,
     ) -> T:
         """Generate structured output.
 
         Uses Gemini when use_research_model=True and a Google API key is configured,
         otherwise falls back to Anthropic (Sonnet or Haiku).
-        use_synthesis_model=True uses a low-temperature model for scoring determinism.
+        use_scoring_model=True uses temperature=0 for deterministic categorical outputs.
+        use_synthesis_model=True uses temperature=0.3 for natural verdict prose.
         """
         if use_research_model and self.research_model is not None:
             return await self._generate_structured_google(
@@ -189,6 +206,7 @@ class LLMService:
             output_schema=output_schema,
             use_cheap_model=use_cheap_model,
             use_synthesis_model=use_synthesis_model,
+            use_scoring_model=use_scoring_model,
         )
 
     @retry(**_ANTHROPIC_RETRY_POLICY)

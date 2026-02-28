@@ -282,15 +282,16 @@ def _compute_confidence(
     scores["willingness_to_pay"] = (wtp_score, 0.20)
 
     # 3. Market gap (weight 0.20) — gap_size from viability analysis
-    gap_map = {"large": 0.9, "medium": 0.6, "small": 0.3, "none": 0.05}
+    #    Tighter spread so a single category flip doesn't swing score >4pts
+    gap_map = {"large": 0.85, "medium": 0.65, "small": 0.4, "none": 0.1}
     scores["market_gap"] = (gap_map.get(viability.gap_size, 0.5), 0.20)
 
     # 4. Reachability (weight 0.15) — reachability from viability analysis
-    reach_map = {"easy": 0.9, "moderate": 0.55, "hard": 0.2}
+    reach_map = {"easy": 0.85, "moderate": 0.6, "hard": 0.3}
     scores["reachability"] = (reach_map.get(viability.reachability, 0.5), 0.15)
 
     # 5. Competition health (weight 0.10) — saturation + unserved needs
-    sat_map = {"low": 0.75, "medium": 0.65, "high": 0.3}
+    sat_map = {"low": 0.75, "medium": 0.6, "high": 0.35}
     comp_score = sat_map.get(comp.market_saturation, 0.5)
     if comp.underserved_needs:
         comp_score = min(1.0, comp_score + len(comp.underserved_needs) * 0.05)
@@ -298,7 +299,7 @@ def _compute_confidence(
 
     # 6. Market momentum (weight 0.10) — growth direction
     if market:
-        growth_map = {"growing": 0.85, "stable": 0.5, "shrinking": 0.15, "unknown": 0.4}
+        growth_map = {"growing": 0.8, "stable": 0.5, "shrinking": 0.2, "unknown": 0.45}
         scores["momentum"] = (growth_map.get(market.growth_direction, 0.4), 0.10)
     else:
         scores["momentum"] = (0.4, 0.10)
@@ -366,12 +367,12 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
                 "large/medium/small/none) in English — only translate the free-text prose."
             )
 
-        # Pass 1: Viability Analysis (low-temp Sonnet for stable categoricals)
+        # Pass 1: Viability Analysis (temperature=0 for stable categoricals)
         viability = await self.llm.generate_structured(
             system_prompt=_VIABILITY_PROMPT + lang_suffix,
             user_prompt=context,
             output_schema=_ViabilityAnalysis,
-            use_synthesis_model=True,
+            use_scoring_model=True,
         )
 
         # Pass 2: Verdict & Strategy (low-temp Sonnet)
