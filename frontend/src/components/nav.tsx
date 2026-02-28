@@ -97,14 +97,14 @@ export function Nav() {
                 {creditsText}
               </Link>
               <div className="mx-2 h-4 w-px bg-card-border" />
-              <LanguageToggle />
-              <div className="mx-1 h-4 w-px bg-card-border" />
               <button
                 onClick={signOut}
                 className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
                 {tc("logOut")}
               </button>
+              <div className="mx-1 h-4 w-px bg-card-border" />
+              <LanguageToggle />
             </>
           ) : (
             <>
