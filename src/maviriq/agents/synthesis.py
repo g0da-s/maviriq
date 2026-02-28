@@ -257,12 +257,25 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return [], {}
 
-    async def run(self, input_data: SynthesisInput) -> SynthesisOutput:
+    async def run(self, input_data: SynthesisInput, language: str = "lt") -> SynthesisOutput:
         context = self._build_research_context(input_data)
+
+        # Language instruction for non-English output
+        lang_suffix = ""
+        if language == "lt":
+            lang_suffix = (
+                "\n\nLANGUAGE REQUIREMENT: Write ALL user-facing text in Lithuanian (lietuvių kalba). "
+                "This includes: one_line_summary, reasoning, key_strengths, key_risks, market_gap, "
+                "people_pay_reasoning, reachability_reasoning, recommended_mvp, recommended_positioning, "
+                "target_user_summary, next_steps, differentiation_strategy, previous_attempts_summary, "
+                "lessons_from_failures, estimated_market_size, and each viability signal description. "
+                "Keep enum values (BUILD/SKIP/MAYBE, positive/negative/neutral, easy/moderate/hard, "
+                "large/medium/small/none) in English — only translate the free-text prose."
+            )
 
         # Pass 1: Viability Analysis (Anthropic Sonnet — better calibrated)
         viability = await self.llm.generate_structured(
-            system_prompt=_VIABILITY_PROMPT,
+            system_prompt=_VIABILITY_PROMPT + lang_suffix,
             user_prompt=context,
             output_schema=_ViabilityAnalysis,
         )
@@ -270,7 +283,7 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         # Pass 2: Verdict & Strategy (Anthropic Sonnet)
         verdict_context = context + self._format_viability_results(viability)
         verdict = await self.llm.generate_structured(
-            system_prompt=_VERDICT_PROMPT,
+            system_prompt=_VERDICT_PROMPT + lang_suffix,
             user_prompt=verdict_context,
             output_schema=_VerdictStrategy,
         )

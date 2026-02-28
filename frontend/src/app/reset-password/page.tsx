@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
 
 export default function ResetPasswordPage() {
@@ -14,6 +15,7 @@ export default function ResetPasswordPage() {
   const [expired, setExpired] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('resetPassword');
 
   // Check for error params from Supabase (e.g. expired link)
   useEffect(() => {
@@ -49,12 +51,12 @@ export default function ResetPasswordPage() {
     setError("");
 
     if (password.length < 8) {
-      setError("password must be at least 8 characters");
+      setError(t('passwordMinLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("passwords do not match");
+      setError(t('passwordsDontMatch'));
       return;
     }
 
@@ -77,15 +79,15 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm text-center">
-          <h1 className="font-display text-3xl font-bold">link expired</h1>
+          <h1 className="font-display text-3xl font-bold">{t('linkExpired')}</h1>
           <p className="mt-4 text-sm text-muted">
-            this reset link has expired. request a new one and try again.
+            {t('linkExpiredMessage')}
           </p>
           <Link
             href="/forgot-password"
             className="mt-6 inline-block rounded-full border border-foreground bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:bg-transparent hover:text-foreground"
           >
-            send new reset link
+            {t('sendNewResetLink')}
           </Link>
         </div>
       </div>
@@ -96,12 +98,12 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm text-center">
-          <p className="text-sm text-muted">verifying reset link...</p>
+          <p className="text-sm text-muted">{t('verifyingResetLink')}</p>
           <Link
             href="/forgot-password"
             className="mt-4 inline-block text-sm text-muted hover:text-foreground transition-colors"
           >
-            request a new link
+            {t('requestNewLink')}
           </Link>
         </div>
       </div>
@@ -112,10 +114,10 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <h1 className="font-display text-3xl font-bold text-center">
-          new password
+          {t('title')}
         </h1>
         <p className="mt-2 text-center text-sm text-muted">
-          choose a new password for your account
+          {t('subtitle')}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -124,7 +126,7 @@ export default function ResetPasswordPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="new password"
+              placeholder={t('newPassword')}
               required
               className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
             />
@@ -134,7 +136,7 @@ export default function ResetPasswordPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="confirm new password"
+              placeholder={t('confirmNewPassword')}
               required
               className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
             />
@@ -147,7 +149,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full rounded-full border border-foreground bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:bg-transparent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {loading ? "updating..." : "update password"}
+            {loading ? t('updating') : t('updatePassword')}
           </button>
         </form>
       </div>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { PainDiscoveryOutput } from "@/lib/types";
 
 function isSafeUrl(url: string): boolean {
@@ -9,18 +12,20 @@ function isSafeUrl(url: string): boolean {
   }
 }
 
-const wtpLabel = {
-  high: "willing to pay a lot",
-  medium: "willing to pay some",
-  low: "price sensitive",
-};
-
 const wtpRank = { high: 3, medium: 2, low: 1 } as const;
 
 const severityRank = { high: 3, moderate: 2, mild: 1 } as const;
 
 
 export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
+  const t = useTranslations("painPoints");
+
+  const wtpLabel = {
+    high: t("willingToPayALot"),
+    medium: t("willingToPaySome"),
+    low: t("priceSensitive"),
+  };
+
   const allSegments = [data.primary_target_user, ...data.user_segments.filter(seg => seg.label !== data.primary_target_user.label)]
     .sort((a, b) => wtpRank[b.willingness_to_pay] - wtpRank[a.willingness_to_pay]);
 
@@ -33,7 +38,7 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
       <div className="rounded-xl border border-card-border bg-card">
         <div className="px-5 py-3 border-b border-card-border">
           <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
-            who has this pain?
+            {t("whoHasThisPain")}
           </p>
         </div>
         <div className="divide-y divide-card-border">
@@ -56,8 +61,8 @@ export function PainPoints({ data }: { data: PainDiscoveryOutput }) {
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
             <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
-              what people are saying
-              <span className="ml-1.5 text-muted/30">{data.pain_points.length} found</span>
+              {t("whatPeopleAreSaying")}
+              <span className="ml-1.5 text-muted/30">{t("found", { count: data.pain_points.length })}</span>
             </p>
           </div>
           <div className="divide-y divide-card-border">

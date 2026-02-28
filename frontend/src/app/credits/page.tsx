@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { useTranslations } from "next-intl";
 import { createCheckout } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -33,6 +34,14 @@ function CreditsContent() {
   const [lastAttemptedPack, setLastAttemptedPack] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const t = useTranslations("credits");
+  const tc = useTranslations("common");
+
+  const packLabelMap: Record<string, string> = {
+    Starter: t("starter"),
+    Popular: t("popular"),
+    Pro: t("pro"),
+  };
 
   // Handle return from Stripe
   useEffect(() => {
@@ -77,25 +86,21 @@ function CreditsContent() {
   return (
     <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-bold">credits</h1>
+        <h1 className="font-display text-3xl font-bold">{t("title")}</h1>
         <p className="mt-2 text-muted">
-          you have{" "}
-          <span className="font-display font-bold text-foreground">
-            {user.credits}
-          </span>{" "}
-          credit{user.credits !== 1 ? "s" : ""} remaining
+          {t("remaining", { count: user.credits })}
         </p>
       </div>
 
       {success && (
         <div className="mt-6 rounded-xl border border-build/30 bg-build/5 px-4 py-3 text-center text-sm text-build">
-          credits added successfully!
+          {t("addedSuccessfully")}
         </div>
       )}
 
       {searchParams.get("canceled") === "true" && (
         <div className="mt-6 rounded-xl border border-maybe/30 bg-maybe/5 px-4 py-3 text-center text-sm text-maybe">
-          checkout was canceled
+          {t("checkoutCanceled")}
         </div>
       )}
 
@@ -106,7 +111,7 @@ function CreditsContent() {
             onClick={() => lastAttemptedPack && handleBuy(lastAttemptedPack)}
             className="shrink-0 rounded-lg border border-skip/30 px-3 py-1 text-xs transition-colors hover:bg-skip/10"
           >
-            retry
+            {tc("retry")}
           </button>
         </div>
       )}
@@ -124,19 +129,19 @@ function CreditsContent() {
           >
             {pack.highlight && (
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-build px-3 py-0.5 text-xs font-medium text-background">
-                best value
+                {t("bestValue")}
               </span>
             )}
             <p className="text-xs uppercase tracking-wider text-muted/60">
-              {pack.label}
+              {packLabelMap[pack.label] ?? pack.label}
             </p>
             <p className="mt-3 font-display text-4xl font-bold">
               {pack.credits}
             </p>
-            <p className="text-sm text-muted">credits</p>
+            <p className="text-sm text-muted">{t("creditsUnit")}</p>
             <p className="mt-4 font-display text-2xl font-bold">{pack.price}</p>
             <p className="text-xs text-muted/50">
-              {pack.pricePerCredit} per validation
+              {pack.pricePerCredit} {t("perValidation")}
             </p>
             <button
               onClick={() => handleBuy(pack.credits)}
@@ -150,10 +155,10 @@ function CreditsContent() {
               {purchasing === pack.credits ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  redirecting...
+                  {t("redirecting")}
                 </span>
               ) : (
-                `buy ${pack.credits} credits`
+                t("buyCredits", { count: pack.credits })
               )}
             </button>
           </div>
@@ -165,7 +170,7 @@ function CreditsContent() {
           href="/"
           className="text-sm text-muted hover:text-foreground transition-colors"
         >
-          &larr; back to validation
+          &larr; {t("backToValidation")}
         </Link>
       </div>
     </div>

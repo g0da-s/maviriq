@@ -51,6 +51,7 @@ class PipelineState(TypedDict):
     idea: str
     user_id: str | None
     run_id: str
+    language: str
     pain_discovery: PainDiscoveryOutput | None
     competitor_research: CompetitorResearchOutput | None
     market_intelligence: MarketIntelligenceOutput | None
@@ -195,7 +196,8 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentStartedEvent.create(5).model_dump())
 
-        # Run agent
+        # Run agent — pass language for localized output
+        language = state.get("language", "lt")
         result = await asyncio.wait_for(
             self.agent5.run(
                 SynthesisInput(
@@ -204,7 +206,8 @@ class PipelineGraph:
                     competitor_research=state["competitor_research"],
                     market_intelligence=state["market_intelligence"],
                     graveyard_research=state["graveyard_research"],
-                )
+                ),
+                language=language,
             ),
             timeout=settings.agent_timeout,
         )
@@ -221,7 +224,7 @@ class PipelineGraph:
     # Public interface
     # ──────────────────────────────────────────
 
-    async def run(self, run_id: str, idea: str, user_id: str | None = None) -> None:
+    async def run(self, run_id: str, idea: str, user_id: str | None = None, language: str = "lt") -> None:
         """Run the full pipeline, publishing SSE events to pubsub."""
         run = ValidationRun(
             id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id
@@ -233,6 +236,7 @@ class PipelineGraph:
             "idea": idea,
             "user_id": user_id,
             "run_id": run_id,
+            "language": language,
             "pain_discovery": None,
             "competitor_research": None,
             "market_intelligence": None,

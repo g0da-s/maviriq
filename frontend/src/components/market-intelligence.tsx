@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { MarketIntelligenceOutput } from "@/lib/types";
 
 function isSafeUrl(url: string): boolean {
@@ -16,19 +19,6 @@ const growthColor = {
   unknown: "text-muted",
 };
 
-const growthLabel = {
-  growing: "growing",
-  stable: "stable",
-  shrinking: "shrinking",
-  unknown: "unknown",
-};
-
-const effortLabel = {
-  low: "easy to reach",
-  medium: "moderate effort",
-  high: "hard to reach",
-};
-
 const effortColor = {
   low: "text-build",
   medium: "text-maybe",
@@ -36,13 +26,28 @@ const effortColor = {
 };
 
 export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput }) {
+  const t = useTranslations("market");
+
+  const growthLabel = {
+    growing: t("growing"),
+    stable: t("stable"),
+    shrinking: t("shrinking"),
+    unknown: t("unknown"),
+  };
+
+  const effortLabel = {
+    low: t("easyToReach"),
+    medium: t("moderateEffort"),
+    high: t("hardToReach"),
+  };
+
   return (
     <div className="space-y-6">
       {/* headline stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">market size (TAM)</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">{t("marketSizeTam")}</p>
           </div>
           <div className="px-5 py-4">
             <p className="text-sm text-muted">{data.market_size_estimate}</p>
@@ -50,7 +55,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
         </div>
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">market growth</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">{t("marketGrowth")}</p>
           </div>
           <div className="px-5 py-4">
             <p className={`text-sm ${growthColor[data.growth_direction]}`}>
@@ -63,7 +68,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {/* TAM + growth reasoning */}
       <div className="rounded-xl border border-card-border bg-card">
         <div className="px-5 py-3 border-b border-card-border">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">why these numbers?</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted/50">{t("whyTheseNumbers")}</p>
         </div>
         <div className="px-5 py-4 space-y-3">
           <p className="text-sm text-muted leading-relaxed">{data.tam_reasoning}</p>
@@ -77,7 +82,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {data.distribution_channels.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">how to reach customers</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">{t("howToReachCustomers")}</p>
           </div>
           <div className="px-5 py-4 space-y-3">
             {[...data.distribution_channels].sort((a, b) => {
@@ -99,7 +104,7 @@ export function MarketIntelligence({ data }: { data: MarketIntelligenceOutput })
       {data.funding_signals.length > 0 && (
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">investor activity in this space</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted/50">{t("investorActivity")}</p>
           </div>
           <div className="px-5 py-4 space-y-3">
             {data.funding_signals.map((sig, i) => (

@@ -3,7 +3,41 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
+
+function switchLocale(newLocale: string) {
+  document.cookie = `locale=${newLocale};path=/;max-age=31536000`;
+  window.location.reload();
+}
+
+function LanguageToggle() {
+  const locale = useLocale();
+  return (
+    <div className="flex items-center gap-0.5 rounded-lg border border-card-border text-xs">
+      <button
+        onClick={() => switchLocale("lt")}
+        className={`rounded-l-md px-2 py-1 transition-colors ${
+          locale === "lt"
+            ? "bg-white/10 text-foreground font-semibold"
+            : "text-muted hover:text-foreground"
+        }`}
+      >
+        LT
+      </button>
+      <button
+        onClick={() => switchLocale("en")}
+        className={`rounded-r-md px-2 py-1 transition-colors ${
+          locale === "en"
+            ? "bg-white/10 text-foreground font-semibold"
+            : "text-muted hover:text-foreground"
+        }`}
+      >
+        EN
+      </button>
+    </div>
+  );
+}
 
 export function Nav() {
   const pathname = usePathname();
@@ -11,6 +45,13 @@ export function Nav() {
   const isHistory = pathname.startsWith("/validations");
   const { user, loading, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("nav");
+  const tc = useTranslations("common");
+  const locale = useLocale();
+
+  const creditsText = user
+    ? `${user.credits} ${user.credits !== 1 ? (locale === "lt" ? "kreditai" : "credits") : (locale === "lt" ? "kreditas" : "credit")}`
+    : "";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
@@ -33,7 +74,7 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                new
+                {t("new")}
               </Link>
               <Link
                 href="/validations"
@@ -43,7 +84,7 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                history
+                {t("history")}
               </Link>
               <Link
                 href="/credits"
@@ -53,29 +94,33 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                {user.credits} credit{user.credits !== 1 ? "s" : ""}
+                {creditsText}
               </Link>
               <div className="mx-2 h-4 w-px bg-card-border" />
+              <LanguageToggle />
+              <div className="mx-1 h-4 w-px bg-card-border" />
               <button
                 onClick={signOut}
                 className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                log out
+                {tc("logOut")}
               </button>
             </>
           ) : (
             <>
+              <LanguageToggle />
+              <div className="mx-1 h-4 w-px bg-card-border" />
               <Link
                 href="/login"
                 className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                log in
+                {tc("logIn")}
               </Link>
               <Link
                 href="/register"
                 className="rounded-lg bg-foreground px-4 py-1.5 text-sm font-medium text-background transition-colors hover:bg-foreground/80"
               >
-                sign up
+                {tc("signUp")}
               </Link>
             </>
           )}
@@ -109,7 +154,7 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                new
+                {t("new")}
               </Link>
               <Link
                 href="/validations"
@@ -120,7 +165,7 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                history
+                {t("history")}
               </Link>
               <Link
                 href="/credits"
@@ -131,31 +176,37 @@ export function Nav() {
                     : "text-muted hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                {user.credits} credit{user.credits !== 1 ? "s" : ""}
+                {creditsText}
               </Link>
+              <div className="my-2 flex items-center gap-2">
+                <LanguageToggle />
+              </div>
               <div className="my-2 h-px bg-card-border" />
               <button
                 onClick={() => { signOut(); setOpen(false); }}
                 className="block w-full text-left rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                log out
+                {tc("logOut")}
               </button>
             </>
           ) : (
             <>
+              <div className="mb-2">
+                <LanguageToggle />
+              </div>
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}
                 className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                log in
+                {tc("logIn")}
               </Link>
               <Link
                 href="/register"
                 onClick={() => setOpen(false)}
                 className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                sign up
+                {tc("signUp")}
               </Link>
             </>
           )}

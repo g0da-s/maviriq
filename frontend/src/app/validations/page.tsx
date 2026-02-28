@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ApiError, deleteValidation, listValidations } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationListItem, ValidationListResponse } from "@/lib/types";
@@ -38,6 +39,8 @@ function HistoryContent() {
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
+  const t = useTranslations("validations");
+  const tc = useTranslations("common");
 
   const [data, setData] = useState<ValidationListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,18 +98,18 @@ function HistoryContent() {
     <div className="mx-auto max-w-3xl px-6 pt-28 pb-16">
       <ConfirmModal
         open={confirmId !== null}
-        title="delete this validation?"
-        description="this action cannot be undone."
+        title={t("deleteConfirmTitle")}
+        description={t("deleteConfirmDescription")}
         onConfirm={handleDelete}
         onCancel={() => setConfirmId(null)}
       />
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold">history</h1>
+        <h1 className="font-display text-3xl font-bold">{t("title")}</h1>
         <Link
           href="/"
           className="rounded-full border border-card-border px-4 py-1.5 text-sm transition-colors hover:bg-white/5"
         >
-          new validation
+          {t("newValidation")}
         </Link>
       </div>
 
@@ -117,7 +120,7 @@ function HistoryContent() {
             onClick={() => load(page)}
             className="ml-4 shrink-0 rounded-lg border border-skip/30 px-3 py-1 text-xs transition-colors hover:bg-skip/10"
           >
-            retry
+            {tc("retry")}
           </button>
         </div>
       )}
@@ -138,9 +141,9 @@ function HistoryContent() {
         </div>
       ) : error && !data ? null : !data || data.items.length === 0 ? (
         <div className="rounded-2xl border border-card-border bg-card p-12 text-center">
-          <p className="text-muted">no validations yet</p>
+          <p className="text-muted">{t("noValidationsYet")}</p>
           <Link href="/" className="mt-4 inline-block text-sm text-build hover:underline">
-            validate your first idea
+            {t("validateFirstIdea")}
           </Link>
         </div>
       ) : (
@@ -200,7 +203,7 @@ function HistoryContent() {
                 href={`/validations?page=${page - 1}`}
                 className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page <= 1 ? "pointer-events-none opacity-30" : ""}`}
               >
-                prev
+                {t("prev")}
               </Link>
               <span className="px-3 text-sm text-muted">
                 {page} / {totalPages}
@@ -209,7 +212,7 @@ function HistoryContent() {
                 href={`/validations?page=${page + 1}`}
                 className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page >= totalPages ? "pointer-events-none opacity-30" : ""}`}
               >
-                next
+                {t("next")}
               </Link>
             </div>
           )}

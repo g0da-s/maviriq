@@ -3,7 +3,7 @@ import json
 import logging
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sse_starlette.sse import EventSourceResponse
 
 from pydantic import BaseModel as _BM
@@ -22,6 +22,7 @@ from maviriq.models.schemas import (
     ValidationStatus,
 )
 from maviriq.pipeline import pubsub
+from maviriq.config import settings
 from maviriq.pipeline.runner import PipelineGraph
 from maviriq.storage.credit_repository import CreditTransactionRepository
 from maviriq.storage.repository import ValidationRepository
@@ -42,6 +43,29 @@ class _IdeaCheck(_BM):
 @router.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
+
+
+@router.post("/transcribe")
+async def transcribe(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+) -> dict:
+    """Transcribe audio via OpenAI Whisper API."""
+    from maviriq.services.transcription import transcribe_audio
+
+    if not settings.openai_api_key:
+        raise HTTPException(status_code=503, detail="Transcription not configured")
+
+    contents = await file.read()
+    if len(contents) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Audio file too large (max 25MB)")
+
+    try:
+        text = await transcribe_audio(contents, filename=file.filename or "recording.webm")
+        return {"text": text}
+    except Exception:
+        logger.exception("Transcription failed")
+        raise HTTPException(status_code=502, detail="Transcription failed")
 
 
 @router.get("/stats")
@@ -72,6 +96,7 @@ async def create_validation(
         check = await llm.generate_structured(
             system_prompt=(
                 "You decide whether user input is a coherent product, startup, or business idea. "
+                "The input may be in Lithuanian or English — both are valid. "
                 "Reject gibberish, random words, profanity-only inputs, or clearly non-idea text. "
                 "Be lenient — vague or unusual ideas are fine. Only reject obvious garbage."
             ),
@@ -117,8 +142,9 @@ async def create_validation(
     run_id = f"val_{uuid4().hex[:12]}"
 
     # Start pipeline in background — use cleaned idea for better research quality
+    language = getattr(request, "language", "lt") or "lt"
     task = asyncio.create_task(
-        _run_pipeline_background(run_id, clean_idea, runner, user_id=user["id"])
+        _run_pipeline_background(run_id, clean_idea, runner, user_id=user["id"], language=language)
     )
     _running_pipelines[run_id] = task
     task.add_done_callback(lambda _: _running_pipelines.pop(run_id, None))
@@ -312,11 +338,11 @@ async def _replay_from_db(run: ValidationRun):
 
 
 async def _run_pipeline_background(
-    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None
+    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None, language: str = "lt"
 ):
     """Run pipeline in background. PipelineGraph.run() handles pubsub internally."""
     try:
-        await runner.run(run_id, idea, user_id=user_id)
+        await runner.run(run_id, idea, user_id=user_id, language=language)
     except Exception:
         logger.exception(f"Background pipeline failed for {run_id}")
     finally:

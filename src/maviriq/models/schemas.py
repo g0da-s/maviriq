@@ -388,6 +388,7 @@ class ValidationRun(BaseModel):
 
 class CreateValidationRequest(BaseModel):
     idea: str = Field(min_length=10, max_length=500)
+    language: str = "lt"
 
     @field_validator("idea")
     @classmethod

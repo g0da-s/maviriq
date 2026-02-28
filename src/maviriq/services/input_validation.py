@@ -27,12 +27,14 @@ _BLOCKED_WORDS = {
 }
 
 # 5+ consecutive consonants — catches keyboard mash like "wfkpsdf", "bcdfgh"
-_CONSONANT_MASH = re.compile(r"[bcdfghjklmnpqrstvwxyz]{5,}", re.IGNORECASE)
+# Includes Lithuanian consonants: č, š, ž
+_CONSONANT_MASH = re.compile(r"[bcčdfghjklmnpqrsštvwxyzž]{5,}", re.IGNORECASE)
 
 # Same character repeated 3+ times — catches "aaaaaaa", "lllll"
 _REPEATED_CHARS = re.compile(r"(.)\1{2,}")
 
-_VOWELS = set("aeiouAEIOU")
+# Includes Lithuanian vowels: ą, ę, ė, į, ū
+_VOWELS = set("aeiouAEIOUąĄęĘėĖįĮūŪ")
 
 
 def check_profanity(text: str) -> str | None:
@@ -96,6 +98,7 @@ async def normalize_idea(text: str) -> str:
         cleaned = await llm.generate_text(
             system_prompt=(
                 "Fix spelling, grammar, and punctuation in this startup idea. "
+                "The idea may be in Lithuanian or English — preserve the original language. "
                 "Expand obvious abbreviations. Do NOT change the meaning, "
                 "add new information, or rephrase beyond fixing errors. "
                 "Return ONLY the corrected text — no commentary."

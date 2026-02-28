@@ -82,11 +82,43 @@ export function createCheckout(pack: number) {
 
 // ── Validations ──
 
-export function createValidation(idea: string) {
+export function createValidation(idea: string, language: string = "lt") {
   return request<CreateValidationResponse>("/validations", CreateValidationResponseSchema, {
     method: "POST",
-    body: JSON.stringify({ idea }),
+    body: JSON.stringify({ idea, language }),
   });
+}
+
+// ── Transcription (Whisper) ──
+
+export async function transcribeAudio(audioBlob: Blob): Promise<string> {
+  const token = await getAccessToken();
+  const formData = new FormData();
+  formData.append("file", audioBlob, "recording.webm");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const res = await fetch(`${API_BASE}/transcribe`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, body.detail || "Transcription failed");
+    }
+    const data = await res.json();
+    return data.text;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error("Transcription timed out");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function getValidation(id: string) {

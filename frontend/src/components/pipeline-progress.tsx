@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { getStreamUrl, getValidation } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun } from "@/lib/types";
-
-const AGENTS = [
-  { num: 1, name: "pain & user discovery", desc: "finding real complaints and pain severity across reddit, hn, and forums" },
-  { num: 2, name: "competitor research", desc: "mapping competitors, scraping pricing pages, and finding market gaps" },
-  { num: 3, name: "market intelligence", desc: "estimating market size, growth trends, and funding activity" },
-  { num: 4, name: "graveyard research", desc: "analyzing failed startups and post-mortems for warning signs" },
-  { num: 5, name: "synthesis & verdict", desc: "assessing viability and delivering a final build/skip verdict" },
-];
 
 // Agents 1-4 run in parallel, then agent 5 runs after all complete
 const PARALLEL_AGENTS = new Set([1, 2, 3, 4]);
@@ -33,6 +26,15 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const retriesRef = useRef(0);
   const doneRef = useRef(false);
   const { session } = useAuth();
+  const t = useTranslations("pipeline");
+
+  const agents = [
+    { num: 1, name: t("agent1Name"), desc: t("agent1Desc") },
+    { num: 2, name: t("agent2Name"), desc: t("agent2Desc") },
+    { num: 3, name: t("agent3Name"), desc: t("agent3Desc") },
+    { num: 4, name: t("agent4Name"), desc: t("agent4Desc") },
+    { num: 5, name: t("agent5Name"), desc: t("agent5Desc") },
+  ];
 
   useEffect(() => {
     if (!session) return;
@@ -78,7 +80,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         let data: Record<string, unknown>;
         try { data = JSON.parse(e.data); } catch {
           es.close();
-          onError("something went wrong");
+          onError(t("somethingWentWrong"));
           return;
         }
         setCompletedAgents(new Set([1, 2, 3, 4, 5]));
@@ -89,7 +91,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           const run = await getValidation(runId);
           onComplete(run);
         } catch {
-          onError("failed to fetch results");
+          onError(t("failedToFetchResults"));
         }
       });
 
@@ -98,7 +100,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         let data: Record<string, unknown>;
         try { data = JSON.parse(e.data); } catch {
           setFailed(true);
-          onError("something went wrong");
+          onError(t("somethingWentWrong"));
           es.close();
           return;
         }
@@ -119,7 +121,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         } else {
           setReconnecting(false);
           setFailed(true);
-          onError("connection lost after multiple retries");
+          onError(t("connectionLost"));
         }
       });
     }
@@ -130,7 +132,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       doneRef.current = true;
       esRef.current?.close();
     };
-  }, [runId, session, onComplete, onError]);
+  }, [runId, session, onComplete, onError, t]);
 
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";
@@ -138,8 +140,8 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     return "waiting";
   }
 
-  const parallelAgents = AGENTS.filter((a) => PARALLEL_AGENTS.has(a.num));
-  const synthesisAgent = AGENTS.find((a) => a.num === 5)!;
+  const parallelAgents = agents.filter((a) => PARALLEL_AGENTS.has(a.num));
+  const synthesisAgent = agents.find((a) => a.num === 5)!;
   const synthesisStatus = getStatus(synthesisAgent.num);
   const allParallelDone = parallelAgents.every((a) => getStatus(a.num) === "done");
 
@@ -191,9 +193,9 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
                   {status === "running" ? (
                     <span>{agent.desc}</span>
                   ) : status === "done" ? (
-                    "complete"
+                    t("complete")
                   ) : (
-                    "waiting"
+                    t("waiting")
                   )}
                 </p>
               </div>
@@ -256,9 +258,9 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
             {synthesisStatus === "running" ? (
               <span>{synthesisAgent.desc}</span>
             ) : synthesisStatus === "done" ? (
-              "complete"
+              t("complete")
             ) : (
-              "waiting"
+              t("waiting")
             )}
           </p>
         </div>
@@ -268,14 +270,14 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         <div role="alert" className="mt-6 rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center text-sm text-maybe">
           <span className="inline-flex items-center gap-2">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-maybe" />
-            reconnecting...
+            {t("reconnecting")}
           </span>
         </div>
       )}
 
       {failed && (
         <div role="alert" className="mt-6 rounded-xl border border-skip/30 bg-skip/5 p-4 text-center text-sm text-skip">
-          something went wrong — please try again
+          {t("somethingWentWrong")}
         </div>
       )}
     </div>

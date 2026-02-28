@@ -21,6 +21,9 @@ class LimitRequestBodyMiddleware(BaseHTTPMiddleware):
     """Reject requests whose Content-Length exceeds _MAX_BODY_SIZE."""
 
     async def dispatch(self, request: Request, call_next):
+        # Exempt audio upload endpoint from 1MB limit (Whisper allows up to 25MB)
+        if request.url.path == "/api/transcribe":
+            return await call_next(request)
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > _MAX_BODY_SIZE:
             return JSONResponse(

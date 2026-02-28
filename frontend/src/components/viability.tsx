@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { ViabilityOutput } from "@/lib/types";
 
 const directionIcon = {
@@ -13,6 +16,7 @@ const directionColor = {
 };
 
 export function Viability({ data }: { data: ViabilityOutput }) {
+  const t = useTranslations("viability");
   const scorePercent = Math.round(data.opportunity_score * 100);
 
   return (
@@ -42,9 +46,9 @@ export function Viability({ data }: { data: ViabilityOutput }) {
           </span>
         </div>
         <div>
-          <p className="font-display font-semibold">opportunity score</p>
+          <p className="font-display font-semibold">{t("opportunityScore")}</p>
           <p className="text-sm text-muted">
-            {scorePercent >= 70 ? "strong opportunity" : scorePercent >= 50 ? "moderate opportunity" : "weak opportunity"}
+            {scorePercent >= 70 ? t("strongOpportunity") : scorePercent >= 50 ? t("moderateOpportunity") : t("weakOpportunity")}
           </p>
         </div>
       </div>
@@ -52,14 +56,14 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       {/* key metrics */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
-          <p className="text-xs text-muted/60 mb-1">will people pay?</p>
+          <p className="text-xs text-muted/60 mb-1">{t("willPeoplePay")}</p>
           <p className={`font-display font-bold ${data.people_pay ? "text-build" : "text-skip"}`}>
-            {data.people_pay ? "yes" : "no"}
+            {data.people_pay ? t("yes") : t("no")}
           </p>
           <p className="mt-1 text-xs text-muted/60 leading-relaxed">{data.people_pay_reasoning}</p>
         </div>
         <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
-          <p className="text-xs text-muted/60 mb-1">reachability</p>
+          <p className="text-xs text-muted/60 mb-1">{t("reachability")}</p>
           <p className={`font-display font-bold ${
             data.reachability === "easy" ? "text-build" :
             data.reachability === "moderate" ? "text-maybe" : "text-skip"
@@ -73,7 +77,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       {/* market gap */}
       <div className="rounded-xl border border-card-border bg-white/[0.02] p-4">
         <p className="text-xs text-muted/60 mb-1">
-          market gap:{" "}
+          {t("marketGap")}{" "}
           <span className={`font-medium ${
             data.gap_size === "large" ? "text-build" :
             data.gap_size === "medium" ? "text-maybe" :
@@ -89,7 +93,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       {data.signals.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            signals
+            {t("signals")}
           </p>
           <div className="space-y-2">
             {data.signals.map((sig, i) => (
@@ -111,7 +115,7 @@ export function Viability({ data }: { data: ViabilityOutput }) {
       {data.risk_factors.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted/60 mb-3">
-            risk factors
+            {t("riskFactors")}
           </p>
           <div className="flex flex-wrap gap-2">
             {data.risk_factors.map((risk, i) => (

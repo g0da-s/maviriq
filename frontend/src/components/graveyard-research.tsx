@@ -1,6 +1,11 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { GraveyardResearchOutput } from "@/lib/types";
 
 export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
+  const t = useTranslations("graveyard");
+
   return (
     <div className="space-y-6">
       {data.previous_attempts.length > 0 && (
@@ -15,7 +20,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
               </div>
               <p className="text-sm text-muted mb-3">{attempt.what_they_did}</p>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">why they failed</p>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">{t("whyTheyFailed")}</p>
                 <p className="text-xs text-foreground/60">{attempt.shutdown_reason}</p>
               </div>
             </div>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { CompetitorResearchOutput } from "@/lib/types";
 
 function isSafeUrl(url: string): boolean {
@@ -10,6 +13,8 @@ function isSafeUrl(url: string): boolean {
 }
 
 export function Competitors({ data }: { data: CompetitorResearchOutput }) {
+  const t = useTranslations("competitors");
+
   return (
     <div className="space-y-6">
       {/* competitor cards */}
@@ -51,7 +56,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   <div className="grid gap-3 sm:grid-cols-2">
                     {comp.strengths.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">strengths</p>
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">{t("strengths")}</p>
                         <ul className="space-y-1">
                           {comp.strengths.slice(0, 3).map((s, j) => (
                             <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
@@ -64,7 +69,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                     )}
                     {comp.weaknesses.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">weaknesses</p>
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted/50 mb-1.5">{t("weaknesses")}</p>
                         <ul className="space-y-1">
                           {comp.weaknesses.slice(0, 3).map((w, j) => (
                             <li key={j} className="flex items-baseline gap-2 text-xs text-foreground/60">
@@ -88,7 +93,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
             <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
-              gaps competitors aren&apos;t filling
+              {t("gapsCompetitorsArentFilling")}
             </p>
           </div>
           <div className="px-5 py-4">
@@ -109,7 +114,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
         <div className="rounded-xl border border-card-border bg-card">
           <div className="px-5 py-3 border-b border-card-border">
             <p className="text-xs font-medium uppercase tracking-wider text-muted/50">
-              what users complain about
+              {t("whatUsersComplainAbout")}
             </p>
           </div>
           <div className="px-5 py-4">

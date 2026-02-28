@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 
 export default function RegisterPage() {
@@ -12,15 +13,17 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
+  const t = useTranslations('register');
+  const tc = useTranslations('common');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
-      setError("passwords don't match");
+      setError(t('passwordsDontMatch'));
       return;
     }
     if (password.length < 8) {
-      setError("password must be at least 8 characters");
+      setError(t('passwordMinLength'));
       return;
     }
 
@@ -43,17 +46,15 @@ export default function RegisterPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm text-center">
-          <h1 className="font-display text-3xl font-bold">check your email</h1>
+          <h1 className="font-display text-3xl font-bold">{t('checkYourEmail')}</h1>
           <p className="mt-4 text-sm text-muted">
-            we sent a verification link to{" "}
-            <strong className="text-foreground">{email}</strong>. click it to
-            activate your account and get your free credit.
+            {t('verificationSent', { email })}
           </p>
           <Link
             href="/login"
             className="mt-8 inline-block text-sm text-foreground hover:underline"
           >
-            go to login
+            {t('goToLogin')}
           </Link>
         </div>
       </div>
@@ -63,9 +64,9 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <h1 className="font-display text-3xl font-bold text-center">sign up</h1>
+        <h1 className="font-display text-3xl font-bold text-center">{t('title')}</h1>
         <p className="mt-2 text-center text-sm text-muted">
-          get 1 free validation after verifying your email
+          {t('subtitle')}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -73,7 +74,7 @@ export default function RegisterPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="email"
+            placeholder={t('email')}
             required
             className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
           />
@@ -81,7 +82,7 @@ export default function RegisterPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="password"
+            placeholder={t('password')}
             required
             minLength={8}
             className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
@@ -90,7 +91,7 @@ export default function RegisterPage() {
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            placeholder="confirm password"
+            placeholder={t('confirmPassword')}
             required
             className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none transition-colors"
           />
@@ -102,13 +103,13 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-full border border-foreground bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:bg-transparent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {loading ? "creating account..." : "create account"}
+            {loading ? t('creatingAccount') : t('createAccount')}
           </button>
         </form>
 
         <div className="mt-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-card-border" />
-          <span className="text-xs text-muted/50">or</span>
+          <span className="text-xs text-muted/50">{tc('or')}</span>
           <div className="h-px flex-1 bg-card-border" />
         </div>
 
@@ -123,13 +124,13 @@ export default function RegisterPage() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          continue with Google
+          {t('continueWithGoogle')}
         </button>
 
         <p className="mt-6 text-center text-sm text-muted">
-          already have an account?{" "}
+          {t('alreadyHaveAccount')}{" "}
           <Link href="/login" className="text-foreground hover:underline">
-            log in
+            {tc('logIn')}
           </Link>
         </p>
       </div>
