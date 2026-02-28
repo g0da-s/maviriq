@@ -142,7 +142,7 @@ async def create_validation(
     run_id = f"val_{uuid4().hex[:12]}"
 
     # Start pipeline in background — use cleaned idea for better research quality
-    language = getattr(request, "language", "lt") or "lt"
+    language = getattr(request, "language", "en") or "en"
     task = asyncio.create_task(
         _run_pipeline_background(run_id, clean_idea, runner, user_id=user["id"], language=language)
     )
@@ -338,7 +338,7 @@ async def _replay_from_db(run: ValidationRun):
 
 
 async def _run_pipeline_background(
-    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None, language: str = "lt"
+    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None, language: str = "en"
 ):
     """Run pipeline in background. PipelineGraph.run() handles pubsub internally."""
     try:

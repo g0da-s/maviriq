@@ -257,7 +257,7 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return [], {}
 
-    async def run(self, input_data: SynthesisInput, language: str = "lt") -> SynthesisOutput:
+    async def run(self, input_data: SynthesisInput, language: str = "en") -> SynthesisOutput:
         context = self._build_research_context(input_data)
 
         # Language instruction for non-English output

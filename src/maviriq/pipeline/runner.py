@@ -197,7 +197,7 @@ class PipelineGraph:
         writer(AgentStartedEvent.create(5).model_dump())
 
         # Run agent — pass language for localized output
-        language = state.get("language", "lt")
+        language = state.get("language", "en")
         result = await asyncio.wait_for(
             self.agent5.run(
                 SynthesisInput(
@@ -224,7 +224,7 @@ class PipelineGraph:
     # Public interface
     # ──────────────────────────────────────────
 
-    async def run(self, run_id: str, idea: str, user_id: str | None = None, language: str = "lt") -> None:
+    async def run(self, run_id: str, idea: str, user_id: str | None = None, language: str = "en") -> None:
         """Run the full pipeline, publishing SSE events to pubsub."""
         run = ValidationRun(
             id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id
