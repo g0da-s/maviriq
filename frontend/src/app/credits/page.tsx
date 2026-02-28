@@ -10,9 +10,9 @@ import { useAuth } from "@/lib/auth-context";
 import { ltPlural } from "@/lib/plural";
 
 const PACKS = [
-  { credits: 5, price: "€5", pricePerCredit: "€1.00", label: "Starter" },
-  { credits: 20, price: "€15", pricePerCredit: "€0.75", label: "Popular", highlight: true },
-  { credits: 50, price: "€30", pricePerCredit: "€0.60", label: "Pro" },
+  { credits: 5, price: "5€", pricePerCredit: "1.00€", label: "Starter" },
+  { credits: 20, price: "15€", pricePerCredit: "0.75€", label: "Popular", highlight: true },
+  { credits: 50, price: "30€", pricePerCredit: "0.60€", label: "Pro" },
 ];
 
 export default function CreditsPage() {
