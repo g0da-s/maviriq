@@ -130,12 +130,12 @@ function CreditsContent() {
             key={pack.credits}
             className={`relative rounded-2xl border p-6 text-center transition-colors ${
               pack.highlight
-                ? "border-build/40 bg-build/5"
+                ? "border-build/40 bg-build/5 pt-8"
                 : "border-card-border bg-card"
             }`}
           >
             {pack.highlight && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-build px-3 py-0.5 text-xs font-medium text-background">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-build px-3 py-0.5 text-xs font-medium text-background">
                 {t("bestValue")}
               </span>
             )}
