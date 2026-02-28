@@ -193,7 +193,7 @@
     "agent4Name": "žlugusių startuolių tyrimas",
     "agent4Desc": "analizuojame žlugusias startuolius ir post-mortem dėl įspėjamųjų ženklų",
     "agent5Name": "sintezė ir verdiktas",
-    "agent5Desc": "vertiname gyvybingumą ir pateikiame galutinį verta/neverta verdiktą",
+    "agent5Desc": "vertiname gyvybingumą ir pateikiame galutinį verdiktą",
     "complete": "baigta",
     "waiting": "laukiama",
     "reconnecting": "jungiamasi iš naujo...",

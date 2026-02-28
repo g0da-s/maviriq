@@ -193,7 +193,7 @@
     "agent4Name": "graveyard research",
     "agent4Desc": "analyzing failed startups and post-mortems for warning signs",
     "agent5Name": "synthesis & verdict",
-    "agent5Desc": "assessing viability and delivering a final worth it/not worth it verdict",
+    "agent5Desc": "assessing viability and delivering a final verdict",
     "complete": "complete",
     "waiting": "waiting",
     "reconnecting": "reconnecting...",
