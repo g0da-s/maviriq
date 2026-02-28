@@ -91,10 +91,13 @@ export function createValidation(idea: string, language: string = "lt") {
 
 // ── Transcription (Whisper) ──
 
-export async function transcribeAudio(audioBlob: Blob): Promise<string> {
+export async function transcribeAudio(audioBlob: Blob, language?: string): Promise<string> {
   const token = await getAccessToken();
   const formData = new FormData();
   formData.append("file", audioBlob, "recording.webm");
+  if (language) {
+    formData.append("language", language);
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);

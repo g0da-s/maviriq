@@ -87,7 +87,7 @@ export function IdeaForm() {
         const blob = new Blob(chunksRef.current, { type: mimeType });
         setIsTranscribing(true);
         try {
-          const text = await transcribeAudio(blob);
+          const text = await transcribeAudio(blob, locale);
           setIdea((prev) => (prev + " " + text).trim().slice(0, 500));
         } catch {
           setError(t("transcriptionFailed"));

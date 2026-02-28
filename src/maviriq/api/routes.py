@@ -3,7 +3,7 @@ import json
 import logging
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
 from sse_starlette.sse import EventSourceResponse
 
 from pydantic import BaseModel as _BM
@@ -48,6 +48,7 @@ async def health() -> dict:
 @router.post("/transcribe")
 async def transcribe(
     file: UploadFile = File(...),
+    language: str | None = Form(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict:
     """Transcribe audio via OpenAI Whisper API."""
@@ -61,7 +62,11 @@ async def transcribe(
         raise HTTPException(status_code=413, detail="Audio file too large (max 25MB)")
 
     try:
-        text = await transcribe_audio(contents, filename=file.filename or "recording.webm")
+        text = await transcribe_audio(
+            contents,
+            filename=file.filename or "recording.webm",
+            language=language,
+        )
         return {"text": text}
     except Exception:
         logger.exception("Transcription failed")
