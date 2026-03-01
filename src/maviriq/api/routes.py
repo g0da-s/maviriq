@@ -103,7 +103,11 @@ async def create_validation(
                 "You decide whether user input is a coherent product, startup, or business idea. "
                 "The input may be in Lithuanian or English — both are valid. "
                 "Reject gibberish, random words, profanity-only inputs, or clearly non-idea text. "
-                "Be lenient — vague or unusual ideas are fine. Only reject obvious garbage."
+                "Also reject ideas centered on adult/NSFW content, pornography, escort services, "
+                "illegal drugs, weapons trafficking, or other clearly illegal activities. "
+                "If rejected for NSFW/illegal content, set reason to exactly: "
+                '"please keep your input appropriate" '
+                "Be lenient with everything else — vague or unusual ideas are fine. Only reject obvious garbage or NSFW/illegal ideas."
             ),
             user_prompt=request.idea,
             output_schema=_IdeaCheck,
