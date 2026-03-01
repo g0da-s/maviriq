@@ -215,7 +215,10 @@
     "reconnecting": "reconnecting...",
     "somethingWentWrong": "something went wrong — please try again",
     "connectionLost": "connection lost after multiple retries",
-    "failedToFetchResults": "failed to fetch results"
+    "failedToFetchResults": "failed to fetch results",
+    "serviceUnavailable": "service temporarily unavailable — please try again in a moment",
+    "processingFailed": "processing failed — please try again",
+    "processingTimedOut": "processing timed out — please try again"
   },
   "painPoints": {
     "whoHasThisPain": "who has this pain?",

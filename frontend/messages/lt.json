@@ -215,7 +215,10 @@
     "reconnecting": "jungiamasi iš naujo...",
     "somethingWentWrong": "kažkas nepavyko — bandyk dar kartą",
     "connectionLost": "ryšys prarastas po kelių bandymų",
-    "failedToFetchResults": "nepavyko gauti rezultatų"
+    "failedToFetchResults": "nepavyko gauti rezultatų",
+    "serviceUnavailable": "paslauga laikinai nepasiekiama — bandyk dar kartą po minutės",
+    "processingFailed": "apdorojimas nepavyko — bandyk dar kartą",
+    "processingTimedOut": "apdorojimo laikas baigėsi — bandyk dar kartą"
   },
   "painPoints": {
     "whoHasThisPain": "kas turi šią problemą?",
