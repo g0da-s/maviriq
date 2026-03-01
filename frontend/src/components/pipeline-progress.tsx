@@ -26,6 +26,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const esRef = useRef<EventSource | null>(null);
   const retriesRef = useRef(0);
   const doneRef = useRef(false);
+  const lastEventTimeRef = useRef(Date.now());
   const { session } = useAuth();
   const t = useTranslations("pipeline");
 
@@ -55,8 +56,13 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       const es = new EventSource(url);
       esRef.current = es;
 
+      es.addEventListener("keepalive", () => {
+        lastEventTimeRef.current = Date.now();
+      });
+
       es.addEventListener("agent_completed", (e) => {
         retriesRef.current = 0;
+        lastEventTimeRef.current = Date.now();
         setReconnecting(false);
         let data: Record<string, unknown>;
         try { data = JSON.parse(e.data); } catch { return; }
@@ -83,6 +89,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       });
 
       es.addEventListener("pipeline_completed", async (e) => {
+        lastEventTimeRef.current = Date.now();
         doneRef.current = true;
         let data: Record<string, unknown>;
         try { data = JSON.parse(e.data); } catch {
@@ -136,9 +143,24 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
     connect();
 
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") return;
+      if (doneRef.current) return;
+      const staleSec = (Date.now() - lastEventTimeRef.current) / 1000;
+      if (staleSec > 20) {
+        esRef.current?.close();
+        retriesRef.current = 0;
+        setReconnecting(true);
+        connect();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       doneRef.current = true;
       esRef.current?.close();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [runId, session, onComplete, onError, t]);
 

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
@@ -245,7 +246,16 @@ async def stream_validation(
 
             # Stream live events from pubsub queue
             while True:
-                event = await queue.get()
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=15.0)
+                except asyncio.TimeoutError:
+                    yield {
+                        "event": "keepalive",
+                        "data": json.dumps(
+                            {"ts": datetime.now(timezone.utc).isoformat()}
+                        ),
+                    }
+                    continue
                 if event is None:
                     break
                 # Skip agent_completed events we already replayed

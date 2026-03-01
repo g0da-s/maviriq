@@ -21,6 +21,7 @@ export default function ValidationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations("results");
@@ -70,6 +71,15 @@ export default function ValidationPage() {
     load();
     return () => { cancelled = true; };
   }, [id, session, authLoading, user, router, t]);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setElapsedSec(0);
+      return;
+    }
+    const interval = setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isStreaming]);
 
   const handleComplete = useCallback((completedRun: ValidationRun) => {
     setRun(completedRun);
@@ -156,7 +166,11 @@ export default function ValidationPage() {
               {run?.idea || t("validating")}
             </h1>
             <p className="mt-2 text-sm text-muted">{t("researchingYourIdea")}</p>
-            <p className="mt-1 text-xs text-muted/40">{t("usuallyTakes")}</p>
+            <p className="mt-1 text-xs tabular-nums text-muted/40">
+              {Math.floor(elapsedSec / 60) > 0
+                ? `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, "0")}`
+                : `${elapsedSec}s`}
+            </p>
           </div>
           <PipelineProgress
             runId={id}
