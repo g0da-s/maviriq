@@ -34,6 +34,23 @@ def _normalize_literal(v: object, allowed: tuple[str, ...], default: str) -> obj
 
 
 # ──────────────────────────────────────────────
+# Agent 0: Context Research
+# ──────────────────────────────────────────────
+
+
+class ContextResearchInput(BaseModel):
+    idea: str
+
+
+class ContextResearchOutput(BaseModel):
+    idea_analysis: str
+    current_landscape: str
+    key_players: str
+    recent_developments: str
+    search_queries_used: list[str] = []
+
+
+# ──────────────────────────────────────────────
 # Agent 1: Pain & User Discovery
 # ──────────────────────────────────────────────
 
@@ -84,6 +101,7 @@ class UserSegment(BaseModel):
 
 class PainDiscoveryInput(BaseModel):
     idea: str
+    context_briefing: str | None = None
 
 
 class PainDiscoveryOutput(BaseModel):
@@ -132,6 +150,7 @@ class Competitor(BaseModel):
 class CompetitorResearchInput(BaseModel):
     idea: str
     target_user: UserSegment | None = None
+    context_briefing: str | None = None
 
 
 class CompetitorResearchOutput(BaseModel):
@@ -182,6 +201,7 @@ class FundingSignal(BaseModel):
 
 class MarketIntelligenceInput(BaseModel):
     idea: str
+    context_briefing: str | None = None
 
 
 class MarketIntelligenceOutput(BaseModel):
@@ -238,6 +258,7 @@ class ChurnSignal(BaseModel):
 
 class GraveyardResearchInput(BaseModel):
     idea: str
+    context_briefing: str | None = None
 
 
 class GraveyardResearchOutput(BaseModel):
@@ -370,6 +391,7 @@ class ValidationRun(BaseModel):
     current_agent: int = 0
     started_at: datetime | None = None
     completed_at: datetime | None = None
+    context_research: ContextResearchOutput | None = None
     pain_discovery: PainDiscoveryOutput | None = None
     competitor_research: CompetitorResearchOutput | None = None
     market_intelligence: MarketIntelligenceOutput | None = None

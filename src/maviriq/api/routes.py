@@ -216,6 +216,7 @@ async def stream_validation(
             # Replay agents that completed before we subscribed
             sent_agents: set[int] = set()
             agent_outputs = [
+                (0, lambda r: r.context_research),
                 (1, lambda r: r.pain_discovery),
                 (2, lambda r: r.competitor_research),
                 (3, lambda r: r.market_intelligence),
@@ -306,6 +307,7 @@ async def delete_validation(
 async def _replay_from_db(run: ValidationRun):
     """Replay completed agent events from a finished run (for late-connecting clients)."""
     agent_outputs = [
+        (0, run.context_research),
         (1, run.pain_discovery),
         (2, run.competitor_research),
         (3, run.market_intelligence),

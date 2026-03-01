@@ -117,13 +117,22 @@ class MarketIntelligenceAgent(
         )
 
     def get_user_prompt(self, input_data: MarketIntelligenceInput) -> str:
-        return (
+        prompt = (
             f"Research the market opportunity for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n\n"
             f"Estimate market size (narrow to the specific niche), identify "
             f"distribution channels, and find funding activity signals. "
             f"Use multiple search tools and diverse queries."
         )
+        if input_data.context_briefing:
+            prompt += (
+                f"\n\n═══ CONTEXT BRIEFING (from preliminary research) ═══\n"
+                f"{input_data.context_briefing}\n"
+                f"═══ END BRIEFING ═══\n\n"
+                f"Use this briefing to inform your search queries. It contains "
+                f"current information that may not be in your training data."
+            )
+        return prompt
 
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)

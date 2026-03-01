@@ -108,13 +108,22 @@ class CompetitorResearchAgent(
         target_label = (
             input_data.target_user.label if input_data.target_user else "general users"
         )
-        return (
+        prompt = (
             f"Research the competitive landscape for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n"
             f"TARGET USER: {target_label}\n\n"
             f"Find competitors, their pricing, strengths/weaknesses, and market gaps. "
             f"Use multiple search tools and diverse queries."
         )
+        if input_data.context_briefing:
+            prompt += (
+                f"\n\n═══ CONTEXT BRIEFING (from preliminary research) ═══\n"
+                f"{input_data.context_briefing}\n"
+                f"═══ END BRIEFING ═══\n\n"
+                f"Use this briefing to inform your search queries. It contains "
+                f"current information that may not be in your training data."
+            )
+        return prompt
 
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)

@@ -110,7 +110,7 @@ class GraveyardResearchAgent(
         return SYSTEM_PROMPT
 
     def get_user_prompt(self, input_data: GraveyardResearchInput) -> str:
-        return (
+        prompt = (
             f"Research failed startups and warning signs for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n\n"
             f"Find post-mortems, shutdowns, and pivots. "
@@ -119,6 +119,15 @@ class GraveyardResearchAgent(
             f"with different phrasings before concluding nothing exists. "
             f"Fire off multiple parallel searches in your first turn."
         )
+        if input_data.context_briefing:
+            prompt += (
+                f"\n\n═══ CONTEXT BRIEFING (from preliminary research) ═══\n"
+                f"{input_data.context_briefing}\n"
+                f"═══ END BRIEFING ═══\n\n"
+                f"Use this briefing to inform your search queries. It contains "
+                f"current information that may not be in your training data."
+            )
+        return prompt
 
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)

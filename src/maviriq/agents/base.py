@@ -48,7 +48,7 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
         """Optional fixups after the tool loop returns (e.g., setting result.idea)."""
         return result
 
-    async def run(self, input_data: TInput) -> TOutput:
+    async def run(self, input_data: TInput, max_iterations: int | None = None) -> TOutput:
         tools, executors = self.get_tools_and_executors()
         result = await self.llm.run_tool_loop(
             system_prompt=self.get_system_prompt(input_data),
@@ -56,7 +56,7 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
             tools=tools,
             tool_executors=executors,
             output_schema=self.output_schema,
-            max_iterations=settings.agent_max_iterations,
+            max_iterations=max_iterations or settings.agent_max_iterations,
             min_searches=self.min_searches,
             recommended_searches=self.recommended_searches,
         )

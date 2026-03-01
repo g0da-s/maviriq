@@ -153,12 +153,21 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
         )
 
     def get_user_prompt(self, input_data: PainDiscoveryInput) -> str:
-        return (
+        prompt = (
             f"Research this business idea and find evidence of real pain points:\n\n"
             f"IDEA: {input_data.idea}\n\n"
             f"Search for genuine complaints, frustrations, and unmet needs related "
             f"to this idea. Use multiple search tools and diverse queries."
         )
+        if input_data.context_briefing:
+            prompt += (
+                f"\n\n═══ CONTEXT BRIEFING (from preliminary research) ═══\n"
+                f"{input_data.context_briefing}\n"
+                f"═══ END BRIEFING ═══\n\n"
+                f"Use this briefing to inform your search queries. It contains "
+                f"current information that may not be in your training data."
+            )
+        return prompt
 
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)

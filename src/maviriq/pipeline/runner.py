@@ -8,6 +8,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from maviriq.agents.competitor_research import CompetitorResearchAgent
+from maviriq.agents.context_research import ContextResearchAgent
 from maviriq.agents.graveyard_research import GraveyardResearchAgent
 from maviriq.agents.market_intelligence import MarketIntelligenceAgent
 from maviriq.agents.pain_discovery import PainDiscoveryAgent
@@ -17,6 +18,8 @@ from maviriq.agents.base import BaseAgent
 from maviriq.models.schemas import (
     CompetitorResearchInput,
     CompetitorResearchOutput,
+    ContextResearchInput,
+    ContextResearchOutput,
     GraveyardResearchInput,
     GraveyardResearchOutput,
     MarketIntelligenceInput,
@@ -52,6 +55,8 @@ class PipelineState(TypedDict):
     user_id: str | None
     run_id: str
     language: str
+    context_research: ContextResearchOutput | None
+    context_briefing: str | None
     pain_discovery: PainDiscoveryOutput | None
     competitor_research: CompetitorResearchOutput | None
     market_intelligence: MarketIntelligenceOutput | None
@@ -71,6 +76,7 @@ class PipelineGraph:
         self.repository = ValidationRepository()
 
         # Initialize agents
+        self.agent0 = ContextResearchAgent(self.llm, self.search)
         self.agent1 = PainDiscoveryAgent(self.llm, self.search)
         self.agent2 = CompetitorResearchAgent(self.llm, self.search)
         self.agent3 = MarketIntelligenceAgent(self.llm, self.search)
@@ -83,17 +89,21 @@ class PipelineGraph:
         builder = StateGraph(PipelineState)
 
         # Add nodes
+        builder.add_node("context_research", self._context_research_node)
         builder.add_node("pain_discovery", self._pain_discovery_node)
         builder.add_node("competitor_research", self._competitor_node)
         builder.add_node("market_intelligence", self._market_intelligence_node)
         builder.add_node("graveyard_research", self._graveyard_research_node)
         builder.add_node("synthesis", self._synthesis_node)
 
-        # START → parallel fan-out to all 4 research agents
-        builder.add_edge(START, "pain_discovery")
-        builder.add_edge(START, "competitor_research")
-        builder.add_edge(START, "market_intelligence")
-        builder.add_edge(START, "graveyard_research")
+        # START → context research (runs first)
+        builder.add_edge(START, "context_research")
+
+        # context research → parallel fan-out to all 4 research agents
+        builder.add_edge("context_research", "pain_discovery")
+        builder.add_edge("context_research", "competitor_research")
+        builder.add_edge("context_research", "market_intelligence")
+        builder.add_edge("context_research", "graveyard_research")
 
         # All 4 research agents → synthesis (fan-in)
         builder.add_edge("pain_discovery", "synthesis")
@@ -139,12 +149,47 @@ class PipelineGraph:
 
         return {state_key: result}
 
+    async def _context_research_node(self, state: PipelineState) -> dict:
+        """Run context research agent (agent 0) and format briefing."""
+        writer = get_stream_writer()
+        run_id = state["run_id"]
+
+        run = await self.repository.get(run_id)
+        run.current_agent = 0
+        await self.repository.update(run)
+        writer(AgentStartedEvent.create(0).model_dump())
+
+        result = await asyncio.wait_for(
+            self.agent0.run(
+                ContextResearchInput(idea=state["idea"]),
+                max_iterations=4,
+            ),
+            timeout=settings.agent_timeout,
+        )
+
+        run = await self.repository.get(run_id)
+        run.context_research = result
+        await self.repository.update(run)
+        writer(AgentCompletedEvent.create(0, result.model_dump()).model_dump())
+
+        briefing = (
+            f"IDEA ANALYSIS:\n{result.idea_analysis}\n\n"
+            f"CURRENT LANDSCAPE:\n{result.current_landscape}\n\n"
+            f"KEY PLAYERS:\n{result.key_players}\n\n"
+            f"RECENT DEVELOPMENTS:\n{result.recent_developments}"
+        )
+
+        return {"context_research": result, "context_briefing": briefing}
+
     async def _pain_discovery_node(self, state: PipelineState) -> dict:
         return await self._run_research_node(
             state,
             1,
             self.agent1,
-            PainDiscoveryInput(idea=state["idea"]),
+            PainDiscoveryInput(
+                idea=state["idea"],
+                context_briefing=state.get("context_briefing"),
+            ),
             "pain_discovery",
         )
 
@@ -153,7 +198,10 @@ class PipelineGraph:
             state,
             2,
             self.agent2,
-            CompetitorResearchInput(idea=state["idea"]),
+            CompetitorResearchInput(
+                idea=state["idea"],
+                context_briefing=state.get("context_briefing"),
+            ),
             "competitor_research",
         )
 
@@ -162,7 +210,10 @@ class PipelineGraph:
             state,
             3,
             self.agent3,
-            MarketIntelligenceInput(idea=state["idea"]),
+            MarketIntelligenceInput(
+                idea=state["idea"],
+                context_briefing=state.get("context_briefing"),
+            ),
             "market_intelligence",
         )
 
@@ -171,7 +222,10 @@ class PipelineGraph:
             state,
             4,
             self.agent4,
-            GraveyardResearchInput(idea=state["idea"]),
+            GraveyardResearchInput(
+                idea=state["idea"],
+                context_briefing=state.get("context_briefing"),
+            ),
             "graveyard_research",
         )
 
@@ -237,6 +291,8 @@ class PipelineGraph:
             "user_id": user_id,
             "run_id": run_id,
             "language": language,
+            "context_research": None,
+            "context_briefing": None,
             "pain_discovery": None,
             "competitor_research": None,
             "market_intelligence": None,
