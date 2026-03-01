@@ -144,6 +144,11 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
     output_schema = PainDiscoveryOutput
     min_searches = 5
     recommended_searches = 8
+    translatable_fields = [
+        "pain_summary", "pain_points[].quote", "pain_points[].author_context",
+        "user_segments[].label", "user_segments[].description",
+        "primary_target_user.label", "primary_target_user.description",
+    ]
 
     def get_system_prompt(self, input_data: PainDiscoveryInput) -> str:
         now = datetime.now(timezone.utc)

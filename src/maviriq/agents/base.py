@@ -48,10 +48,33 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
         """Optional fixups after the tool loop returns (e.g., setting result.idea)."""
         return result
 
-    async def run(self, input_data: TInput, max_iterations: int | None = None) -> TOutput:
+    # Free-text fields per agent that should be translated.
+    # Subclasses can override this to list the JSON field names that contain
+    # user-facing prose (not enum values or URLs).
+    translatable_fields: ClassVar[list[str]] = []
+
+    async def run(
+        self,
+        input_data: TInput,
+        max_iterations: int | None = None,
+        language: str = "en",
+    ) -> TOutput:
+        system_prompt = self.get_system_prompt(input_data)
+
+        if language == "lt" and self.translatable_fields:
+            fields = ", ".join(self.translatable_fields)
+            system_prompt += (
+                "\n\nLANGUAGE REQUIREMENT: Write ALL user-facing text in Lithuanian "
+                "(lietuvių kalba). This includes these fields: "
+                f"{fields}. "
+                "Keep enum values (high/moderate/mild, direct/indirect/potential, "
+                "positive/negative/neutral, strong/moderate/weak, low/medium/high, "
+                "growing/stable/shrinking) in English — only translate the free-text prose."
+            )
+
         tools, executors = self.get_tools_and_executors()
         result = await self.llm.run_tool_loop(
-            system_prompt=self.get_system_prompt(input_data),
+            system_prompt=system_prompt,
             user_prompt=self.get_user_prompt(input_data),
             tools=tools,
             tool_executors=executors,

@@ -42,15 +42,31 @@ EXTRACTION RULES:
 - For each competitor: extract name, URL, one-liner description.
 - Classify each competitor's type:
   "direct" = solves the same problem for the same audience
-  "indirect" = solves a related problem or serves a different audience but users \
-    might use it instead
+  "indirect" = different product, but a user who wants THIS SPECIFIC solution \
+    would realistically consider switching to it as an alternative
   "potential" = large company that could easily enter this space but hasn't yet
+  Before classifying a product, ask: "Would someone actively searching for \
+    [the idea] consider buying this instead?" If the answer is no, EXCLUDE it \
+    — do not list it at all.
   <example>
   Idea: "AI meeting summarizer"
   Otter.ai → direct (same problem, same audience)
   Notion AI → indirect (different product, but users might use it instead)
   Apple → potential (could add this to Siri but hasn't)
   </example>
+  <counter_example>
+  Idea: "Chore app for kids to earn screentime"
+  Greenlight (kid debit card + financial literacy) → EXCLUDE — shares "kids" \
+    audience but solves a completely different problem; no user would switch \
+    between them
+  Khan Academy Kids → EXCLUDE — educational app for kids, but not a chore \
+    tracker or screentime manager
+  </counter_example>
+  <counter_example>
+  Idea: "AI meeting summarizer"
+  Grammarly → EXCLUDE — both use AI for text, but no one chooses Grammarly \
+    instead of a meeting summarizer
+  </counter_example>
 - Extract pricing tiers from scraped pages (plan name, price, features).
 - Extract strengths and weaknesses from review snippets.
 - For review_sentiment, use ONLY: "positive", "mixed", or "negative".
@@ -72,6 +88,9 @@ EXTRACTION RULES:
 - Identify underserved needs (gaps in the market). Be specific — "no solution \
   handles multi-language codebases" not "lacks features."
 - Do NOT fabricate competitors. Only report what you find in the data.
+- Do NOT include products that merely share an audience or a broad theme. \
+  "Both target kids" or "both use AI" is NOT enough — the products must be \
+  substitutes that solve the same or overlapping user job.
 - If the idea targets a niche or novel space and only 1-2 competitors exist, \
   that's a valid finding — it means the market is underserved. Do NOT pad the \
   list with irrelevant companies to hit a number.
@@ -100,6 +119,12 @@ class CompetitorResearchAgent(
     output_schema = CompetitorResearchOutput
     min_searches = 6
     recommended_searches = 10
+    translatable_fields = [
+        "competitors[].one_liner", "competitors[].strengths", "competitors[].weaknesses",
+        "competitors[].pricing[].plan_name", "competitors[].pricing[].features",
+        "common_complaints", "underserved_needs",
+        "target_user.label", "target_user.description",
+    ]
 
     def get_system_prompt(self, input_data: CompetitorResearchInput) -> str:
         return SYSTEM_PROMPT

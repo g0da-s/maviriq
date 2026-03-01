@@ -108,6 +108,11 @@ class MarketIntelligenceAgent(
     output_schema = MarketIntelligenceOutput
     min_searches = 4
     recommended_searches = 6
+    translatable_fields = [
+        "market_size_estimate", "growth_evidence", "tam_reasoning",
+        "distribution_channels[].channel", "distribution_channels[].reach_estimate",
+        "funding_signals",
+    ]
 
     def get_system_prompt(self, input_data: MarketIntelligenceInput) -> str:
         now = datetime.now(timezone.utc)

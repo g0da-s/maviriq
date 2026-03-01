@@ -105,6 +105,9 @@ class GraveyardResearchAgent(
     output_schema = GraveyardResearchOutput
     min_searches = 4
     recommended_searches = 7
+    translatable_fields = [
+        "previous_attempts[].what_they_did", "previous_attempts[].shutdown_reason",
+    ]
 
     def get_system_prompt(self, input_data: GraveyardResearchInput) -> str:
         return SYSTEM_PROMPT

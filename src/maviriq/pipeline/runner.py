@@ -137,8 +137,9 @@ class PipelineGraph:
         await self.repository.update(run)
         writer(AgentStartedEvent.create(agent_num).model_dump())
 
+        language = state.get("language", "en")
         result = await asyncio.wait_for(
-            agent.run(input_data),
+            agent.run(input_data, language=language),
             timeout=settings.agent_timeout,
         )
 
