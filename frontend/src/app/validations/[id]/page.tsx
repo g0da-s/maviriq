@@ -22,6 +22,7 @@ export default function ValidationPage() {
   const [error, setError] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
+  const [progress, setProgress] = useState(0);
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations("results");
@@ -80,6 +81,10 @@ export default function ValidationPage() {
     const interval = setInterval(() => setElapsedSec((s) => s + 1), 1000);
     return () => clearInterval(interval);
   }, [isStreaming]);
+
+  const handleProgress = useCallback((completed: number, total: number) => {
+    setProgress(Math.round((completed / total) * 100));
+  }, []);
 
   const handleComplete = useCallback((completedRun: ValidationRun) => {
     setRun(completedRun);
@@ -156,12 +161,6 @@ export default function ValidationPage() {
       <div className="flex min-h-screen flex-col items-center justify-center px-6">
         <div className="w-full max-w-2xl">
           <div className="mb-10 text-center">
-            {/* animated working indicator */}
-            <div className="mb-5 flex items-center justify-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:0ms]" />
-              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:150ms]" />
-              <span className="h-2 w-2 rounded-full bg-build animate-bounce [animation-delay:300ms]" />
-            </div>
             <h1 className="font-display text-xl sm:text-3xl font-bold leading-snug">
               {run?.idea || t("validating")}
             </h1>
@@ -176,7 +175,18 @@ export default function ValidationPage() {
             runId={id}
             onComplete={handleComplete}
             onError={handleError}
+            onProgress={handleProgress}
           />
+        </div>
+
+        {/* Fixed bottom progress bar */}
+        <div className="fixed bottom-0 left-0 right-0">
+          <div className="h-1 w-full bg-white/5">
+            <div
+              className="h-full bg-build transition-all duration-700 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
     );

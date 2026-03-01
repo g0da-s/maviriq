@@ -16,9 +16,10 @@ interface Props {
   runId: string;
   onComplete: (run: ValidationRun) => void;
   onError: (error: string) => void;
+  onProgress?: (completed: number, total: number) => void;
 }
 
-export function PipelineProgress({ runId, onComplete, onError }: Props) {
+export function PipelineProgress({ runId, onComplete, onError, onProgress }: Props) {
   const [runningAgents, setRunningAgents] = useState<Set<number>>(new Set());
   const [completedAgents, setCompletedAgents] = useState<Set<number>>(new Set());
   const [failed, setFailed] = useState(false);
@@ -163,6 +164,10 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [runId, session, onComplete, onError, t]);
+
+  useEffect(() => {
+    onProgress?.(completedAgents.size, 6);
+  }, [completedAgents, onProgress]);
 
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";
