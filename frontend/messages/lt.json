@@ -84,7 +84,8 @@
     "serviceUnavailable": "paslauga laikinai nepasiekiama — bandyk dar kartą po minutės",
     "processingFailed": "apdorojimas nepavyko — bandyk dar kartą",
     "processingTimedOut": "apdorojimo laikas baigėsi — bandyk dar kartą",
-    "audioTooLarge": "garso failas per didelis (maks. 25 MB)"
+    "audioTooLarge": "garso failas per didelis (maks. 25 MB)",
+    "somethingWentWrong": "kažkas nepavyko — bandyk dar kartą"
   },
   "login": {
     "title": "prisijungti",

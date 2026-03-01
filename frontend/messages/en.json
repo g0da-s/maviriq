@@ -84,7 +84,8 @@
     "serviceUnavailable": "service temporarily unavailable — please try again in a moment",
     "processingFailed": "processing failed — please try again",
     "processingTimedOut": "processing timed out — please try again",
-    "audioTooLarge": "audio file too large (max 25MB)"
+    "audioTooLarge": "audio file too large (max 25MB)",
+    "somethingWentWrong": "something went wrong — please try again"
   },
   "login": {
     "title": "log in",
