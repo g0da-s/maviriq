@@ -22,7 +22,8 @@
     "history": "istorija",
     "creditsOne": "{count} kreditas",
     "creditsFew": "{count} kreditai",
-    "creditsOther": "{count} kreditų"
+    "creditsOther": "{count} kreditų",
+    "toggleMenu": "Atidaryti meniu"
   },
   "home": {
     "ideasAnalyzedOne": "idėja išanalizuota",
@@ -79,7 +80,11 @@
     "recording": "įrašoma...",
     "transcribing": "transkribuojama...",
     "startRecording": "Įrašyti balsą",
-    "stopRecording": "Sustabdyti įrašymą"
+    "stopRecording": "Sustabdyti įrašymą",
+    "serviceUnavailable": "paslauga laikinai nepasiekiama — bandyk dar kartą po minutės",
+    "processingFailed": "apdorojimas nepavyko — bandyk dar kartą",
+    "processingTimedOut": "apdorojimo laikas baigėsi — bandyk dar kartą",
+    "audioTooLarge": "garso failas per didelis (maks. 25 MB)"
   },
   "login": {
     "title": "prisijungti",
@@ -192,6 +197,8 @@
     "failedToLoad": "nepavyko įkelti tikrinimo"
   },
   "pipeline": {
+    "agent0Name": "konteksto tyrimas",
+    "agent0Desc": "suprantame idėją ir tiriame dabartinę situaciją",
     "agent1Name": "skausmo ir vartotojų tyrimas",
     "agent1Desc": "ieškome tikrų skundų ir skausmo lygio reddit, hn ir forumuose",
     "agent2Name": "konkurentų tyrimas",

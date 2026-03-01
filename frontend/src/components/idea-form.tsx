@@ -6,6 +6,7 @@ import Link from "next/link";
 import posthog from "posthog-js";
 import { useTranslations, useLocale } from "next-intl";
 import { createValidation, transcribeAudio, ApiError } from "@/lib/api";
+import { mapBackendError } from "@/lib/supabase-error";
 import { useAuth } from "@/lib/auth-context";
 
 const BLOCKED_WORDS = new Set([
@@ -130,7 +131,8 @@ export function IdeaForm() {
       if (err instanceof ApiError && err.status === 402) {
         setNeedsCredits(true);
       } else {
-        setError(err instanceof Error ? err.message : t("transcriptionFailed"));
+        const key = err instanceof Error ? mapBackendError(err.message, "somethingWentWrong") : "transcriptionFailed";
+        setError(t(key));
       }
       setLoading(false);
     }

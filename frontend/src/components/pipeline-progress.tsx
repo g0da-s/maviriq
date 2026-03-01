@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { getStreamUrl, getValidation } from "@/lib/api";
+import { mapBackendError } from "@/lib/supabase-error";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun } from "@/lib/types";
 
-// Agents 1-4 run in parallel, then agent 5 runs after all complete
+// Agents 1-4 run in parallel after agent 0 completes
 const PARALLEL_AGENTS = new Set([1, 2, 3, 4]);
 
 type Status = "waiting" | "running" | "done";
@@ -28,6 +29,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
   const { session } = useAuth();
   const t = useTranslations("pipeline");
 
+  const contextAgent = { num: 0, name: t("agent0Name"), desc: t("agent0Desc") };
   const agents = [
     { num: 1, name: t("agent1Name"), desc: t("agent1Desc") },
     { num: 2, name: t("agent2Name"), desc: t("agent2Desc") },
@@ -46,8 +48,8 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     async function connect() {
       if (doneRef.current) return;
 
-      // Agents 1-4 start in parallel immediately
-      setRunningAgents(new Set([1, 2, 3, 4]));
+      // Agent 0 (context research) starts first
+      setRunningAgents(new Set([0]));
 
       const url = await getStreamUrl(runId);
       const es = new EventSource(url);
@@ -62,6 +64,11 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
 
         setCompletedAgents((prev) => {
           const next = new Set([...prev, agentNum]);
+
+          // When agent 0 completes, start parallel agents 1-4
+          if (agentNum === 0) {
+            setRunningAgents(new Set([1, 2, 3, 4]));
+          }
 
           // When all 4 parallel agents are done, start agent 5
           if (PARALLEL_AGENTS.has(agentNum)) {
@@ -83,7 +90,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           onError(t("somethingWentWrong"));
           return;
         }
-        setCompletedAgents(new Set([1, 2, 3, 4, 5]));
+        setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
         setRunningAgents(new Set());
         es.close();
 
@@ -105,7 +112,8 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           return;
         }
         setFailed(true);
-        onError(data.error as string);
+        const key = mapBackendError(data.error as string, "somethingWentWrong");
+        onError(t(key));
         es.close();
       });
 
@@ -140,13 +148,85 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
     return "waiting";
   }
 
+  const contextStatus = getStatus(contextAgent.num);
   const parallelAgents = agents.filter((a) => PARALLEL_AGENTS.has(a.num));
   const synthesisAgent = agents.find((a) => a.num === 5)!;
   const synthesisStatus = getStatus(synthesisAgent.num);
   const allParallelDone = parallelAgents.every((a) => getStatus(a.num) === "done");
+  const contextDone = contextStatus === "done";
+
+  // Shared renderer for standalone agent rows (agent 0 and agent 5)
+  function renderStandaloneAgent(agent: { num: number; name: string; desc: string }, status: Status) {
+    return (
+      <div
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
+          status === "running" ? "bg-build/5" : ""
+        }`}
+      >
+        <div
+          className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
+            status === "done"
+              ? "border-build bg-build/20 text-build"
+              : status === "running"
+                ? "border-build text-build pulse-glow"
+                : "border-card-border text-muted/40"
+          }`}
+        >
+          {status === "done" ? (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          )}
+        </div>
+        <div className="min-w-0 sm:mt-2">
+          <p
+            className={`font-display text-sm font-semibold transition-colors duration-300 ${
+              status === "done" || status === "running"
+                ? "text-foreground"
+                : "text-muted/40"
+            }`}
+          >
+            {agent.name}
+          </p>
+          <p
+            className={`mt-0.5 sm:mt-1 text-xs transition-colors duration-300 ${
+              status === "running" ? "text-muted" : "text-muted/30"
+            }`}
+          >
+            {status === "running" ? (
+              <span>{agent.desc}</span>
+            ) : status === "done" ? (
+              t("complete")
+            ) : (
+              t("waiting")
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {/* Agent 0: context research */}
+      {renderStandaloneAgent(contextAgent, contextStatus)}
+
+      {/* connector: agent 0 → parallel agents */}
+      <div className="hidden sm:flex justify-center py-3">
+        <div
+          className={`w-0.5 h-8 transition-colors duration-500 ${
+            contextDone ? "bg-build/40" : "bg-card-border"
+          }`}
+        />
+      </div>
+      <div className="sm:hidden flex justify-center py-1">
+        <div className={`w-8 h-0.5 rounded transition-colors duration-500 ${contextDone ? "bg-build/40" : "bg-card-border"}`} />
+      </div>
+
       {/* parallel agents — vertical list on mobile, 4-col grid on desktop */}
       <div className="flex flex-col gap-3 sm:grid sm:grid-cols-4 sm:gap-3">
         {parallelAgents.map((agent) => {
@@ -204,7 +284,7 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
         })}
       </div>
 
-      {/* connector line — hidden on mobile (vertical list), visible on desktop (grid) */}
+      {/* connector: parallel agents → synthesis */}
       <div className="hidden sm:flex justify-center py-3">
         <div
           className={`w-0.5 h-8 transition-colors duration-500 ${
@@ -212,59 +292,12 @@ export function PipelineProgress({ runId, onComplete, onError }: Props) {
           }`}
         />
       </div>
-      {/* mobile separator */}
       <div className="sm:hidden flex justify-center py-1">
         <div className={`w-8 h-0.5 rounded transition-colors duration-500 ${allParallelDone ? "bg-build/40" : "bg-card-border"}`} />
       </div>
 
-      {/* synthesis agent */}
-      <div
-        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
-          synthesisStatus === "running" ? "bg-build/5" : ""
-        }`}
-      >
-        <div
-          className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
-            synthesisStatus === "done"
-              ? "border-build bg-build/20 text-build"
-              : synthesisStatus === "running"
-                ? "border-build text-build pulse-glow"
-                : "border-card-border text-muted/40"
-          }`}
-        >
-          {synthesisStatus === "done" ? (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            synthesisAgent.num
-          )}
-        </div>
-        <div className="min-w-0 sm:mt-2">
-          <p
-            className={`font-display text-sm font-semibold transition-colors duration-300 ${
-              synthesisStatus === "done" || synthesisStatus === "running"
-                ? "text-foreground"
-                : "text-muted/40"
-            }`}
-          >
-            {synthesisAgent.name}
-          </p>
-          <p
-            className={`mt-0.5 sm:mt-1 text-xs transition-colors duration-300 ${
-              synthesisStatus === "running" ? "text-muted" : "text-muted/30"
-            }`}
-          >
-            {synthesisStatus === "running" ? (
-              <span>{synthesisAgent.desc}</span>
-            ) : synthesisStatus === "done" ? (
-              t("complete")
-            ) : (
-              t("waiting")
-            )}
-          </p>
-        </div>
-      </div>
+      {/* Agent 5: synthesis */}
+      {renderStandaloneAgent(synthesisAgent, synthesisStatus)}
 
       {reconnecting && (
         <div role="alert" className="mt-6 rounded-xl border border-maybe/30 bg-maybe/5 p-4 text-center text-sm text-maybe">

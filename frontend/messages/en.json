@@ -22,7 +22,8 @@
     "history": "history",
     "creditsOne": "{count} credit",
     "creditsFew": "{count} credits",
-    "creditsOther": "{count} credits"
+    "creditsOther": "{count} credits",
+    "toggleMenu": "Toggle menu"
   },
   "home": {
     "ideasAnalyzedOne": "idea analyzed",
@@ -79,7 +80,11 @@
     "recording": "recording...",
     "transcribing": "transcribing...",
     "startRecording": "Record voice",
-    "stopRecording": "Stop recording"
+    "stopRecording": "Stop recording",
+    "serviceUnavailable": "service temporarily unavailable — please try again in a moment",
+    "processingFailed": "processing failed — please try again",
+    "processingTimedOut": "processing timed out — please try again",
+    "audioTooLarge": "audio file too large (max 25MB)"
   },
   "login": {
     "title": "log in",
@@ -192,6 +197,8 @@
     "failedToLoad": "failed to load validation"
   },
   "pipeline": {
+    "agent0Name": "context research",
+    "agent0Desc": "understanding the idea and researching the current landscape",
     "agent1Name": "pain & user discovery",
     "agent1Desc": "finding real complaints and pain severity across reddit, hn, and forums",
     "agent2Name": "competitor research",

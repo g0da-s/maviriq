@@ -131,7 +131,7 @@ export function Nav() {
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden flex flex-col justify-center gap-1.5 p-2"
-          aria-label="Toggle menu"
+          aria-label={t("toggleMenu")}
         >
           <span className={`block h-px w-5 bg-foreground transition-all ${open ? "translate-y-[3.5px] rotate-45" : ""}`} />
           <span className={`block h-px w-5 bg-foreground transition-all ${open ? "opacity-0" : ""}`} />
