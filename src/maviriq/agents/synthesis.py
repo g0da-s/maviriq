@@ -216,16 +216,19 @@ TONE — write like a sharp founder advising another founder:
 - target_user_summary: 1-2 sentences. Who exactly, in plain language. \
   GOOD: "Senior Python devs at startups (10-50 people) shipping fast and worried about security debt." \
   BAD: "Software developers and engineering teams who require code security solutions."
-- next_steps: 3-5 items. Each must include a specific action + channel + concrete metric. \
+- next_steps: 3-5 items. Each must be a COMPLETE, self-contained instruction that \
+  anyone can follow — even someone who has never heard of Reddit or Product Hunt. \
+  Include a specific action + channel (with explanation of what the channel is) + concrete metric. \
+  Always explain WHAT a platform is when referencing it. Always spell out the full action.
   <example>
   GOOD next steps:
-  - "Post on r/Python asking 'how do you handle security reviews?' — aim for 20+ responses in 1 week"
+  - "Post a question in the r/Python community on Reddit (reddit.com/r/Python — a developer forum with 1.5M members) asking 'how do you handle security reviews?' — aim for 20+ responses in 1 week"
   - "Build a VS Code extension MVP that flags OWASP Top 5 in Python — ship to 10 beta users in 2 weeks"
   - "DM 5 CTOs from YC W24 batch who mentioned security pain — get 3 discovery calls booked"
   BAD next steps:
-  - "Conduct customer discovery interviews"
-  - "Build an MVP"
-  - "Validate the market"
+  - "Post on r/Parenting" (unclear — what is r/Parenting? what to post? what's the goal?)
+  - "Conduct customer discovery interviews" (vague, no specifics)
+  - "Validate the market" (meaningless without concrete action)
   </example>
 - differentiation_strategy: 2-3 sentences. What SPECIFIC angle should this product take?
 - previous_attempts_summary: 1-2 sentences. What was tried before and what happened? \
@@ -358,13 +361,28 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         lang_suffix = ""
         if language == "lt":
             lang_suffix = (
-                "\n\nLANGUAGE REQUIREMENT: Write ALL user-facing text in Lithuanian (lietuvių kalba). "
-                "This includes: one_line_summary, reasoning, key_strengths, key_risks, market_gap, "
+                "\n\nLANGUAGE REQUIREMENT — STRICT:"
+                "\nWrite ALL user-facing text in Lithuanian (lietuvių kalba)."
+                "\nThis includes: one_line_summary, reasoning, key_strengths, key_risks, market_gap, "
                 "people_pay_reasoning, reachability_reasoning, recommended_mvp, recommended_positioning, "
                 "target_user_summary, next_steps, differentiation_strategy, previous_attempts_summary, "
-                "lessons_from_failures, estimated_market_size, and each viability signal description. "
-                "Keep enum values (BUILD/SKIP/MAYBE, positive/negative/neutral, easy/moderate/hard, "
-                "large/medium/small/none) in English — only translate the free-text prose."
+                "lessons_from_failures, estimated_market_size, and each viability signal description."
+                "\n"
+                "\nCRITICAL RULES:"
+                "\n- Do NOT mix English words into Lithuanian sentences. Translate EVERYTHING."
+                "\n- English jargon MUST be translated or explained in Lithuanian."
+                "\n  BAD: 'Padaryk landing page su email signup'"
+                "\n  GOOD: 'Sukurk pristatymo puslapį su el. pašto registracija'"
+                "\n- Use correct Lithuanian grammar: proper noun cases, adjective agreement, natural word order."
+                "\n  Do NOT calque English sentence structure. Write as a native Lithuanian speaker would."
+                "\n- For product/company names (Reddit, GitHub, etc.) keep the name but explain"
+                "\n  what it is if not universally known. E.g., 'Reddit (internetinis forumas)'"
+                "\n- next_steps MUST be fully self-contained: always explain what each platform is"
+                "\n  and give the full URL when referencing online communities."
+                "\n  BAD: 'Paskelbk r/Parenting'"
+                "\n  GOOD: 'Paskelbk klausimą Reddit forume (reddit.com/r/Parenting) — tai tėvystės bendruomenė su 5M+ narių'"
+                "\n- Keep enum values (BUILD/SKIP/MAYBE, positive/negative/neutral, easy/moderate/hard, "
+                "large/medium/small/none) in English — only these stay in English."
             )
 
         # Pass 1: Viability Analysis (temperature=0 for stable categoricals)

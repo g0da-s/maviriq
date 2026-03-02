@@ -64,13 +64,36 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
         if language == "lt" and self.translatable_fields:
             fields = ", ".join(self.translatable_fields)
             system_prompt += (
-                "\n\nLANGUAGE REQUIREMENT: Write ALL user-facing text in Lithuanian "
-                "(lietuvių kalba). This includes these fields: "
-                f"{fields}. "
-                "Keep enum values (high/moderate/mild, direct/indirect/potential, "
+                "\n\nLANGUAGE REQUIREMENT — STRICT:"
+                "\nWrite ALL user-facing text in Lithuanian (lietuvių kalba)."
+                f"\nThis applies to these fields: {fields}."
+                "\n"
+                "\nCRITICAL RULES:"
+                "\n- Do NOT mix English words into Lithuanian sentences. Translate EVERYTHING."
+                "\n- English jargon MUST be translated or replaced with a natural Lithuanian equivalent."
+                "\n  BAD: 'Padaryk landing page su email signup'"
+                "\n  GOOD: 'Sukurk pristatymo puslapį su el. pašto registracija'"
+                "\n  BAD: 'Naudok content marketing strategiją'"
+                "\n  GOOD: 'Naudok turinio rinkodaros strategiją'"
+                "\n- Use correct Lithuanian grammar: proper noun cases (kilmininkas, galininkas, etc.),"
+                "\n  adjective-noun agreement, and natural Lithuanian word order."
+                "\n  Do NOT calque English sentence structure — write as a native Lithuanian speaker would."
+                "\n  BAD: 'Tai yra didelis rinkos galimybė' (English word order calque)"
+                "\n  GOOD: 'Tai didelė rinkos galimybė' (correct gender agreement + natural order)"
+                "\n- For well-known product/company names (Reddit, GitHub, Slack, etc.) keep the"
+                "\n  name but translate everything around it into proper Lithuanian."
+                "\n- Keep enum values (high/moderate/mild, direct/indirect/potential, "
                 "positive/negative/neutral, strong/moderate/weak, low/medium/high, "
-                "growing/stable/shrinking) in English — only translate the free-text prose."
+                "growing/stable/shrinking) in English — only these stay in English."
             )
+
+            if "pain_points[].quote" in self.translatable_fields:
+                system_prompt += (
+                    "\n\nQUOTE TRANSLATION: The pain point quotes you find will be in English."
+                    "\nYou MUST translate each quote into natural Lithuanian while preserving"
+                    "\nthe original meaning and emotion. Do NOT leave quotes in English."
+                    "\nThe source and source_url fields stay in English (they are identifiers, not prose)."
+                )
 
         tools, executors = self.get_tools_and_executors()
         result = await self.llm.run_tool_loop(
