@@ -47,111 +47,178 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
     doneRef.current = false;
     retriesRef.current = 0;
 
+    // Connection generation counter — prevents stale async connect() from proceeding
+    let currentGeneration = 0;
+    let connectInFlight = false;
+    let abortController = new AbortController();
+
+    function startNewGeneration() {
+      currentGeneration += 1;
+      abortController.abort();
+      abortController = new AbortController();
+      esRef.current?.close();
+      return currentGeneration;
+    }
+
     async function connect() {
       if (doneRef.current) return;
+      if (connectInFlight) return; // Prevent duplicate parallel connects
 
-      // Agent 0 (context research) starts first
-      setRunningAgents(new Set([0]));
+      const gen = startNewGeneration();
+      connectInFlight = true;
 
-      const url = await getStreamUrl(runId);
-      const es = new EventSource(url);
-      esRef.current = es;
-
-      es.addEventListener("keepalive", () => {
-        lastEventTimeRef.current = Date.now();
-      });
-
-      es.addEventListener("agent_completed", (e) => {
-        retriesRef.current = 0;
-        lastEventTimeRef.current = Date.now();
-        setReconnecting(false);
-        let data: Record<string, unknown>;
-        try { data = JSON.parse(e.data); } catch { return; }
-        const agentNum = data.agent as number;
-
-        setCompletedAgents((prev) => {
-          const next = new Set([...prev, agentNum]);
-
-          // When agent 0 completes, start parallel agents 1-4
-          if (agentNum === 0) {
-            setRunningAgents(new Set([1, 2, 3, 4]));
-          }
-
-          // When all 4 parallel agents are done, start agent 5
-          if (PARALLEL_AGENTS.has(agentNum)) {
-            const allDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
-            if (allDone) {
-              setRunningAgents(new Set([5]));
-            }
-          }
-
-          return next;
-        });
-      });
-
-      es.addEventListener("pipeline_completed", async (e) => {
-        lastEventTimeRef.current = Date.now();
-        doneRef.current = true;
-        let data: Record<string, unknown>;
-        try { data = JSON.parse(e.data); } catch {
-          es.close();
-          onError(t("somethingWentWrong"));
-          return;
-        }
-        setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
-        setRunningAgents(new Set());
-        es.close();
-
+      try {
+        // Check if pipeline already finished (handles refresh / stale reconnect)
         try {
-          const run = await getValidation(runId);
-          onComplete(run);
+          const current = await getValidation(runId);
+          if (gen !== currentGeneration) return; // Stale — bail out
+          if (current.status === "completed") {
+            doneRef.current = true;
+            setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
+            setRunningAgents(new Set());
+            onComplete(current);
+            return;
+          }
+          if (current.status === "failed") {
+            doneRef.current = true;
+            setFailed(true);
+            onError(current.error || t("somethingWentWrong"));
+            return;
+          }
         } catch {
-          onError(t("failedToFetchResults"));
+          if (gen !== currentGeneration) return;
+          // If status check fails, proceed with SSE anyway
         }
-      });
 
-      es.addEventListener("pipeline_error", (e) => {
-        doneRef.current = true;
-        let data: Record<string, unknown>;
-        try { data = JSON.parse(e.data); } catch {
-          setFailed(true);
-          onError(t("somethingWentWrong"));
-          es.close();
-          return;
+        // Optimistically show agent 0 as running
+        setRunningAgents(new Set([0]));
+
+        let url: string;
+        try {
+          url = await getStreamUrl(runId, abortController.signal);
+        } catch {
+          // Aborted or failed — bail out
+          if (gen !== currentGeneration) return;
+          throw new Error("Failed to get stream URL");
         }
-        setFailed(true);
-        const key = mapBackendError(data.error as string, "somethingWentWrong");
-        onError(t(key));
-        es.close();
-      });
+        if (gen !== currentGeneration) return; // Stale — bail out
 
-      es.addEventListener("error", () => {
-        if (doneRef.current) return;
-        es.close();
+        const es = new EventSource(url);
+        esRef.current = es;
 
-        if (retriesRef.current < MAX_RETRIES) {
-          setReconnecting(true);
-          const delay = Math.min(1000 * 2 ** retriesRef.current, 10_000);
-          retriesRef.current += 1;
-          setTimeout(connect, delay);
-        } else {
+        es.addEventListener("keepalive", () => {
+          lastEventTimeRef.current = Date.now();
+        });
+
+        es.addEventListener("agent_completed", (e) => {
+          retriesRef.current = 0;
+          lastEventTimeRef.current = Date.now();
           setReconnecting(false);
+          let data: Record<string, unknown>;
+          try { data = JSON.parse(e.data); } catch { return; }
+          const agentNum = data.agent as number;
+
+          setCompletedAgents((prev) => {
+            const next = new Set([...prev, agentNum]);
+
+            // Derive running agents from completed set
+            if (next.has(0)) {
+              const allParallelDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
+              if (allParallelDone) {
+                setRunningAgents(next.has(5) ? new Set() : new Set([5]));
+              } else {
+                // Show parallel agents that haven't completed as running
+                const running = new Set<number>();
+                for (const a of PARALLEL_AGENTS) {
+                  if (!next.has(a)) running.add(a);
+                }
+                setRunningAgents(running);
+              }
+            }
+
+            return next;
+          });
+        });
+
+        es.addEventListener("pipeline_completed", async (e) => {
+          lastEventTimeRef.current = Date.now();
+          doneRef.current = true;
+          let data: Record<string, unknown>;
+          try { data = JSON.parse(e.data); } catch {
+            es.close();
+            onError(t("somethingWentWrong"));
+            return;
+          }
+          setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
+          setRunningAgents(new Set());
+          es.close();
+
+          try {
+            const run = await getValidation(runId);
+            onComplete(run);
+          } catch {
+            onError(t("failedToFetchResults"));
+          }
+        });
+
+        es.addEventListener("pipeline_error", (e) => {
+          doneRef.current = true;
+          let data: Record<string, unknown>;
+          try { data = JSON.parse(e.data); } catch {
+            setFailed(true);
+            onError(t("somethingWentWrong"));
+            es.close();
+            return;
+          }
           setFailed(true);
-          onError(t("connectionLost"));
-        }
-      });
+          const key = mapBackendError(data.error as string, "somethingWentWrong");
+          onError(t(key));
+          es.close();
+        });
+
+        es.addEventListener("error", () => {
+          if (doneRef.current) return;
+          es.close();
+
+          if (retriesRef.current < MAX_RETRIES) {
+            setReconnecting(true);
+            const delay = Math.min(1000 * 2 ** retriesRef.current, 10_000);
+            retriesRef.current += 1;
+            connectInFlight = false; // Allow retry to proceed
+            setTimeout(connect, delay);
+          } else {
+            setReconnecting(false);
+            setFailed(true);
+            onError(t("connectionLost"));
+          }
+        });
+      } finally {
+        connectInFlight = false;
+      }
     }
 
     connect();
+
+    // Watchdog: force reconnect if no event (including keepalive) in 30s
+    const watchdog = setInterval(() => {
+      if (doneRef.current) return;
+      const staleSec = (Date.now() - lastEventTimeRef.current) / 1000;
+      if (staleSec > 30) {
+        retriesRef.current = 0;
+        setReconnecting(true);
+        connectInFlight = false; // Allow reconnect
+        connect();
+      }
+    }, 20_000);
 
     function handleVisibilityChange() {
       if (document.visibilityState !== "visible") return;
       if (doneRef.current) return;
       const staleSec = (Date.now() - lastEventTimeRef.current) / 1000;
       if (staleSec > 20) {
-        esRef.current?.close();
         retriesRef.current = 0;
         setReconnecting(true);
+        connectInFlight = false; // Allow reconnect
         connect();
       }
     }
@@ -160,7 +227,8 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
 
     return () => {
       doneRef.current = true;
-      esRef.current?.close();
+      startNewGeneration(); // Aborts in-flight fetch + closes EventSource
+      clearInterval(watchdog);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [runId, session, onComplete, onError, t]);
@@ -186,7 +254,7 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
   function renderStandaloneAgent(agent: { num: number; name: string; desc: string }, status: Status) {
     return (
       <div
-        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
+        className={`flex flex-col items-center text-center rounded-xl px-3 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
           status === "running" ? "bg-build/5" : ""
         }`}
       >
@@ -209,7 +277,7 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
             </svg>
           )}
         </div>
-        <div className="min-w-0 sm:mt-2">
+        <div className="min-w-0 mt-2">
           <p
             className={`font-display text-sm font-semibold transition-colors duration-300 ${
               status === "done" || status === "running"
@@ -243,25 +311,22 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       {renderStandaloneAgent(contextAgent, contextStatus)}
 
       {/* connector: agent 0 → parallel agents */}
-      <div className="hidden sm:flex justify-center py-3">
+      <div className="flex justify-center py-2 sm:py-3">
         <div
-          className={`w-0.5 h-8 transition-colors duration-500 ${
+          className={`w-0.5 h-6 sm:h-8 transition-colors duration-500 ${
             contextDone ? "bg-build/40" : "bg-card-border"
           }`}
         />
       </div>
-      <div className="sm:hidden flex justify-center py-1">
-        <div className={`w-8 h-0.5 rounded transition-colors duration-500 ${contextDone ? "bg-build/40" : "bg-card-border"}`} />
-      </div>
 
-      {/* parallel agents — vertical list on mobile, 4-col grid on desktop */}
-      <div className="flex flex-col gap-3 sm:grid sm:grid-cols-4 sm:gap-3">
+      {/* parallel agents — 2-col grid on mobile, 4-col grid on desktop */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {parallelAgents.map((agent) => {
           const status = getStatus(agent.num);
           return (
             <div
               key={agent.num}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 sm:flex-col sm:items-center sm:text-center sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
+              className={`flex flex-col items-center text-center rounded-xl px-2 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
                 status === "running" ? "bg-build/5" : ""
               }`}
             >
@@ -282,9 +347,9 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
                   agent.num
                 )}
               </div>
-              <div className="min-w-0 sm:mt-2">
+              <div className="min-w-0 mt-2">
                 <p
-                  className={`font-display text-sm font-semibold leading-tight transition-colors duration-300 ${
+                  className={`font-display text-xs sm:text-sm font-semibold leading-tight transition-colors duration-300 ${
                     status === "done" || status === "running"
                       ? "text-foreground"
                       : "text-muted/40"
@@ -312,15 +377,12 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       </div>
 
       {/* connector: parallel agents → synthesis */}
-      <div className="hidden sm:flex justify-center py-3">
+      <div className="flex justify-center py-2 sm:py-3">
         <div
-          className={`w-0.5 h-8 transition-colors duration-500 ${
+          className={`w-0.5 h-6 sm:h-8 transition-colors duration-500 ${
             allParallelDone ? "bg-build/40" : "bg-card-border"
           }`}
         />
-      </div>
-      <div className="sm:hidden flex justify-center py-1">
-        <div className={`w-8 h-0.5 rounded transition-colors duration-500 ${allParallelDone ? "bg-build/40" : "bg-card-border"}`} />
       </div>
 
       {/* Agent 5: synthesis */}

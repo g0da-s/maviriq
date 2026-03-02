@@ -154,11 +154,11 @@ export async function getStats(): Promise<{ ideas_analyzed: number }> {
 
 const StreamTokenSchema = z.object({ token: z.string() });
 
-export async function getStreamUrl(id: string): Promise<string> {
+export async function getStreamUrl(id: string, signal?: AbortSignal): Promise<string> {
   const { token } = await request<{ token: string }>(
     `/validations/${id}/stream-token`,
     StreamTokenSchema,
-    { method: "POST" },
+    { method: "POST", signal },
   );
   return `${API_BASE}/validations/${id}/stream?token=${encodeURIComponent(token)}`;
 }

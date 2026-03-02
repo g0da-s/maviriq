@@ -158,10 +158,10 @@ export default function ValidationPage() {
 
   if (isStreaming) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-6">
+      <div className="flex min-h-screen flex-col items-center px-4 sm:px-6 pt-16 sm:pt-24 pb-8">
         <div className="w-full max-w-2xl">
-          <div className="mb-10 text-center">
-            <h1 className="font-display text-xl sm:text-3xl font-bold leading-snug">
+          <div className="mb-8 sm:mb-10 text-center">
+            <h1 className="font-display text-lg sm:text-3xl font-bold leading-snug break-words">
               {run?.idea || t("validating")}
             </h1>
             <p className="mt-2 text-sm text-muted">{t("researchingYourIdea")}</p>
