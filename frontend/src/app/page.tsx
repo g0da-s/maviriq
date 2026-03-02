@@ -62,7 +62,7 @@ export default function Home() {
             <img
               src="/ISM-logo.png"
               alt="ISM University of Management and Economics"
-              className="h-8 opacity-40 brightness-0 invert grayscale"
+              className="h-12 opacity-60 brightness-0 invert"
             />
           </div>
         </div>
