@@ -14,7 +14,7 @@ export function GraveyardResearch({ data }: { data: GraveyardResearchOutput }) {
             <div key={i} className="px-5 py-4">
               <div className="flex items-center gap-2.5 mb-1.5">
                 <p className="text-sm font-semibold text-foreground">{attempt.name}</p>
-                {attempt.year && (
+                {attempt.year && !/^(unknown|n\/a|na|tbd|none|null)$/i.test(attempt.year) && (
                   <span className="text-[10px] uppercase tracking-wider text-muted/40">{attempt.year}</span>
                 )}
               </div>

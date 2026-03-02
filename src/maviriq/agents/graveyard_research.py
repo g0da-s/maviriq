@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
@@ -81,6 +82,16 @@ EXTRACTION RULES:
 - For source, use the URL or website name where you found this information \
   (e.g., "failory.com", "techcrunch.com", "reddit.com"). This is NOT the \
   startup's own website — it's where the post-mortem or shutdown story was found.
+- Each entry MUST be a real, named company or product with a specific, verifiable \
+  name. NEVER use descriptions like "Various projects", "Unnamed app", \
+  "Several startups", or "Unknown company". If you cannot find a real company \
+  name, do NOT include the entry.
+- For the year field: use null if the shutdown year is not known. Do NOT write \
+  "unknown", "N/A", "TBD", or any placeholder string. Either provide a real \
+  year (e.g. "2022") or leave it null.
+- An empty list is ALWAYS better than fabricated or vague entries. If your \
+  searches genuinely return no specific, named failures, return an empty list. \
+  The founder benefits more from "no data found" than from made-up examples.
 - Only return an empty list if you have exhausted many diverse search queries \
   and genuinely found zero relevant failures. This should be rare — most spaces \
   have at least one failed attempt worth mentioning.
@@ -88,6 +99,11 @@ EXTRACTION RULES:
 
 When you have gathered enough failure intelligence, call submit_result with \
 your structured findings."""
+
+_VAGUE_NAME_RE = re.compile(
+    r"(?i)\b(unnamed|unknown|various|several|multiple|generic|"
+    r"numerous|unspecified|anonymous|miscellaneous)\b"
+)
 
 TOOL_NAMES = [
     "search_web",
@@ -134,3 +150,12 @@ class GraveyardResearchAgent(
 
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)
+
+    def post_process(
+        self, input_data: GraveyardResearchInput, result: GraveyardResearchOutput,
+    ) -> GraveyardResearchOutput:
+        result.previous_attempts = [
+            attempt for attempt in result.previous_attempts
+            if attempt.name.strip() and not _VAGUE_NAME_RE.search(attempt.name)
+        ]
+        return result

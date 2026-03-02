@@ -236,6 +236,11 @@ class MarketIntelligenceOutput(BaseModel):
 # ──────────────────────────────────────────────
 
 
+_UNKNOWN_YEAR_VALUES = frozenset({
+    "unknown", "n/a", "na", "none", "null", "tbd", "not available", "",
+})
+
+
 class PreviousAttempt(BaseModel):
     name: str
     url: str | None = None
@@ -243,6 +248,15 @@ class PreviousAttempt(BaseModel):
     shutdown_reason: str
     year: str | None = None
     source: str
+
+    @field_validator("year", mode="before")
+    @classmethod
+    def normalize_year(cls, v: object) -> object:
+        if not isinstance(v, str):
+            return v
+        if v.strip().lower() in _UNKNOWN_YEAR_VALUES:
+            return None
+        return v.strip()
 
 
 class ChurnSignal(BaseModel):
