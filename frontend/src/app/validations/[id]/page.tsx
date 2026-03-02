@@ -181,9 +181,9 @@ export default function ValidationPage() {
 
         {/* Fixed bottom progress bar */}
         <div className="fixed bottom-0 left-0 right-0">
-          <div className="h-1 w-full bg-white/5">
+          <div className="h-1.5 w-full bg-white/10">
             <div
-              className="h-full bg-build transition-all duration-700 ease-out"
+              className="h-full bg-build transition-all duration-700 ease-out shadow-[0_0_8px_rgba(34,197,94,0.4)]"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -232,7 +232,7 @@ export default function ValidationPage() {
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-8 py-7">
             <div className="flex items-center gap-8">
-              <div className="flex flex-col items-center shrink-0">
+              <div className="flex flex-col items-start shrink-0">
                 <span className={`font-display text-6xl font-bold leading-none ${
                   s.verdict === "BUILD" ? "text-build" :
                   s.verdict === "MAYBE" ? "text-maybe" : "text-skip"
