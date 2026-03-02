@@ -53,7 +53,7 @@ export default function Home() {
       </div>
 
       {/* ═══ TESTIMONIAL ═══ */}
-      <div className="px-6 -mt-[10vh]">
+      <div className="px-6 -mt-[2vh]">
         <div className="mx-auto max-w-2xl">
           <p className="text-center text-xs uppercase tracking-widest text-muted/50 mb-6">
             {t('testimonialHeadline')}
@@ -64,7 +64,7 @@ export default function Home() {
             <div className="relative shrink-0">
               <div className="h-24 w-24 rounded-full bg-white/10 border-2 border-build/40 flex items-center justify-center overflow-hidden">
                 <img
-                  src="/ISM-logo.png"
+                  src="/ISM.png"
                   alt="ISM University"
                   className="h-14 w-14 object-contain"
                 />
