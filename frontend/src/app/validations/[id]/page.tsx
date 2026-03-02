@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { getValidation } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationRun } from "@/lib/types";
@@ -25,6 +25,7 @@ export default function ValidationPage() {
   const [progress, setProgress] = useState(0);
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("results");
   const tc = useTranslations("common");
 
@@ -72,6 +73,17 @@ export default function ValidationPage() {
     load();
     return () => { cancelled = true; };
   }, [id, session, authLoading, user, router, t]);
+
+  // Sync UI locale to match the content language so labels and body text
+  // are never in different languages (e.g. Lithuanian labels + English content)
+  useEffect(() => {
+    if (!run || run.status === "running" || run.status === "pending") return;
+    const contentLang = run.language || "en";
+    if (contentLang !== locale) {
+      document.cookie = `locale=${contentLang};path=/;max-age=31536000`;
+      window.location.reload();
+    }
+  }, [run, locale]);
 
   useEffect(() => {
     if (!isStreaming) {

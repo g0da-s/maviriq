@@ -282,7 +282,8 @@ class PipelineGraph:
     async def run(self, run_id: str, idea: str, user_id: str | None = None, language: str = "en") -> None:
         """Run the full pipeline, publishing SSE events to pubsub."""
         run = ValidationRun(
-            id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id
+            id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id,
+            language=language,
         )
         run.started_at = datetime.now(timezone.utc)
         await self.repository.create(run)

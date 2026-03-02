@@ -222,6 +222,7 @@ export const ValidationRunSchema = z.object({
   error: z.string().nullable(),
   total_cost_cents: z.number(),
   user_id: z.string().nullable().optional(),
+  language: z.string().default("en"),
 });
 
 export const CreateValidationResponseSchema = z.object({

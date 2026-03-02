@@ -44,6 +44,7 @@ export function Nav() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isHistory = pathname.startsWith("/validations");
+  const isResultsPage = /^\/validations\/[^/]+$/.test(pathname);
   const { user, loading, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
@@ -104,13 +105,21 @@ export function Nav() {
               >
                 {tc("logOut")}
               </button>
-              <div className="mx-1 h-4 w-px bg-card-border" />
-              <LanguageToggle />
+              {!isResultsPage && (
+                <>
+                  <div className="mx-1 h-4 w-px bg-card-border" />
+                  <LanguageToggle />
+                </>
+              )}
             </>
           ) : (
             <>
-              <LanguageToggle />
-              <div className="mx-1 h-4 w-px bg-card-border" />
+              {!isResultsPage && (
+                <>
+                  <LanguageToggle />
+                  <div className="mx-1 h-4 w-px bg-card-border" />
+                </>
+              )}
               <Link
                 href="/login"
                 className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-foreground"
@@ -179,9 +188,11 @@ export function Nav() {
               >
                 {creditsText}
               </Link>
-              <div className="my-2 flex items-center gap-2">
-                <LanguageToggle />
-              </div>
+              {!isResultsPage && (
+                <div className="my-2 flex items-center gap-2">
+                  <LanguageToggle />
+                </div>
+              )}
               <div className="my-2 h-px bg-card-border" />
               <button
                 onClick={() => { signOut(); setOpen(false); }}
@@ -192,9 +203,11 @@ export function Nav() {
             </>
           ) : (
             <>
-              <div className="mb-2">
-                <LanguageToggle />
-              </div>
+              {!isResultsPage && (
+                <div className="mb-2">
+                  <LanguageToggle />
+                </div>
+              )}
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}
