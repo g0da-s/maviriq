@@ -62,7 +62,9 @@
     "exampleRisk2": "Grocery delivery APIs are expensive",
     "exampleRisk3": "Recipe content is a commodity",
     "exampleMore": "+ competitor deep-dive, market sizing, failed startups, action plan...",
-    "trustedBy": "trusted by",
+    "testimonialQuote": "maviriq lets us validate startup ideas with real data before wasting a single sprint. it's become essential for our entrepreneurship program.",
+    "testimonialAuthor": "ISM Entrepreneurship & Innovation",
+    "testimonialRole": "ISM University of Management and Economics",
     "poweredBy": "powered by anthropic"
   },
   "ideaForm": {

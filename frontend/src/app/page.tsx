@@ -52,18 +52,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ═══ TRUSTED BY ═══ */}
+      {/* ═══ TESTIMONIAL ═══ */}
       <div className="px-6 -mt-[10vh]">
-        <div className="mx-auto max-w-2xl">
-          <p className="text-center text-xs uppercase tracking-widest text-muted/30 mb-4">
-            {t('trustedBy')}
-          </p>
-          <div className="flex items-center justify-center gap-8">
-            <img
-              src="/ISM-logo.png"
-              alt="ISM University of Management and Economics"
-              className="h-12 opacity-60 brightness-0 invert"
-            />
+        <div className="mx-auto max-w-xl">
+          <div className="rounded-2xl border border-card-border bg-card p-6 sm:p-8 text-center">
+            <p className="text-sm text-muted leading-relaxed italic">
+              &ldquo;{t('testimonialQuote')}&rdquo;
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <img
+                src="/ISM-logo.png"
+                alt="ISM University"
+                className="h-8 rounded bg-white p-1"
+              />
+              <div className="text-left">
+                <p className="text-xs font-semibold text-foreground">{t('testimonialAuthor')}</p>
+                <p className="text-xs text-muted">{t('testimonialRole')}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
