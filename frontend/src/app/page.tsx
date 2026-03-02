@@ -52,6 +52,22 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ═══ TRUSTED BY ═══ */}
+      <div className="px-6 -mt-[10vh]">
+        <div className="mx-auto max-w-2xl">
+          <p className="text-center text-xs uppercase tracking-widest text-muted/30 mb-4">
+            {t('trustedBy')}
+          </p>
+          <div className="flex items-center justify-center gap-8">
+            <img
+              src="/ISM-logo.png"
+              alt="ISM University of Management and Economics"
+              className="h-8 opacity-40 brightness-0 invert grayscale"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* ═══ BELOW THE FOLD ═══ */}
       <div className="px-6">
         <div className="mx-auto max-w-2xl">
