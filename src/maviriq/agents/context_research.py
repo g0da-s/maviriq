@@ -39,6 +39,15 @@ Turn 2 (parallel):
 Turn 3 (if gaps remain):
 - Fill any remaining gaps, then submit immediately. Do NOT over-research.
 
+═══ GEOGRAPHIC SCOPING ═══
+If a TARGET MARKET is specified (not "Global"):
+- Include at least one search scoped to that country/region \
+  (e.g., "[category] in [country]", "[category] [country] market").
+- Note any local regulations, language barriers, or market dynamics \
+  specific to that country in your briefing.
+- Mention whether global players in this space operate locally in \
+  the target market or not.
+
 ═══ OUTPUT GUIDELINES ═══
 
 - idea_analysis: 2-4 sentences. What is this idea? How would it work? \
@@ -80,9 +89,12 @@ class ContextResearchAgent(
         )
 
     def get_user_prompt(self, input_data: ContextResearchInput) -> str:
+        market = input_data.target_market
+        market_line = f"TARGET MARKET: {market}\n" if market and market != "Global" else ""
         return (
             f"Build a context briefing for this business idea:\n\n"
-            f"IDEA: {input_data.idea}\n\n"
+            f"IDEA: {input_data.idea}\n"
+            f"{market_line}\n"
             f"Search to understand what this idea is about, what's happening "
             f"in the space right now, and any recent developments. "
             f"Fire off parallel searches in your first turn."

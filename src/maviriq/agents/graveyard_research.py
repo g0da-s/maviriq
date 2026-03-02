@@ -97,6 +97,16 @@ EXTRACTION RULES:
   have at least one failed attempt worth mentioning.
 - Do NOT fabricate failed startups. Only report what you find in the data.
 
+═══ GEOGRAPHIC SCOPING ═══
+If a TARGET MARKET is specified (not "Global"):
+- Also search for failed startups in the target market specifically. \
+  Try "[category] startup failed [country]", "[country] startup shutdown".
+- A startup that failed in the US may have failed for reasons that don't \
+  apply locally (e.g., couldn't compete with US incumbents). Note when \
+  failure reasons are market-specific vs universal.
+- If NO local failures exist but global ones do, that's useful context — \
+  it may mean the idea hasn't been tried locally yet.
+
 When you have gathered enough failure intelligence, call submit_result with \
 your structured findings."""
 
@@ -129,9 +139,12 @@ class GraveyardResearchAgent(
         return SYSTEM_PROMPT
 
     def get_user_prompt(self, input_data: GraveyardResearchInput) -> str:
+        market = input_data.target_market
+        market_line = f"TARGET MARKET: {market}\n" if market and market != "Global" else ""
         prompt = (
             f"Research failed startups and warning signs for this business idea:\n\n"
-            f"IDEA: {input_data.idea}\n\n"
+            f"IDEA: {input_data.idea}\n"
+            f"{market_line}\n"
             f"Find post-mortems, shutdowns, and pivots. "
             f"Use multiple search tools and diverse queries. "
             f"Think about synonyms and related terms for the idea — search broadly "

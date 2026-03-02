@@ -40,6 +40,7 @@ def _normalize_literal(v: object, allowed: tuple[str, ...], default: str) -> obj
 
 class ContextResearchInput(BaseModel):
     idea: str
+    target_market: str | None = None
 
 
 class ContextResearchOutput(BaseModel):
@@ -101,6 +102,7 @@ class UserSegment(BaseModel):
 
 class PainDiscoveryInput(BaseModel):
     idea: str
+    target_market: str | None = None
     context_briefing: str | None = None
 
 
@@ -149,6 +151,7 @@ class Competitor(BaseModel):
 
 class CompetitorResearchInput(BaseModel):
     idea: str
+    target_market: str | None = None
     target_user: UserSegment | None = None
     context_briefing: str | None = None
 
@@ -201,6 +204,7 @@ class FundingSignal(BaseModel):
 
 class MarketIntelligenceInput(BaseModel):
     idea: str
+    target_market: str | None = None
     context_briefing: str | None = None
 
 
@@ -272,6 +276,7 @@ class ChurnSignal(BaseModel):
 
 class GraveyardResearchInput(BaseModel):
     idea: str
+    target_market: str | None = None
     context_briefing: str | None = None
 
 
@@ -335,6 +340,7 @@ class Verdict(str, Enum):
 
 class SynthesisInput(BaseModel):
     idea: str
+    target_market: str | None = None
     pain_discovery: PainDiscoveryOutput
     competitor_research: CompetitorResearchOutput
     market_intelligence: MarketIntelligenceOutput | None = None
@@ -416,6 +422,7 @@ class ValidationRun(BaseModel):
     total_cost_cents: int = 0
     user_id: str | None = None
     language: str = "en"
+    target_market: str | None = None
 
 
 # ──────────────────────────────────────────────
@@ -426,6 +433,7 @@ class ValidationRun(BaseModel):
 class CreateValidationRequest(BaseModel):
     idea: str = Field(min_length=10, max_length=500)
     language: str = "en"
+    target_market: str | None = None
 
     @field_validator("idea")
     @classmethod

@@ -90,6 +90,23 @@ EXTRACTION RULES:
 NOTE: You do NOT need to assess monetization or pricing — the Competitor Research \
 agent handles that separately.
 
+═══ GEOGRAPHIC SCOPING ═══
+If a TARGET MARKET is specified (not "Global"):
+- Narrow the TAM to the target market. If you only find global numbers, \
+  estimate the local share. E.g., "The global market is $50B. Lithuania \
+  (pop. 2.8M, ~0.04% of world) → local addressable market is roughly $XM, \
+  but adjust for local internet penetration and purchasing power."
+- Search for "[category] market [country]", "[category] [country] report" \
+  to find local market data.
+- Distribution channels should be LOCAL: what communities, platforms, and \
+  channels exist in the target market? For Lithuania, that might be local \
+  Facebook groups, Lithuanian startup communities, local tech meetups, etc. \
+  — not just global channels like Reddit or Product Hunt.
+- Funding signals: look for local VCs, accelerators, and grants in the \
+  target market (e.g., "Lithuania startup funding", "[country] tech ecosystem").
+- Growth direction: if the local market is emerging while the global market \
+  is mature, note this distinction.
+
 When you have gathered enough market intelligence, call submit_result with \
 your structured findings."""
 
@@ -122,9 +139,12 @@ class MarketIntelligenceAgent(
         )
 
     def get_user_prompt(self, input_data: MarketIntelligenceInput) -> str:
+        market = input_data.target_market
+        market_line = f"TARGET MARKET: {market}\n" if market and market != "Global" else ""
         prompt = (
             f"Research the market opportunity for this business idea:\n\n"
-            f"IDEA: {input_data.idea}\n\n"
+            f"IDEA: {input_data.idea}\n"
+            f"{market_line}\n"
             f"Estimate market size (narrow to the specific niche), identify "
             f"distribution channels, and find funding activity signals. "
             f"Use multiple search tools and diverse queries."

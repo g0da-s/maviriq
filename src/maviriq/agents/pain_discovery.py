@@ -124,6 +124,18 @@ WHEN EVIDENCE IS THIN:
   points. Do NOT stretch weak signals or fabricate pain points to fill a quota.
 - The pain_summary should honestly state the lack of evidence if that's the case.
 
+═══ GEOGRAPHIC SCOPING ═══
+If a TARGET MARKET is specified (not "Global"):
+- Include searches scoped to that country or region. For example, search \
+  for "[problem] in [country]" or "[problem] [country] Reddit".
+- For non-English-speaking markets, also try searching for the problem in \
+  the local language if possible (e.g., Lithuanian forums, local communities).
+- Pain points from the target market carry extra weight — local evidence \
+  is more relevant than global complaints for a locally launched product.
+- When identifying user segments, consider local demographics and purchasing \
+  power. A "high willingness to pay" user in the US may behave differently \
+  than one in a smaller market.
+
 When you have gathered enough evidence (aim for 5-15 pain points across multiple \
 sources), call submit_result with your structured findings."""
 
@@ -158,9 +170,12 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
         )
 
     def get_user_prompt(self, input_data: PainDiscoveryInput) -> str:
+        market = input_data.target_market
+        market_line = f"TARGET MARKET: {market}\n" if market and market != "Global" else ""
         prompt = (
             f"Research this business idea and find evidence of real pain points:\n\n"
-            f"IDEA: {input_data.idea}\n\n"
+            f"IDEA: {input_data.idea}\n"
+            f"{market_line}\n"
             f"Search for genuine complaints, frustrations, and unmet needs related "
             f"to this idea. Use multiple search tools and diverse queries."
         )

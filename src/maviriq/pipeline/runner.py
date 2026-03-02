@@ -55,6 +55,7 @@ class PipelineState(TypedDict):
     user_id: str | None
     run_id: str
     language: str
+    target_market: str | None
     context_research: ContextResearchOutput | None
     context_briefing: str | None
     pain_discovery: PainDiscoveryOutput | None
@@ -162,7 +163,10 @@ class PipelineGraph:
 
         result = await asyncio.wait_for(
             self.agent0.run(
-                ContextResearchInput(idea=state["idea"]),
+                ContextResearchInput(
+                    idea=state["idea"],
+                    target_market=state.get("target_market"),
+                ),
                 max_iterations=4,
             ),
             timeout=settings.agent_timeout,
@@ -189,6 +193,7 @@ class PipelineGraph:
             self.agent1,
             PainDiscoveryInput(
                 idea=state["idea"],
+                target_market=state.get("target_market"),
                 context_briefing=state.get("context_briefing"),
             ),
             "pain_discovery",
@@ -201,6 +206,7 @@ class PipelineGraph:
             self.agent2,
             CompetitorResearchInput(
                 idea=state["idea"],
+                target_market=state.get("target_market"),
                 context_briefing=state.get("context_briefing"),
             ),
             "competitor_research",
@@ -213,6 +219,7 @@ class PipelineGraph:
             self.agent3,
             MarketIntelligenceInput(
                 idea=state["idea"],
+                target_market=state.get("target_market"),
                 context_briefing=state.get("context_briefing"),
             ),
             "market_intelligence",
@@ -225,6 +232,7 @@ class PipelineGraph:
             self.agent4,
             GraveyardResearchInput(
                 idea=state["idea"],
+                target_market=state.get("target_market"),
                 context_briefing=state.get("context_briefing"),
             ),
             "graveyard_research",
@@ -257,6 +265,7 @@ class PipelineGraph:
             self.agent5.run(
                 SynthesisInput(
                     idea=state["idea"],
+                    target_market=state.get("target_market"),
                     pain_discovery=state["pain_discovery"],
                     competitor_research=state["competitor_research"],
                     market_intelligence=state["market_intelligence"],
@@ -279,11 +288,18 @@ class PipelineGraph:
     # Public interface
     # ──────────────────────────────────────────
 
-    async def run(self, run_id: str, idea: str, user_id: str | None = None, language: str = "en") -> None:
+    async def run(
+        self,
+        run_id: str,
+        idea: str,
+        user_id: str | None = None,
+        language: str = "en",
+        target_market: str | None = None,
+    ) -> None:
         """Run the full pipeline, publishing SSE events to pubsub."""
         run = ValidationRun(
             id=run_id, idea=idea, status=ValidationStatus.RUNNING, user_id=user_id,
-            language=language,
+            language=language, target_market=target_market,
         )
         run.started_at = datetime.now(timezone.utc)
         await self.repository.create(run)
@@ -293,6 +309,7 @@ class PipelineGraph:
             "user_id": user_id,
             "run_id": run_id,
             "language": language,
+            "target_market": target_market,
             "context_research": None,
             "context_briefing": None,
             "pain_discovery": None,

@@ -134,6 +134,15 @@ GOOD viability analysis (for "AI code review for Python security"):
 - signals: [positive] "8 pain points about AI-generated code security on HN" / [negative] "CodeRabbit has 2yr head start with deep GitHub integration"
 </example>
 
+GEOGRAPHIC CONTEXT:
+- If a TARGET MARKET is specified, evaluate viability for THAT market, not globally.
+- "7 competitors exist globally but 0 operate in the target market" means the \
+  local market has LOW competition — this is an opportunity, not saturation.
+- For reachability, consider local distribution channels and communities, not \
+  just global ones.
+- For market_gap, consider gaps created by the absence of localized solutions \
+  in the target market.
+
 Be evidence-driven, not pessimistic or optimistic. If the data is strong, say so. \
 If the data is weak, say so. Don't inflate weak signals, but don't deflate strong ones either. \
 Your job is accurate assessment — let the data speak.
@@ -236,6 +245,21 @@ TONE — write like a sharp founder advising another founder:
 - lessons_from_failures: 1-2 sentences. What must the founder do differently? \
   Skip if no failures found.
 
+GEOGRAPHIC CONTEXT:
+- If a TARGET MARKET is specified (not "Global"), evaluate competition LOCALLY, \
+  not globally.
+- "7 competitors exist globally but 0 operate in the target market" is an \
+  OPPORTUNITY, not saturation. The founder can be first-to-market locally.
+- Consider local market dynamics: population size, internet penetration, \
+  purchasing power, and language barriers that create natural moats.
+- For small markets (Baltics, Nordics, Central Europe, etc.), "the local \
+  version of [global product]" can be a valid strategy if the global player \
+  doesn't localize. Being first in a small market is a real advantage.
+- Adjust next_steps for the local market: suggest local communities, local \
+  accelerators, local go-to-market channels, and explain what each one is.
+- Do NOT penalize an idea for global competition if the local market is empty. \
+  A crowded US market with zero local presence is a signal to BUILD, not SKIP.
+
 Use the viability analysis as established facts. Do NOT contradict its findings — build on them.
 Be direct. Don't oversell weak ideas. This is NOT a pitch deck — it's an honest assessment \
 from one founder to another."""
@@ -260,6 +284,9 @@ def _compute_confidence(
     comp = input_data.competitor_research
     market = input_data.market_intelligence
     graveyard = input_data.graveyard_research
+    target_market = input_data.target_market
+
+    has_local_market = bool(target_market and target_market != "Global")
 
     # {dimension: (score, weight)}
     scores: dict[str, tuple[float, float]] = {}
@@ -294,8 +321,12 @@ def _compute_confidence(
     scores["reachability"] = (reach_map.get(viability.reachability, 0.5), 0.15)
 
     # 5. Competition health (weight 0.10) — saturation + unserved needs
+    #    When a specific local market is targeted, soften the saturation
+    #    penalty: global competitors that don't operate locally leave room.
     sat_map = {"low": 0.75, "medium": 0.6, "high": 0.35}
     comp_score = sat_map.get(comp.market_saturation, 0.5)
+    if has_local_market and comp.market_saturation == "high":
+        comp_score = 0.55  # soften: global saturation != local saturation
     if comp.underserved_needs:
         comp_score = min(1.0, comp_score + len(comp.underserved_needs) * 0.05)
     scores["competition"] = (comp_score, 0.10)
@@ -436,6 +467,7 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
     def _build_research_context(self, input_data: SynthesisInput) -> str:
         """Build the full research context string from all agent outputs."""
         idea = input_data.idea
+        target_market = input_data.target_market
         pain = input_data.pain_discovery
         competitors = input_data.competitor_research
         market_intel = input_data.market_intelligence
@@ -455,8 +487,12 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
             else "N/A"
         )
 
+        market_line = ""
+        if target_market and target_market != "Global":
+            market_line = f"\nTARGET MARKET: {target_market}"
+
         context = f"""
-IDEA: {idea}
+IDEA: {idea}{market_line}
 
 ═══ PAIN RESEARCH ═══
 Target user: {pain.primary_target_user.label}

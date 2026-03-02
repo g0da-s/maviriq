@@ -85,7 +85,28 @@
     "processingFailed": "processing failed — please try again",
     "processingTimedOut": "processing timed out — please try again",
     "audioTooLarge": "audio file too large (max 25MB)",
-    "somethingWentWrong": "something went wrong — please try again"
+    "somethingWentWrong": "something went wrong — please try again",
+    "targetMarket": "where would this work?",
+    "countryGlobal": "Global / Worldwide",
+    "countryLithuania": "Lithuania",
+    "countryLatvia": "Latvia",
+    "countryEstonia": "Estonia",
+    "countryPoland": "Poland",
+    "countryGermany": "Germany",
+    "countryUnitedKingdom": "United Kingdom",
+    "countryUnitedStates": "United States",
+    "countryFrance": "France",
+    "countrySpain": "Spain",
+    "countryItaly": "Italy",
+    "countryNetherlands": "Netherlands",
+    "countrySweden": "Sweden",
+    "countryFinland": "Finland",
+    "countryNorway": "Norway",
+    "countryDenmark": "Denmark",
+    "countryIreland": "Ireland",
+    "countryCzechRepublic": "Czech Republic",
+    "countryAustria": "Austria",
+    "countrySwitzerland": "Switzerland"
   },
   "login": {
     "title": "log in",
@@ -195,7 +216,8 @@
     "recommendedPositioning": "recommended positioning",
     "failed": "failed",
     "validationNotFound": "validation not found",
-    "failedToLoad": "failed to load validation"
+    "failedToLoad": "failed to load validation",
+    "targetMarket": "target market"
   },
   "pipeline": {
     "agent0Name": "context research",

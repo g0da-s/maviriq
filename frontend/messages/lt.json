@@ -85,7 +85,28 @@
     "processingFailed": "apdorojimas nepavyko — bandyk dar kartą",
     "processingTimedOut": "apdorojimo laikas baigėsi — bandyk dar kartą",
     "audioTooLarge": "garso failas per didelis (maks. 25 MB)",
-    "somethingWentWrong": "kažkas nepavyko — bandyk dar kartą"
+    "somethingWentWrong": "kažkas nepavyko — bandyk dar kartą",
+    "targetMarket": "kur tai veiktų?",
+    "countryGlobal": "Globaliai / Visame pasaulyje",
+    "countryLithuania": "Lietuva",
+    "countryLatvia": "Latvija",
+    "countryEstonia": "Estija",
+    "countryPoland": "Lenkija",
+    "countryGermany": "Vokietija",
+    "countryUnitedKingdom": "Jungtinė Karalystė",
+    "countryUnitedStates": "Jungtinės Valstijos",
+    "countryFrance": "Prancūzija",
+    "countrySpain": "Ispanija",
+    "countryItaly": "Italija",
+    "countryNetherlands": "Nyderlandai",
+    "countrySweden": "Švedija",
+    "countryFinland": "Suomija",
+    "countryNorway": "Norvegija",
+    "countryDenmark": "Danija",
+    "countryIreland": "Airija",
+    "countryCzechRepublic": "Čekija",
+    "countryAustria": "Austrija",
+    "countrySwitzerland": "Šveicarija"
   },
   "login": {
     "title": "prisijungti",
@@ -195,7 +216,8 @@
     "recommendedPositioning": "rekomenduojamas pozicionavimas",
     "failed": "nepavyko",
     "validationNotFound": "tikrinimas nerastas",
-    "failedToLoad": "nepavyko įkelti tikrinimo"
+    "failedToLoad": "nepavyko įkelti tikrinimo",
+    "targetMarket": "tikslinė rinka"
   },
   "pipeline": {
     "agent0Name": "konteksto tyrimas",

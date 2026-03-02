@@ -153,8 +153,12 @@ async def create_validation(
 
     # Start pipeline in background — use cleaned idea for better research quality
     language = getattr(request, "language", "en") or "en"
+    target_market = getattr(request, "target_market", None)
     task = asyncio.create_task(
-        _run_pipeline_background(run_id, clean_idea, runner, user_id=user["id"], language=language)
+        _run_pipeline_background(
+            run_id, clean_idea, runner,
+            user_id=user["id"], language=language, target_market=target_market,
+        )
     )
     _running_pipelines[run_id] = task
     task.add_done_callback(lambda _: _running_pipelines.pop(run_id, None))
@@ -359,11 +363,16 @@ async def _replay_from_db(run: ValidationRun):
 
 
 async def _run_pipeline_background(
-    run_id: str, idea: str, runner: PipelineGraph, user_id: str | None = None, language: str = "en"
+    run_id: str,
+    idea: str,
+    runner: PipelineGraph,
+    user_id: str | None = None,
+    language: str = "en",
+    target_market: str | None = None,
 ):
     """Run pipeline in background. PipelineGraph.run() handles pubsub internally."""
     try:
-        await runner.run(run_id, idea, user_id=user_id, language=language)
+        await runner.run(run_id, idea, user_id=user_id, language=language, target_market=target_market)
     except Exception:
         logger.exception(f"Background pipeline failed for {run_id}")
     finally:

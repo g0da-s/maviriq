@@ -239,7 +239,14 @@ export default function ValidationPage() {
 
       {/* 1. VERDICT HERO */}
       <div className="mt-6">
-        <h1 className="font-display text-3xl font-bold leading-tight uppercase">{run.idea}</h1>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="font-display text-3xl font-bold leading-tight uppercase">{run.idea}</h1>
+          {run.target_market && run.target_market !== "Global" && (
+            <span className="shrink-0 rounded-full border border-card-border bg-white/[0.03] px-3 py-0.5 text-xs text-muted">
+              {t("targetMarket")}: {run.target_market}
+            </span>
+          )}
+        </div>
 
         {s && (
           <div className="mt-5 rounded-2xl border border-card-border bg-card px-8 py-7">

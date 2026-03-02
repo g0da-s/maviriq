@@ -96,6 +96,23 @@ EXTRACTION RULES:
   list with irrelevant companies to hit a number.
 - If zero competitors exist, report that honestly. An empty landscape is signal.
 
+═══ GEOGRAPHIC SCOPING ═══
+If a TARGET MARKET is specified (not "Global"):
+- Add geographically scoped searches: "[category] in [country]", \
+  "[category] tools [country]", "[category] [country] startups".
+- Distinguish between competitors that ACTUALLY OPERATE in the target market \
+  (have local-language support, local pricing, local users) vs global-only \
+  competitors that don't serve the target market.
+- CRITICAL: Many global competitors (especially US-based) do NOT operate \
+  in smaller markets. If you find 7 global competitors but none of them \
+  have a localized presence in the target market, the LOCAL competitive \
+  landscape is actually LOW — note this explicitly.
+- For market_saturation, evaluate LOCAL saturation. A market can be globally \
+  saturated but locally empty. If the target market has 0-2 local competitors, \
+  that's "low" saturation locally even if the global count is high.
+- Still report global competitors for context, but make it clear which ones \
+  operate locally and which don't.
+
 When you have mapped the landscape AND scraped pricing, call submit_result with \
 your structured findings. Every competitor should have strengths, weaknesses, \
 and pricing."""
@@ -133,10 +150,13 @@ class CompetitorResearchAgent(
         target_label = (
             input_data.target_user.label if input_data.target_user else "general users"
         )
+        market = input_data.target_market
+        market_line = f"TARGET MARKET: {market}\n" if market and market != "Global" else ""
         prompt = (
             f"Research the competitive landscape for this business idea:\n\n"
             f"IDEA: {input_data.idea}\n"
-            f"TARGET USER: {target_label}\n\n"
+            f"TARGET USER: {target_label}\n"
+            f"{market_line}\n"
             f"Find competitors, their pricing, strengths/weaknesses, and market gaps. "
             f"Use multiple search tools and diverse queries."
         )

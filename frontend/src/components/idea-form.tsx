@@ -55,10 +55,34 @@ function getSupportedMimeType(): string {
   return "audio/webm";
 }
 
+const TARGET_MARKET_OPTIONS = [
+  "Global",
+  "Lithuania",
+  "Latvia",
+  "Estonia",
+  "Poland",
+  "Germany",
+  "United Kingdom",
+  "United States",
+  "France",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Sweden",
+  "Finland",
+  "Norway",
+  "Denmark",
+  "Ireland",
+  "Czech Republic",
+  "Austria",
+  "Switzerland",
+] as const;
+
 export function IdeaForm() {
   const t = useTranslations("ideaForm");
   const locale = useLocale();
   const [idea, setIdea] = useState("");
+  const [targetMarket, setTargetMarket] = useState(locale === "lt" ? "Lithuania" : "Global");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [needsCredits, setNeedsCredits] = useState(false);
@@ -124,8 +148,8 @@ export function IdeaForm() {
     setNeedsCredits(false);
 
     try {
-      const res = await createValidation(idea.trim(), locale);
-      posthog.capture("validation_started", { validation_id: res.id });
+      const res = await createValidation(idea.trim(), locale, targetMarket);
+      posthog.capture("validation_started", { validation_id: res.id, target_market: targetMarket });
       router.push(`/validations/${res.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
@@ -180,6 +204,24 @@ export function IdeaForm() {
             {idea.length}/500
           </span>
         </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-3">
+        <label htmlFor="target-market" className="shrink-0 text-sm text-muted/70">
+          {t("targetMarket")}
+        </label>
+        <select
+          id="target-market"
+          value={targetMarket}
+          onChange={(e) => setTargetMarket(e.target.value)}
+          className="w-full rounded-xl border border-card-border bg-white/[0.03] px-4 py-2 text-sm text-foreground transition-colors focus:border-white/20 focus:outline-none focus:ring-0"
+        >
+          {TARGET_MARKET_OPTIONS.map((country) => (
+            <option key={country} value={country}>
+              {t(`country${country.replace(/\s/g, "")}` as Parameters<typeof t>[0])}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error && <p role="alert" className="mt-3 text-sm text-skip">{error}</p>}

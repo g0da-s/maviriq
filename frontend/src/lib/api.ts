@@ -82,10 +82,10 @@ export function createCheckout(pack: number) {
 
 // ── Validations ──
 
-export function createValidation(idea: string, language: string = "lt") {
+export function createValidation(idea: string, language: string = "lt", targetMarket?: string) {
   return request<CreateValidationResponse>("/validations", CreateValidationResponseSchema, {
     method: "POST",
-    body: JSON.stringify({ idea, language }),
+    body: JSON.stringify({ idea, language, target_market: targetMarket || null }),
   });
 }
 

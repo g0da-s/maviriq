@@ -223,6 +223,7 @@ export const ValidationRunSchema = z.object({
   total_cost_cents: z.number(),
   user_id: z.string().nullable().optional(),
   language: z.string().default("en"),
+  target_market: z.string().nullable().optional(),
 });
 
 export const CreateValidationResponseSchema = z.object({
