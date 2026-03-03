@@ -128,7 +128,7 @@ class MarketIntelligenceAgent(
     translatable_fields = [
         "market_size_estimate", "growth_evidence", "tam_reasoning",
         "distribution_channels[].channel", "distribution_channels[].reach_estimate",
-        "funding_signals",
+        "funding_signals", "funding_signals[].description",
     ]
 
     def get_system_prompt(self, input_data: MarketIntelligenceInput) -> str:

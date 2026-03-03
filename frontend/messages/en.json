@@ -216,8 +216,6 @@
     "whatToBuildFirst": "what to build first",
     "differentiationStrategy": "differentiation strategy",
     "nextSteps": "next steps",
-    "fullAiReasoning": "full AI reasoning",
-    "recommendedPositioning": "recommended positioning",
     "failed": "failed",
     "validationNotFound": "validation not found",
     "failedToLoad": "failed to load validation",
@@ -257,6 +255,9 @@
   "competitors": {
     "strengths": "strengths",
     "weaknesses": "weaknesses",
+    "typeDirect": "direct",
+    "typeIndirect": "indirect",
+    "typePotential": "potential",
     "gapsCompetitorsArentFilling": "gaps competitors aren't filling",
     "whatUsersComplainAbout": "what users complain about"
   },

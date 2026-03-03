@@ -138,7 +138,8 @@ class CompetitorResearchAgent(
     recommended_searches = 10
     translatable_fields = [
         "competitors[].one_liner", "competitors[].strengths", "competitors[].weaknesses",
-        "competitors[].pricing[].plan_name", "competitors[].pricing[].features",
+        "competitors[].pricing[].plan_name", "competitors[].pricing[].price",
+        "competitors[].pricing[].features",
         "common_complaints", "underserved_needs",
         "target_user.label", "target_user.description",
     ]

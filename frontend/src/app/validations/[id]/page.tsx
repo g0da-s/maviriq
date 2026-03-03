@@ -494,32 +494,6 @@ export default function ValidationPage() {
           </section>
         )}
 
-        {/* Full Reasoning (collapsed) */}
-        {s && (
-          <details className="mb-8 rounded-2xl border border-card-border bg-card group">
-            <summary className="flex cursor-pointer items-center justify-between p-5 text-base font-semibold text-foreground hover:bg-white/[0.02] transition-colors select-none">
-              {t("fullAiReasoning")}
-              <svg
-                className="h-4 w-4 text-muted/40 transition-transform group-open:rotate-180"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div className="border-t border-card-border p-5">
-              <p className="text-sm text-muted leading-relaxed whitespace-pre-line">{s.reasoning}</p>
-              {s.recommended_positioning && (
-                <div className="mt-4 pt-4 border-t border-card-border">
-                  <p className="text-sm font-semibold text-foreground mb-1">{t("recommendedPositioning")}</p>
-                  <p className="text-sm text-muted leading-relaxed">{s.recommended_positioning}</p>
-                </div>
-              )}
-            </div>
-          </details>
-        )}
       </div>
     </div>
   );

@@ -216,8 +216,6 @@
     "whatToBuildFirst": "ką kurti pirmiausia",
     "differentiationStrategy": "diferenciavimo strategija",
     "nextSteps": "kiti žingsniai",
-    "fullAiReasoning": "pilnas AI argumentavimas",
-    "recommendedPositioning": "rekomenduojamas pozicionavimas",
     "failed": "nepavyko",
     "validationNotFound": "tikrinimas nerastas",
     "failedToLoad": "nepavyko įkelti tikrinimo",
@@ -257,6 +255,9 @@
   "competitors": {
     "strengths": "stiprybės",
     "weaknesses": "silpnybės",
+    "typeDirect": "tiesioginis",
+    "typeIndirect": "netiesioginis",
+    "typePotential": "potencialus",
     "gapsCompetitorsArentFilling": "spragos, kurių konkurentai neužpildo",
     "whatUsersComplainAbout": "dėl ko skundžiasi vartotojai"
   },

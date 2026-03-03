@@ -15,6 +15,12 @@ function isSafeUrl(url: string): boolean {
 export function Competitors({ data }: { data: CompetitorResearchOutput }) {
   const t = useTranslations("competitors");
 
+  const typeLabel: Record<string, string> = {
+    direct: t("typeDirect"),
+    indirect: t("typeIndirect"),
+    potential: t("typePotential"),
+  };
+
   return (
     <div className="space-y-6">
       {/* competitor cards */}
@@ -33,7 +39,7 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                     <p className="text-sm font-semibold text-foreground">{comp.name}</p>
                   )}
                   <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted/70">
-                    {comp.competitor_type}
+                    {typeLabel[comp.competitor_type] ?? comp.competitor_type}
                   </span>
                 </div>
 
@@ -45,7 +51,9 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   <div className="flex flex-wrap gap-2 mb-3">
                     {comp.pricing.map((p, j) => (
                       <span key={j} className="rounded-full bg-white/5 px-3 py-0.5 text-xs text-muted">
-                        {p.plan_name}: {p.price}
+                        {p.plan_name.trim().toLowerCase() === p.price.trim().toLowerCase()
+                          ? p.price
+                          : `${p.plan_name}: ${p.price}`}
                       </span>
                     ))}
                   </div>
