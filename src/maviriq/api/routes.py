@@ -225,7 +225,6 @@ async def stream_validation(
             # Replay agents that completed before we subscribed
             sent_agents: set[int] = set()
             agent_outputs = [
-                (0, lambda r: r.context_research),
                 (1, lambda r: r.pain_discovery),
                 (2, lambda r: r.competitor_research),
                 (3, lambda r: r.market_intelligence),
@@ -234,6 +233,21 @@ async def stream_validation(
             ]
             run = await repo.get_for_user(run_id, token_user_id)
             if run:
+                # Infer agent 0 completion from downstream outputs or current_agent
+                has_downstream = any(
+                    get_output(run) is not None for _, get_output in agent_outputs
+                )
+                if (
+                    run.context_research is not None
+                    or has_downstream
+                    or (run.current_agent or 0) > 0
+                ):
+                    sent_agents.add(0)
+                    yield {
+                        "event": "agent_completed",
+                        "data": json.dumps({"agent": 0, "output": {}}),
+                    }
+
                 for agent_num, get_output in agent_outputs:
                     output = get_output(run)
                     if output is not None:
@@ -338,13 +352,25 @@ async def delete_validation(
 async def _replay_from_db(run: ValidationRun):
     """Replay completed agent events from a finished run (for late-connecting clients)."""
     agent_outputs = [
-        (0, run.context_research),
         (1, run.pain_discovery),
         (2, run.competitor_research),
         (3, run.market_intelligence),
         (4, run.graveyard_research),
         (5, run.synthesis),
     ]
+    # Agent 0 (context research) isn't persisted in DB but always completes
+    # before any downstream agent. Infer from downstream outputs or current_agent.
+    has_downstream = any(output is not None for _, output in agent_outputs)
+    context_done = (
+        run.context_research is not None
+        or has_downstream
+        or (run.current_agent or 0) > 0
+    )
+    if context_done:
+        yield {
+            "event": "agent_completed",
+            "data": json.dumps({"agent": 0, "output": {}}),
+        }
     for agent_num, output in agent_outputs:
         if output is not None:
             yield {

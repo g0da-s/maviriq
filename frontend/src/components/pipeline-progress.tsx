@@ -61,12 +61,14 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
 
     function completedFromRecord(run: ValidationRun): Set<number> {
       const s = new Set<number>();
-      if (run.context_research) s.add(0);
       if (run.pain_discovery) s.add(1);
       if (run.competitor_research) s.add(2);
       if (run.market_intelligence) s.add(3);
       if (run.graveyard_research) s.add(4);
       if (run.synthesis) s.add(5);
+      // Agent 0 (context research) always completes before agents 1-4 can start,
+      // but it's not persisted in DB. Infer from any downstream agent or current_agent.
+      if (run.context_research || s.size > 0 || (run.current_agent ?? 0) > 0) s.add(0);
       return s;
     }
 
