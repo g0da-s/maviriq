@@ -1,11 +1,22 @@
 import type {
   ValidationRun,
   ValidationListResponse,
+  ContextResearchOutput,
   PainDiscoveryOutput,
   CompetitorResearchOutput,
+  MarketIntelligenceOutput,
+  GraveyardResearchOutput,
   ViabilityOutput,
   SynthesisOutput,
 } from "@/lib/types";
+
+export const mockContextResearch: ContextResearchOutput = {
+  idea_analysis: "AI meeting scheduler targets a common pain in tech teams.",
+  current_landscape: "Several general-purpose schedulers exist but none AI-first.",
+  key_players: "Calendly, SavvyCal, Cal.com, Reclaim.ai",
+  recent_developments: "AI scheduling is a growing trend.",
+  search_queries_used: ["AI meeting scheduler market", "meeting scheduling tools"],
+};
 
 export const mockPainDiscovery: PainDiscoveryOutput = {
   idea: "AI meeting scheduler",
@@ -80,6 +91,35 @@ export const mockCompetitorResearch: CompetitorResearchOutput = {
   underserved_needs: ["AI-powered scheduling", "Team coordination"],
 };
 
+export const mockMarketIntelligence: MarketIntelligenceOutput = {
+  market_size_estimate: "$2.5B",
+  growth_direction: "growing",
+  growth_evidence: "Increasing adoption of AI tools in enterprise.",
+  tam_reasoning: "Based on enterprise scheduling tool spend.",
+  distribution_channels: [
+    { channel: "Product Hunt", reach_estimate: "50k", effort: "low" },
+  ],
+  funding_signals: [{ description: "Reclaim.ai raised $10M Series A", source_url: null }],
+  search_queries_used: ["meeting scheduling market size"],
+};
+
+export const mockGraveyardResearch: GraveyardResearchOutput = {
+  previous_attempts: [
+    {
+      name: "Clara Labs",
+      url: "https://claralabs.com",
+      what_they_did: "AI scheduling assistant via email",
+      shutdown_reason: "Burned through funding, couldn't scale human-in-the-loop",
+      year: "2021",
+      source: "TechCrunch",
+    },
+  ],
+  failure_reasons: [],
+  lessons_learned: "",
+  churn_signals: [],
+  search_queries_used: ["failed AI scheduling startups"],
+};
+
 export const mockViability: ViabilityOutput = {
   people_pay: true,
   people_pay_reasoning: "Strong willingness to pay observed across multiple segments",
@@ -117,36 +157,62 @@ export const mockSynthesis: SynthesisOutput = {
   target_user_summary: "Engineering managers at mid-size tech companies",
   estimated_market_size: "$2.5B",
   next_steps: ["Build MVP", "Get 10 beta users", "Validate pricing"],
+  people_pay: true,
+  people_pay_reasoning: "Strong willingness to pay observed across multiple segments",
+  reachability: "moderate",
+  reachability_reasoning: "Can reach through tech communities and LinkedIn",
+  market_gap: "No AI-first scheduler exists for engineering teams",
+  gap_size: "medium",
+  signals: [
+    {
+      signal: "Growing demand for AI tools",
+      direction: "positive",
+      confidence: 0.85,
+      source: "Market research",
+    },
+  ],
 };
 
 export const mockCompletedRun: ValidationRun = {
   id: "run-123",
   idea: "AI meeting scheduler for engineering teams",
   status: "completed",
-  current_agent: 4,
+  current_agent: 5,
   started_at: "2024-01-15T10:00:00Z",
   completed_at: "2024-01-15T10:05:00Z",
+  context_research: mockContextResearch,
   pain_discovery: mockPainDiscovery,
   competitor_research: mockCompetitorResearch,
+  market_intelligence: mockMarketIntelligence,
+  graveyard_research: mockGraveyardResearch,
   viability: mockViability,
   synthesis: mockSynthesis,
   error: null,
   total_cost_cents: 150,
+  user_id: "u1",
+  language: "en",
+  target_market: null,
 };
 
 export const mockRunningRun: ValidationRun = {
   id: "run-456",
   idea: "AI meeting scheduler for engineering teams",
   status: "running",
-  current_agent: 2,
+  current_agent: 0,
   started_at: "2024-01-15T10:00:00Z",
   completed_at: null,
+  context_research: null,
   pain_discovery: null,
   competitor_research: null,
+  market_intelligence: null,
+  graveyard_research: null,
   viability: null,
   synthesis: null,
   error: null,
   total_cost_cents: 0,
+  user_id: "u1",
+  language: "en",
+  target_market: null,
 };
 
 export const mockFailedRun: ValidationRun = {
@@ -156,12 +222,40 @@ export const mockFailedRun: ValidationRun = {
   current_agent: 2,
   started_at: "2024-01-15T10:00:00Z",
   completed_at: null,
+  context_research: mockContextResearch,
   pain_discovery: mockPainDiscovery,
   competitor_research: null,
+  market_intelligence: null,
+  graveyard_research: null,
   viability: null,
   synthesis: null,
   error: "Pipeline failed at competitor research",
   total_cost_cents: 50,
+  user_id: "u1",
+  language: "en",
+  target_market: null,
+};
+
+/** A running run with agent 0 and 1 already completed — simulates mid-pipeline reconnect. */
+export const mockMidPipelineRun: ValidationRun = {
+  id: "run-mid",
+  idea: "AI meeting scheduler for engineering teams",
+  status: "running",
+  current_agent: 2,
+  started_at: "2024-01-15T10:00:00Z",
+  completed_at: null,
+  context_research: mockContextResearch,
+  pain_discovery: mockPainDiscovery,
+  competitor_research: null,
+  market_intelligence: null,
+  graveyard_research: null,
+  viability: null,
+  synthesis: null,
+  error: null,
+  total_cost_cents: 30,
+  user_id: "u1",
+  language: "en",
+  target_market: null,
 };
 
 export const mockValidationList: ValidationListResponse = {

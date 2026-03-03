@@ -90,9 +90,16 @@ export default function ValidationPage() {
       setElapsedSec(0);
       return;
     }
+
+    // Initialize from started_at so the timer stays accurate after tab return
+    if (run?.started_at) {
+      const elapsed = Math.max(0, Math.floor((Date.now() - new Date(run.started_at).getTime()) / 1000));
+      setElapsedSec(elapsed);
+    }
+
     const interval = setInterval(() => setElapsedSec((s) => s + 1), 1000);
     return () => clearInterval(interval);
-  }, [isStreaming]);
+  }, [isStreaming, run?.started_at]);
 
   const handleProgress = useCallback((completed: number, total: number) => {
     setProgress(Math.round((completed / total) * 100));

@@ -52,42 +52,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ═══ TESTIMONIAL ═══ */}
-      <div className="px-6 -mt-[2vh]">
-        <div className="mx-auto max-w-2xl">
-          <p className="text-center text-xs uppercase tracking-widest text-muted/50 mb-6">
-            {t('testimonialHeadline')}
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
-            {/* circular logo with accent ring */}
-            <div className="relative shrink-0">
-              <div className="h-24 w-24 rounded-full bg-white/10 border-2 border-build/40 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/ISM.png"
-                  alt="ISM University"
-                  className="h-14 w-14 object-contain"
-                />
-              </div>
-              {/* decorative accent triangles */}
-              <span className="absolute -top-1 -right-1 text-build text-xs rotate-45">&#9654;</span>
-              <span className="absolute -bottom-1 -left-1 text-build text-xs -rotate-45">&#9654;</span>
-            </div>
-
-            {/* quote + attribution */}
-            <div className="text-center sm:text-left">
-              <p className="text-sm sm:text-base text-muted leading-relaxed">
-                {t('testimonialQuote')}
-              </p>
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-foreground">{t('testimonialAuthor')}</p>
-                <p className="text-xs text-muted">{t('testimonialRole')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ═══ BELOW THE FOLD ═══ */}
       <div className="px-6">
         <div className="mx-auto max-w-2xl">

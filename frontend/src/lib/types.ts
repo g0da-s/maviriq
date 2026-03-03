@@ -22,6 +22,18 @@ export type Reachability = z.infer<typeof ReachabilitySchema>;
 export type ReviewSentiment = z.infer<typeof ReviewSentimentSchema>;
 export type PainSeverity = z.infer<typeof PainSeveritySchema>;
 
+// ── Context Research ──
+
+const ContextResearchOutputSchema = z.object({
+  idea_analysis: z.string(),
+  current_landscape: z.string(),
+  key_players: z.string(),
+  recent_developments: z.string(),
+  search_queries_used: z.array(z.string()).default([]),
+});
+
+export type ContextResearchOutput = z.infer<typeof ContextResearchOutputSchema>;
+
 // ── Pain Discovery ──
 
 const PainPointSchema = z.object({
@@ -213,6 +225,7 @@ export const ValidationRunSchema = z.object({
   current_agent: z.number(),
   started_at: z.string().nullable(),
   completed_at: z.string().nullable(),
+  context_research: ContextResearchOutputSchema.nullable(),
   pain_discovery: PainDiscoveryOutputSchema.nullable(),
   competitor_research: CompetitorResearchOutputSchema.nullable(),
   market_intelligence: MarketIntelligenceOutputSchema.nullable(),

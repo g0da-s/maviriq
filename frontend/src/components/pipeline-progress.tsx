@@ -20,8 +20,8 @@ interface Props {
 }
 
 export function PipelineProgress({ runId, onComplete, onError, onProgress }: Props) {
-  const [runningAgents, setRunningAgents] = useState<Set<number>>(new Set());
   const [completedAgents, setCompletedAgents] = useState<Set<number>>(new Set());
+  const [pipelineStarted, setPipelineStarted] = useState(false);
   const [failed, setFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const esRef = useRef<EventSource | null>(null);
@@ -60,6 +60,18 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       return currentGeneration;
     }
 
+    /** Build a set of completed agent numbers from a validation record. */
+    function completedFromRecord(run: ValidationRun): Set<number> {
+      const s = new Set<number>();
+      if (run.context_research) s.add(0);
+      if (run.pain_discovery) s.add(1);
+      if (run.competitor_research) s.add(2);
+      if (run.market_intelligence) s.add(3);
+      if (run.graveyard_research) s.add(4);
+      if (run.synthesis) s.add(5);
+      return s;
+    }
+
     async function connect() {
       if (doneRef.current) return;
       if (connectInFlight) return; // Prevent duplicate parallel connects
@@ -75,7 +87,7 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
           if (current.status === "completed") {
             doneRef.current = true;
             setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
-            setRunningAgents(new Set());
+            setPipelineStarted(true);
             onComplete(current);
             return;
           }
@@ -85,13 +97,16 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
             onError(current.error || t("somethingWentWrong"));
             return;
           }
+
+          // Pipeline still running — pre-populate from DB state
+          const preCompleted = completedFromRecord(current);
+          setCompletedAgents(preCompleted);
+          setPipelineStarted(true);
         } catch {
           if (gen !== currentGeneration) return;
           // If status check fails, proceed with SSE anyway
+          setPipelineStarted(true);
         }
-
-        // Optimistically show agent 0 as running
-        setRunningAgents(new Set([0]));
 
         let url: string;
         try {
@@ -118,39 +133,18 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
           try { data = JSON.parse(e.data); } catch { return; }
           const agentNum = data.agent as number;
 
-          setCompletedAgents((prev) => {
-            const next = new Set([...prev, agentNum]);
-
-            // Derive running agents from completed set
-            if (next.has(0)) {
-              const allParallelDone = [...PARALLEL_AGENTS].every((a) => next.has(a));
-              if (allParallelDone) {
-                setRunningAgents(next.has(5) ? new Set() : new Set([5]));
-              } else {
-                // Show parallel agents that haven't completed as running
-                const running = new Set<number>();
-                for (const a of PARALLEL_AGENTS) {
-                  if (!next.has(a)) running.add(a);
-                }
-                setRunningAgents(running);
-              }
-            }
-
-            return next;
-          });
+          setCompletedAgents((prev) => new Set([...prev, agentNum]));
         });
 
         es.addEventListener("pipeline_completed", async (e) => {
           lastEventTimeRef.current = Date.now();
           doneRef.current = true;
-          let data: Record<string, unknown>;
-          try { data = JSON.parse(e.data); } catch {
+          try { JSON.parse(e.data); } catch {
             es.close();
             onError(t("somethingWentWrong"));
             return;
           }
           setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
-          setRunningAgents(new Set());
           es.close();
 
           try {
@@ -237,9 +231,27 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
     onProgress?.(completedAgents.size, 6);
   }, [completedAgents, onProgress]);
 
+  // Derive running status from completedAgents — no separate state to keep in sync
   function getStatus(agentNum: number): Status {
     if (completedAgents.has(agentNum)) return "done";
-    if (runningAgents.has(agentNum) && !failed) return "running";
+    if (failed || !pipelineStarted) return "waiting";
+
+    // Agent 0 runs first — it's running if nothing has completed yet
+    if (agentNum === 0) {
+      return completedAgents.size === 0 ? "running" : "waiting";
+    }
+
+    // Agents 1-4 run in parallel after agent 0 completes
+    if (PARALLEL_AGENTS.has(agentNum)) {
+      return completedAgents.has(0) ? "running" : "waiting";
+    }
+
+    // Agent 5 runs after all parallel agents complete
+    if (agentNum === 5) {
+      const allParallelDone = [...PARALLEL_AGENTS].every((a) => completedAgents.has(a));
+      return allParallelDone && completedAgents.has(0) ? "running" : "waiting";
+    }
+
     return "waiting";
   }
 
@@ -254,8 +266,8 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
   function renderStandaloneAgent(agent: { num: number; name: string; desc: string }, status: Status) {
     return (
       <div
-        className={`flex flex-col items-center text-center rounded-xl px-3 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
-          status === "running" ? "bg-build/5" : ""
+        className={`flex flex-col items-center text-center rounded-xl px-3 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-all duration-300 ${
+          status === "running" ? "bg-build/5 shimmer-bg" : ""
         }`}
       >
         <div
@@ -268,9 +280,13 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
           }`}
         >
           {status === "done" ? (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            <span className="check-pop">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+          ) : status === "running" ? (
+            <div className="h-4 w-4 rounded-full border-2 border-build border-t-transparent spin-slow" />
           ) : (
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -314,21 +330,25 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       <div className="flex justify-center py-2 sm:py-3">
         <div
           className={`w-0.5 h-6 sm:h-8 transition-colors duration-500 ${
-            contextDone ? "bg-build/40" : "bg-card-border"
+            contextDone ? "bg-build/40 connector-fill" : "bg-card-border"
           }`}
         />
       </div>
 
       {/* parallel agents — 2-col grid on mobile, 4-col grid on desktop */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-        {parallelAgents.map((agent) => {
+        {parallelAgents.map((agent, index) => {
           const status = getStatus(agent.num);
           return (
             <div
               key={agent.num}
-              className={`flex flex-col items-center text-center rounded-xl px-2 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-colors duration-300 ${
-                status === "running" ? "bg-build/5" : ""
+              className={`flex flex-col items-center text-center rounded-xl px-2 py-2.5 sm:rounded-none sm:px-0 sm:py-0 sm:bg-transparent transition-all duration-500 ${
+                status === "running" ? "bg-build/5 shimmer-bg" : ""
               }`}
+              style={{
+                transitionDelay: status === "running" ? `${index * 100}ms` : "0ms",
+                opacity: status === "waiting" ? 0.4 : 1,
+              }}
             >
               <div
                 className={`flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-500 ${
@@ -340,9 +360,13 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
                 }`}
               >
                 {status === "done" ? (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <span className="check-pop">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                ) : status === "running" ? (
+                  <div className="h-4 w-4 rounded-full border-2 border-build border-t-transparent spin-slow" />
                 ) : (
                   agent.num
                 )}
@@ -380,7 +404,7 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       <div className="flex justify-center py-2 sm:py-3">
         <div
           className={`w-0.5 h-6 sm:h-8 transition-colors duration-500 ${
-            allParallelDone ? "bg-build/40" : "bg-card-border"
+            allParallelDone ? "bg-build/40 connector-fill" : "bg-card-border"
           }`}
         />
       </div>
