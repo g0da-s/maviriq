@@ -237,6 +237,152 @@ class TestGraveyardResearchAgent:
         call_kwargs = llm.run_tool_loop.call_args.kwargs
         assert call_kwargs["output_schema"] is GraveyardResearchOutput
 
+    @pytest.mark.asyncio
+    async def test_filters_low_relevance_score(self):
+        """Entries with relevance_score below threshold are dropped."""
+        from maviriq.models.schemas import PreviousAttempt
+
+        graveyard = GraveyardResearchOutput(
+            previous_attempts=[
+                PreviousAttempt(
+                    name="RelevantCo",
+                    what_they_did="Same problem",
+                    shutdown_reason="Ran out of cash",
+                    source="failory.com",
+                    relevance_score=0.8,
+                ),
+                PreviousAttempt(
+                    name="IrrelevantCo",
+                    what_they_did="Completely different product",
+                    shutdown_reason="No market fit",
+                    source="techcrunch.com",
+                    relevance_score=0.3,
+                ),
+            ],
+            search_queries_used=["test"],
+        )
+        llm, search = make_mock_services(run_tool_loop_return=graveyard)
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(
+            GraveyardResearchInput(idea="children screen time app")
+        )
+
+        assert len(result.previous_attempts) == 1
+        assert result.previous_attempts[0].name == "RelevantCo"
+
+    @pytest.mark.asyncio
+    async def test_unscored_entries_go_through_llm_check(self):
+        """Entries without relevance_score are validated via LLM."""
+        from maviriq.agents.graveyard_research import _RelevanceJudgment, _RelevanceJudgments
+        from maviriq.models.schemas import PreviousAttempt
+
+        graveyard = GraveyardResearchOutput(
+            previous_attempts=[
+                PreviousAttempt(
+                    name="UnscoredGood",
+                    what_they_did="Parental control app",
+                    shutdown_reason="App Store policy changes",
+                    source="failory.com",
+                ),
+                PreviousAttempt(
+                    name="UnscoredBad",
+                    what_they_did="Privacy-focused docs editor",
+                    shutdown_reason="No traction",
+                    source="techcrunch.com",
+                ),
+            ],
+            search_queries_used=["test"],
+        )
+        llm_judgments = _RelevanceJudgments(judgments=[
+            _RelevanceJudgment(name="UnscoredGood", relevant=True),
+            _RelevanceJudgment(name="UnscoredBad", relevant=False),
+        ])
+        llm, search = make_mock_services(run_tool_loop_return=graveyard)
+        llm.generate_structured = AsyncMock(return_value=llm_judgments)
+
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(
+            GraveyardResearchInput(idea="children screen time app")
+        )
+
+        assert len(result.previous_attempts) == 1
+        assert result.previous_attempts[0].name == "UnscoredGood"
+        llm.generate_structured.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_llm_check_failure_keeps_entries(self):
+        """If the LLM relevance check fails, unscored entries are kept as fallback."""
+        from maviriq.models.schemas import PreviousAttempt
+
+        graveyard = GraveyardResearchOutput(
+            previous_attempts=[
+                PreviousAttempt(
+                    name="KeptOnFailure",
+                    what_they_did="Some startup",
+                    shutdown_reason="Unknown",
+                    source="reddit.com",
+                ),
+            ],
+            search_queries_used=["test"],
+        )
+        llm, search = make_mock_services(run_tool_loop_return=graveyard)
+        llm.generate_structured = AsyncMock(side_effect=RuntimeError("LLM down"))
+
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(
+            GraveyardResearchInput(idea="test idea")
+        )
+
+        assert len(result.previous_attempts) == 1
+        assert result.previous_attempts[0].name == "KeptOnFailure"
+
+    @pytest.mark.asyncio
+    async def test_mixed_scored_and_unscored(self):
+        """Scored entries are filtered by threshold; unscored go through LLM."""
+        from maviriq.agents.graveyard_research import _RelevanceJudgment, _RelevanceJudgments
+        from maviriq.models.schemas import PreviousAttempt
+
+        graveyard = GraveyardResearchOutput(
+            previous_attempts=[
+                PreviousAttempt(
+                    name="HighScore",
+                    what_they_did="Relevant startup",
+                    shutdown_reason="Timing",
+                    source="failory.com",
+                    relevance_score=0.9,
+                ),
+                PreviousAttempt(
+                    name="LowScore",
+                    what_they_did="Irrelevant startup",
+                    shutdown_reason="No demand",
+                    source="techcrunch.com",
+                    relevance_score=0.2,
+                ),
+                PreviousAttempt(
+                    name="NoScore",
+                    what_they_did="Unscored startup",
+                    shutdown_reason="Pivot",
+                    source="reddit.com",
+                ),
+            ],
+            search_queries_used=["test"],
+        )
+        llm_judgments = _RelevanceJudgments(judgments=[
+            _RelevanceJudgment(name="NoScore", relevant=True),
+        ])
+        llm, search = make_mock_services(run_tool_loop_return=graveyard)
+        llm.generate_structured = AsyncMock(return_value=llm_judgments)
+
+        agent = GraveyardResearchAgent(llm, search)
+        result = await agent.run(
+            GraveyardResearchInput(idea="test idea")
+        )
+
+        names = [a.name for a in result.previous_attempts]
+        assert "HighScore" in names
+        assert "LowScore" not in names
+        assert "NoScore" in names
+
 
 # ──────────────────────────────────────────────
 # Agent 5: Synthesis & Verdict

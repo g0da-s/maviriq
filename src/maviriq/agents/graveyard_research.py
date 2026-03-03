@@ -3,11 +3,19 @@ from __future__ import annotations
 import logging
 import re
 
+from pydantic import BaseModel
+
 from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
 from maviriq.agents.tools import build_tools_for_agent
-from maviriq.models.schemas import GraveyardResearchInput, GraveyardResearchOutput
+from maviriq.models.schemas import (
+    GraveyardResearchInput,
+    GraveyardResearchOutput,
+    PreviousAttempt,
+)
 
 logger = logging.getLogger(__name__)
+
+RELEVANCE_SCORE_THRESHOLD = 0.5
 
 SYSTEM_PROMPT = """\
 You are a startup failure analyst. Your mission is to find failed startups, \
@@ -80,7 +88,22 @@ EXTRACTION RULES:
   BAD match: "Uber (ride-sharing)" — different industry, just because both are on-demand \
     does not make them relevant
   </example>
+  <example>
+  Idea: "App to limit children's screen time based on chore completion"
+  GREAT match: "Kudoso (WiFi router that required chores for internet access)" — same mechanism
+  GOOD match: "OurPact (parental control app, struggled with App Store policies)" — adjacent
+  BAD match: "Graphite Docs (privacy-focused Google Docs alternative)" — completely different \
+    product, just because both involve digital tools does not make them relevant
+  </example>
   </examples>
+- RELEVANCE SELF-CHECK: For each entry, assign a relevance_score from 0.0 to 1.0:
+  - 0.8–1.0: Same problem, same audience (GREAT match)
+  - 0.5–0.7: Adjacent problem or adjacent audience (GOOD match)
+  - Below 0.5: Loosely related at best — DO NOT INCLUDE these
+  Before including any entry, ask: "Did this startup try to solve the SAME or a \
+  closely ADJACENT problem for a SIMILAR audience?" If the only connection is a \
+  vague category like "both are apps" or "both are B2C" or "both use AI", the \
+  answer is NO — do not include it.
 - For each previous attempt: include what they did, why they shut down (be specific \
   — not generic reasons like "ran out of money", dig into the real cause), and when \
   (if available).
@@ -127,6 +150,15 @@ _VAGUE_NAME_RE = re.compile(
     r"(?i)\b(unnamed|unknown|various|several|multiple|generic|"
     r"numerous|unspecified|anonymous|miscellaneous)\b"
 )
+
+class _RelevanceJudgment(BaseModel):
+    name: str
+    relevant: bool
+
+
+class _RelevanceJudgments(BaseModel):
+    judgments: list[_RelevanceJudgment]
+
 
 TOOL_NAMES = [
     "search_web",
@@ -177,11 +209,72 @@ class GraveyardResearchAgent(
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)
 
-    def post_process(
+    async def post_process(
         self, input_data: GraveyardResearchInput, result: GraveyardResearchOutput,
     ) -> GraveyardResearchOutput:
         result.previous_attempts = [
             attempt for attempt in result.previous_attempts
             if attempt.name.strip() and not _VAGUE_NAME_RE.search(attempt.name)
         ]
+
+        scored: list[PreviousAttempt] = []
+        needs_llm_check: list[PreviousAttempt] = []
+        for attempt in result.previous_attempts:
+            if attempt.relevance_score is not None:
+                if attempt.relevance_score >= RELEVANCE_SCORE_THRESHOLD:
+                    scored.append(attempt)
+                else:
+                    logger.info(
+                        "Dropping '%s' — self-rated relevance %.2f < %.2f",
+                        attempt.name, attempt.relevance_score, RELEVANCE_SCORE_THRESHOLD,
+                    )
+            else:
+                needs_llm_check.append(attempt)
+
+        if needs_llm_check:
+            validated = await self._llm_relevance_filter(
+                input_data.idea, needs_llm_check,
+            )
+            scored.extend(validated)
+
+        result.previous_attempts = scored
         return result
+
+    async def _llm_relevance_filter(
+        self, idea: str, attempts: list[PreviousAttempt],
+    ) -> list[PreviousAttempt]:
+        """Use a fast LLM call to filter out irrelevant entries."""
+        entries = "\n".join(
+            f"- {a.name}: {a.what_they_did}" for a in attempts
+        )
+        validated: list[PreviousAttempt] = []
+        try:
+            judgments = await self.llm.generate_structured(
+                system_prompt=(
+                    "You judge whether failed startups are relevant to a business idea. "
+                    "A startup is relevant ONLY if it tried to solve the SAME or a closely "
+                    "ADJACENT problem for a SIMILAR audience. Sharing a vague category "
+                    '(e.g. "both are apps", "both are B2C", "both use AI") is NOT enough.'
+                ),
+                user_prompt=(
+                    f"IDEA: {idea}\n\n"
+                    f"For each startup below, answer YES (relevant) or NO (not relevant):\n"
+                    f"{entries}"
+                ),
+                output_schema=_RelevanceJudgments,
+                use_cheap_model=True,
+            )
+            by_name = {a.name.strip().lower(): a for a in attempts}
+            for j in judgments.judgments:
+                key = j.name.strip().lower()
+                if key in by_name and j.relevant:
+                    validated.append(by_name[key])
+                elif key in by_name:
+                    logger.info("Dropping '%s' — LLM judged not relevant", j.name)
+        except Exception:
+            logger.warning(
+                "LLM relevance check failed; keeping %d unscored entries",
+                len(attempts),
+            )
+            validated = list(attempts)
+        return validated

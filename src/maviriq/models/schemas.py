@@ -252,6 +252,7 @@ class PreviousAttempt(BaseModel):
     shutdown_reason: str
     year: str | None = None
     source: str
+    relevance_score: float | None = Field(default=None, ge=0.0, le=1.0)
 
     @field_validator("year", mode="before")
     @classmethod

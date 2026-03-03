@@ -192,7 +192,7 @@ class PainDiscoveryAgent(BaseAgent[PainDiscoveryInput, PainDiscoveryOutput]):
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)
 
-    def post_process(
+    async def post_process(
         self, input_data: PainDiscoveryInput, result: PainDiscoveryOutput
     ) -> PainDiscoveryOutput:
         result.idea = input_data.idea

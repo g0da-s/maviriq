@@ -237,6 +237,7 @@ def sample_graveyard_research() -> GraveyardResearchOutput:
                 shutdown_reason="Couldn't differentiate from Slidebean; ran out of funding",
                 year="2022",
                 source="failory.com",
+                relevance_score=0.9,
             ),
         ],
         failure_reasons=["Insufficient differentiation from incumbents", "High CAC for startup-focused tools"],

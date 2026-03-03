@@ -174,7 +174,7 @@ class CompetitorResearchAgent(
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]:
         return build_tools_for_agent(self.search, TOOL_NAMES)
 
-    def post_process(
+    async def post_process(
         self, input_data: CompetitorResearchInput, result: CompetitorResearchOutput
     ) -> CompetitorResearchOutput:
         if input_data.target_user is not None:

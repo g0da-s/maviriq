@@ -44,7 +44,7 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
     @abstractmethod
     def get_tools_and_executors(self) -> tuple[ToolSchemas, ToolExecutors]: ...
 
-    def post_process(self, input_data: TInput, result: TOutput) -> TOutput:
+    async def post_process(self, input_data: TInput, result: TOutput) -> TOutput:
         """Optional fixups after the tool loop returns (e.g., setting result.idea)."""
         return result
 
@@ -142,4 +142,4 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
             min_searches=self.min_searches,
             recommended_searches=self.recommended_searches,
         )
-        return self.post_process(input_data, result)
+        return await self.post_process(input_data, result)
