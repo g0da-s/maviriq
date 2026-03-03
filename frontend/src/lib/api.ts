@@ -57,7 +57,11 @@ async function request<T>(
     }
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new ApiError(res.status, body.detail || `Request failed: ${res.status}`);
+      let detail = body.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((e: { msg?: string }) => e.msg).filter(Boolean).join("; ") || `Request failed: ${res.status}`;
+      }
+      throw new ApiError(res.status, detail || `Request failed: ${res.status}`);
     }
     const data = await res.json();
     return schema.parse(data);

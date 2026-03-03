@@ -155,8 +155,11 @@ export function IdeaForm() {
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
         setNeedsCredits(true);
+      } else if (err instanceof ApiError && err.status === 422) {
+        const key = mapBackendError(err.message, "ideaRejected");
+        setError(t(key));
       } else {
-        const key = err instanceof Error ? mapBackendError(err.message, "somethingWentWrong") : "transcriptionFailed";
+        const key = err instanceof Error ? mapBackendError(err.message, "somethingWentWrong") : "somethingWentWrong";
         setError(t(key));
       }
       setLoading(false);

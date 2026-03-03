@@ -24,6 +24,8 @@ const BACKEND_ERROR_MAP: Record<string, string> = {
   "processing timed out": "processingTimedOut",
   "too large": "audioTooLarge",
   "transcription failed": "transcriptionFailed",
+  "too many requests": "rateLimited",
+  "request timed out": "requestTimedOut",
 };
 
 /**
