@@ -45,6 +45,8 @@ CREATE TABLE public.validation_runs (
     graveyard_research_output JSONB,
     synthesis_output JSONB,
     total_cost_cents INTEGER DEFAULT 0,
+    language TEXT NOT NULL DEFAULT 'en',
+    target_market TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

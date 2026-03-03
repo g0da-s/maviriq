@@ -91,7 +91,7 @@ export function IdeaForm() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const router = useRouter();
-  const { user, session } = useAuth();
+  const { user, session, refreshUser } = useAuth();
 
   async function toggleRecording() {
     if (isRecording) {
@@ -150,6 +150,7 @@ export function IdeaForm() {
     try {
       const res = await createValidation(idea.trim(), locale, targetMarket);
       posthog.capture("validation_started", { validation_id: res.id, target_market: targetMarket });
+      refreshUser();
       router.push(`/validations/${res.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {

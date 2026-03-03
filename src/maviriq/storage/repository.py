@@ -35,6 +35,8 @@ class ValidationRepository:
                         "started_at": run.started_at.isoformat()
                         if run.started_at
                         else None,
+                        "language": run.language,
+                        "target_market": run.target_market,
                         "created_at": datetime.now(timezone.utc).isoformat(),
                     }
                 )
@@ -261,6 +263,8 @@ class ValidationRepository:
             else None,
             total_cost_cents=row.get("total_cost_cents", 0),
             user_id=row.get("user_id"),
+            language=row.get("language", "en"),
+            target_market=row.get("target_market"),
         )
 
 
