@@ -248,6 +248,19 @@ async def stream_validation(
                             ),
                         }
 
+                # Re-check: pipeline may have completed during replay
+                if run.status in (
+                    ValidationStatus.COMPLETED,
+                    ValidationStatus.FAILED,
+                ):
+                    async for evt in _replay_from_db(run):
+                        if evt["event"] in (
+                            "pipeline_completed",
+                            "pipeline_error",
+                        ):
+                            yield evt
+                    return
+
             # Stream live events from pubsub queue
             while True:
                 try:

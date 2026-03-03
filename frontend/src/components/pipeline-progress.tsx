@@ -43,14 +43,13 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
   useEffect(() => {
     if (!session) return;
 
-    const MAX_RETRIES = 5;
     doneRef.current = false;
     retriesRef.current = 0;
 
-    // Connection generation counter — prevents stale async connect() from proceeding
     let currentGeneration = 0;
     let connectInFlight = false;
     let abortController = new AbortController();
+    let needsReconnect = false;
 
     function startNewGeneration() {
       currentGeneration += 1;
@@ -60,7 +59,6 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       return currentGeneration;
     }
 
-    /** Build a set of completed agent numbers from a validation record. */
     function completedFromRecord(run: ValidationRun): Set<number> {
       const s = new Set<number>();
       if (run.context_research) s.add(0);
@@ -72,54 +70,76 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       return s;
     }
 
+    /** Handle a completed or failed run detected from DB poll or SSE. */
+    function handleTerminalStatus(run: ValidationRun) {
+      doneRef.current = true;
+      setReconnecting(false);
+      esRef.current?.close();
+      if (run.status === "completed") {
+        setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
+        setPipelineStarted(true);
+        setFailed(false);
+        onComplete(run);
+      } else {
+        setFailed(true);
+        onError(run.error || t("somethingWentWrong"));
+      }
+    }
+
+    /**
+     * Poll DB and resolve the current pipeline state.
+     * Returns the run if still in progress, or null if terminal (handled internally).
+     */
+    async function pollDB(signal?: AbortSignal): Promise<ValidationRun | null> {
+      try {
+        const run = await getValidation(runId, signal);
+        if (doneRef.current) return null;
+        if (run.status === "completed" || run.status === "failed") {
+          handleTerminalStatus(run);
+          return null;
+        }
+        const preCompleted = completedFromRecord(run);
+        setCompletedAgents((prev) => {
+          const merged = new Set(prev);
+          for (const n of preCompleted) merged.add(n);
+          return merged.size === prev.size ? prev : merged;
+        });
+        setPipelineStarted(true);
+        setFailed(false);
+        return run;
+      } catch {
+        return undefined as unknown as ValidationRun | null;
+      }
+    }
+
     async function connect() {
       if (doneRef.current) return;
-      if (connectInFlight) return; // Prevent duplicate parallel connects
+      if (connectInFlight) return;
 
       const gen = startNewGeneration();
       connectInFlight = true;
+      needsReconnect = false;
 
       try {
-        // Check if pipeline already finished (handles refresh / stale reconnect)
-        try {
-          const current = await getValidation(runId);
-          if (gen !== currentGeneration) return; // Stale — bail out
-          if (current.status === "completed") {
-            doneRef.current = true;
-            setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
-            setPipelineStarted(true);
-            onComplete(current);
-            return;
-          }
-          if (current.status === "failed") {
-            doneRef.current = true;
-            setFailed(true);
-            onError(current.error || t("somethingWentWrong"));
-            return;
-          }
+        const run = await pollDB(abortController.signal);
+        if (gen !== currentGeneration || doneRef.current) return;
+        if (run === null) return;
 
-          // Pipeline still running — pre-populate from DB state
-          const preCompleted = completedFromRecord(current);
-          setCompletedAgents(preCompleted);
-          setPipelineStarted(true);
-        } catch {
-          if (gen !== currentGeneration) return;
-          // If status check fails, proceed with SSE anyway
-          setPipelineStarted(true);
-        }
+        setPipelineStarted(true);
 
         let url: string;
         try {
           url = await getStreamUrl(runId, abortController.signal);
         } catch {
-          // Aborted or failed — bail out
           if (gen !== currentGeneration) return;
-          throw new Error("Failed to get stream URL");
+          scheduleRetry();
+          return;
         }
-        if (gen !== currentGeneration) return; // Stale — bail out
+        if (gen !== currentGeneration) return;
 
         const es = new EventSource(url);
         esRef.current = es;
+        setReconnecting(false);
 
         es.addEventListener("keepalive", () => {
           lastEventTimeRef.current = Date.now();
@@ -132,21 +152,18 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
           let data: Record<string, unknown>;
           try { data = JSON.parse(e.data); } catch { return; }
           const agentNum = data.agent as number;
-
           setCompletedAgents((prev) => new Set([...prev, agentNum]));
         });
 
         es.addEventListener("pipeline_completed", async (e) => {
           lastEventTimeRef.current = Date.now();
           doneRef.current = true;
+          es.close();
           try { JSON.parse(e.data); } catch {
-            es.close();
             onError(t("somethingWentWrong"));
             return;
           }
           setCompletedAgents(new Set([0, 1, 2, 3, 4, 5]));
-          es.close();
-
           try {
             const run = await getValidation(runId);
             onComplete(run);
@@ -157,50 +174,59 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
 
         es.addEventListener("pipeline_error", (e) => {
           doneRef.current = true;
+          es.close();
           let data: Record<string, unknown>;
           try { data = JSON.parse(e.data); } catch {
             setFailed(true);
             onError(t("somethingWentWrong"));
-            es.close();
             return;
           }
           setFailed(true);
           const key = mapBackendError(data.error as string, "somethingWentWrong");
           onError(t(key));
-          es.close();
         });
 
         es.addEventListener("error", () => {
           if (doneRef.current) return;
           es.close();
 
-          if (retriesRef.current < MAX_RETRIES) {
-            setReconnecting(true);
-            const delay = Math.min(1000 * 2 ** retriesRef.current, 10_000);
-            retriesRef.current += 1;
-            connectInFlight = false; // Allow retry to proceed
-            setTimeout(connect, delay);
-          } else {
-            setReconnecting(false);
-            setFailed(true);
-            onError(t("connectionLost"));
+          if (document.visibilityState !== "visible") {
+            needsReconnect = true;
+            return;
           }
+
+          scheduleRetry();
         });
       } finally {
         connectInFlight = false;
       }
     }
 
+    function scheduleRetry() {
+      setReconnecting(true);
+      const delay = Math.min(1000 * 2 ** retriesRef.current, 30_000);
+      retriesRef.current += 1;
+      connectInFlight = false;
+      setTimeout(connect, delay);
+    }
+
     connect();
 
-    // Watchdog: force reconnect if no event (including keepalive) in 30s
+    // DB poll fallback: detect completed/failed pipelines even if SSE is broken
+    const dbPoll = setInterval(() => {
+      if (doneRef.current) return;
+      pollDB();
+    }, 10_000);
+
+    // Watchdog: force SSE reconnect if no event in 30s (tab must be visible)
     const watchdog = setInterval(() => {
       if (doneRef.current) return;
+      if (document.visibilityState !== "visible") return;
       const staleSec = (Date.now() - lastEventTimeRef.current) / 1000;
       if (staleSec > 30) {
         retriesRef.current = 0;
         setReconnecting(true);
-        connectInFlight = false; // Allow reconnect
+        connectInFlight = false;
         connect();
       }
     }, 20_000);
@@ -208,11 +234,15 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
     function handleVisibilityChange() {
       if (document.visibilityState !== "visible") return;
       if (doneRef.current) return;
+
+      retriesRef.current = 0;
+      setFailed(false);
+
       const staleSec = (Date.now() - lastEventTimeRef.current) / 1000;
-      if (staleSec > 20) {
-        retriesRef.current = 0;
+      if (needsReconnect || staleSec > 10) {
+        needsReconnect = false;
         setReconnecting(true);
-        connectInFlight = false; // Allow reconnect
+        connectInFlight = false;
         connect();
       }
     }
@@ -221,8 +251,9 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
 
     return () => {
       doneRef.current = true;
-      startNewGeneration(); // Aborts in-flight fetch + closes EventSource
+      startNewGeneration();
       clearInterval(watchdog);
+      clearInterval(dbPoll);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [runId, session, onComplete, onError, t]);

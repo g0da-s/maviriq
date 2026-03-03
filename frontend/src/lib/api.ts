@@ -124,8 +124,8 @@ export async function transcribeAudio(audioBlob: Blob, language?: string): Promi
   }
 }
 
-export function getValidation(id: string) {
-  return request<ValidationRun>(`/validations/${id}`, ValidationRunSchema);
+export function getValidation(id: string, signal?: AbortSignal) {
+  return request<ValidationRun>(`/validations/${id}`, ValidationRunSchema, signal ? { signal } : undefined);
 }
 
 export function listValidations(page = 1, perPage = 20) {
