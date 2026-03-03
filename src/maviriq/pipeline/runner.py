@@ -30,6 +30,7 @@ from maviriq.models.schemas import (
     ValidationRun,
     ValidationStatus,
 )
+from difflib import SequenceMatcher
 from maviriq.pipeline.events import (
     AgentCompletedEvent,
     AgentStartedEvent,
@@ -43,6 +44,43 @@ from maviriq.services.search import SerperService
 from maviriq.storage.repository import ValidationRepository
 
 logger = logging.getLogger(__name__)
+
+
+def _deduplicate_graveyard(
+    competitors: CompetitorResearchOutput | None,
+    graveyard: GraveyardResearchOutput | None,
+) -> GraveyardResearchOutput | None:
+    """Remove graveyard entries that fuzzy-match an active competitor name.
+
+    Prevents the same company from appearing in both the competitor list
+    and the failed startups list (e.g. a company still operating being
+    wrongly listed as dead).
+    """
+    if not graveyard or not competitors or not competitors.competitors:
+        return graveyard
+
+    competitor_names = {c.name.strip().lower() for c in competitors.competitors}
+
+    def _matches_competitor(attempt_name: str) -> bool:
+        normalized = attempt_name.strip().lower()
+        if normalized in competitor_names:
+            return True
+        for comp_name in competitor_names:
+            if SequenceMatcher(None, normalized, comp_name).ratio() > 0.85:
+                return True
+        return False
+
+    original_count = len(graveyard.previous_attempts)
+    graveyard.previous_attempts = [
+        a for a in graveyard.previous_attempts if not _matches_competitor(a.name)
+    ]
+    removed = original_count - len(graveyard.previous_attempts)
+    if removed:
+        logger.info(
+            "Removed %d graveyard entries that matched active competitors", removed
+        )
+
+    return graveyard
 
 
 # ──────────────────────────────────────────────
@@ -248,6 +286,9 @@ class PipelineGraph:
         if competitor and not competitor.target_user and pain:
             competitor.target_user = pain.primary_target_user
 
+        # Cross-validate: remove graveyard entries that match active competitors
+        graveyard = _deduplicate_graveyard(competitor, state["graveyard_research"])
+
         # Emit agent_started
         run = await self.repository.get(run_id)
         run.current_agent = 5
@@ -255,7 +296,7 @@ class PipelineGraph:
         run.pain_discovery = pain
         run.competitor_research = competitor
         run.market_intelligence = state["market_intelligence"]
-        run.graveyard_research = state["graveyard_research"]
+        run.graveyard_research = graveyard
         await self.repository.update(run)
         writer(AgentStartedEvent.create(5).model_dump())
 
@@ -269,7 +310,7 @@ class PipelineGraph:
                     pain_discovery=state["pain_discovery"],
                     competitor_research=state["competitor_research"],
                     market_intelligence=state["market_intelligence"],
-                    graveyard_research=state["graveyard_research"],
+                    graveyard_research=graveyard,
                 ),
                 language=language,
             ),

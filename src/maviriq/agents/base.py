@@ -85,6 +85,17 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
                 "\n  BAD: 'aukštos kokybės produktas' when referring to masculine noun"
                 "\n  GOOD: 'aukštos kokybės produktas' is correct (kokybė is feminine genitive)"
                 "\n  Always match adjective endings to the gender AND case of the noun they modify."
+                "\n- ACCUSATIVE CASE — common source of errors with feminine nouns:"
+                "\n  Lithuanian adjectives MUST match the gender AND case of their noun."
+                "\n  Common feminine nouns: rizika, galimybė, problema, rinka, strategija, platforma, grėsmė."
+                "\n  Their accusative adjectives end in -ę (didelę, mažą, naują), NOT masculine -į."
+                "\n  BAD: 'kelia didelį riziką' (masculine -į with feminine rizika)"
+                "\n  GOOD: 'kelia didelę riziką' (correct feminine accusative)"
+                "\n  BAD: 'turi didelį galimybę' (masculine ending)"
+                "\n  GOOD: 'turi didelę galimybę' (correct feminine accusative)"
+                "\n  BAD: 'sukuria naują problemą' — this IS correct (naują works for both genders in acc.)"
+                "\n  BAD: 'mato didelį grėsmę' (masculine -į with feminine grėsmė)"
+                "\n  GOOD: 'mato didelę grėsmę' (correct feminine accusative)"
                 "\n- For well-known product/company names (Reddit, GitHub, Slack, etc.) keep the"
                 "\n  name but translate everything around it into proper Lithuanian."
                 "\n- For pricing fields: translate descriptive prices like 'Free' → 'Nemokama',"
@@ -101,10 +112,23 @@ class BaseAgent(ABC, Generic[TInput, TOutput]):
 
             if "pain_points[].quote" in self.translatable_fields:
                 system_prompt += (
-                    "\n\nQUOTE TRANSLATION: The pain point quotes you find will be in English."
-                    "\nYou MUST translate each quote into natural Lithuanian while preserving"
-                    "\nthe original meaning and emotion. Do NOT leave quotes in English."
+                    "\n\nQUOTE TRANSLATION — ABSOLUTELY MANDATORY:"
+                    "\nThe pain point quotes you find will be in English from Reddit, HN, etc."
+                    "\nYou MUST translate EVERY quote into natural Lithuanian while preserving"
+                    "\nthe original meaning, emotion, and tone. Do NOT leave ANY quote in English."
+                    "\n"
+                    "\nExample — BEFORE (English original from Reddit):"
+                    '\n  "I\'ve been looking for a good parental control app but they all suck"'
+                    "\nExample — AFTER (translated to Lithuanian):"
+                    '\n  "Ieškojau geros tėvų kontrolės programėlės, bet visos yra prastos"'
+                    "\n"
+                    "\nExample — BEFORE:"
+                    '\n  "The biggest problem is that no tool integrates with our existing workflow"'
+                    "\nExample — AFTER:"
+                    '\n  "Didžiausia problema ta, kad joks įrankis neintegruojasi su mūsų esamu darbo procesu"'
+                    "\n"
                     "\nThe source and source_url fields stay in English (they are identifiers, not prose)."
+                    "\nWARNING: If ANY quote in your output is still in English, your response will be REJECTED."
                 )
 
         tools, executors = self.get_tools_and_executors()

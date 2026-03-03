@@ -44,6 +44,19 @@ SEARCH STRATEGY — BE AGGRESSIVE:
 You can call multiple search tools in a single turn for parallel execution. \
 Use this aggressively — fire off 3-4 searches at once with different phrasings.
 
+CRITICAL — ONLY GENUINELY DEAD STARTUPS:
+- ONLY include companies that have genuinely SHUT DOWN, DIED, or COMPLETELY \
+  PIVOTED away from their original product. Do NOT include companies that are \
+  still actively operating, selling their product, and have paying customers.
+- If a company's website is still live and they are still offering their \
+  product/service, they are NOT a failed startup — they are a COMPETITOR.
+- Before including any company, ask yourself: "Is their product still active? \
+  Do they still have users/customers? Is their website still operational?" \
+  If the answer to ANY of these is yes, DO NOT include them.
+- Companies that were ACQUIRED and are still operating under the acquirer \
+  are NOT failed startups. Only include acquisitions if the product was \
+  shut down after acquisition (acqui-hire with product death).
+
 EXTRACTION RULES:
 - Aim for 2-5 highly relevant previous attempts. Quality over quantity — 2 \
   perfectly relevant failures are more useful than 8 loosely related ones.
