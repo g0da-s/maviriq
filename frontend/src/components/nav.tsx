@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { ltPlural } from "@/lib/plural";
 
-function switchLocale(newLocale: string) {
-  document.cookie = `locale=${newLocale};path=/;max-age=31536000`;
-  window.location.reload();
+function switchLocale(newLocale: string, router: ReturnType<typeof useRouter>) {
+  document.cookie = `locale=${newLocale};path=/;max-age=31536000;samesite=strict${location.protocol === "https:" ? ";secure" : ""}`;
+  router.refresh();
 }
 
-function LanguageToggle() {
+function LanguageToggle({ router }: { router: ReturnType<typeof useRouter> }) {
   const locale = useLocale();
   return (
     <div className="flex items-center gap-0.5 rounded-lg border border-card-border text-xs">
       <button
-        onClick={() => switchLocale("lt")}
-        className={`rounded-l-md px-2 py-1 transition-colors ${
+        onClick={() => switchLocale("lt", router)}
+        className={`rounded-l-md px-3 py-2 transition-colors ${
           locale === "lt"
             ? "bg-white/10 text-foreground font-semibold"
             : "text-muted hover:text-foreground"
@@ -27,8 +27,8 @@ function LanguageToggle() {
         LT
       </button>
       <button
-        onClick={() => switchLocale("en")}
-        className={`rounded-r-md px-2 py-1 transition-colors ${
+        onClick={() => switchLocale("en", router)}
+        className={`rounded-r-md px-3 py-2 transition-colors ${
           locale === "en"
             ? "bg-white/10 text-foreground font-semibold"
             : "text-muted hover:text-foreground"
@@ -42,6 +42,7 @@ function LanguageToggle() {
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
   const isHistory = pathname.startsWith("/validations");
   const isResultsPage = /^\/validations\/[^/]+$/.test(pathname);
@@ -108,7 +109,7 @@ export function Nav() {
               {!isResultsPage && (
                 <>
                   <div className="mx-1 h-4 w-px bg-card-border" />
-                  <LanguageToggle />
+                  <LanguageToggle router={router} />
                 </>
               )}
             </>
@@ -116,7 +117,7 @@ export function Nav() {
             <>
               {!isResultsPage && (
                 <>
-                  <LanguageToggle />
+                  <LanguageToggle router={router} />
                   <div className="mx-1 h-4 w-px bg-card-border" />
                 </>
               )}
@@ -190,7 +191,7 @@ export function Nav() {
               </Link>
               {!isResultsPage && (
                 <div className="my-2 flex items-center gap-2">
-                  <LanguageToggle />
+                  <LanguageToggle router={router} />
                 </div>
               )}
               <div className="my-2 h-px bg-card-border" />
@@ -205,7 +206,7 @@ export function Nav() {
             <>
               {!isResultsPage && (
                 <div className="mb-2">
-                  <LanguageToggle />
+                  <LanguageToggle router={router} />
                 </div>
               )}
               <Link

@@ -152,7 +152,10 @@ async def create_validation(
     run_id = f"val_{uuid4().hex[:12]}"
 
     # Start pipeline in background — use cleaned idea for better research quality
+    _SUPPORTED_LANGUAGES = {"en", "lt"}
     language = getattr(request, "language", "en") or "en"
+    if language not in _SUPPORTED_LANGUAGES:
+        language = "en"
     target_market = getattr(request, "target_market", None)
     task = asyncio.create_task(
         _run_pipeline_background(

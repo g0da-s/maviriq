@@ -74,7 +74,7 @@ async def stripe_webhook(request: Request) -> dict:
             return {"status": "ok"}
         credits = int(session["metadata"]["credits"])
         if credits not in PACK_TO_CREDITS:
-            logger.error(f"Webhook has invalid credit amount {credits} — skipping")
+            logger.error("Webhook has invalid credit amount %d — skipping", credits)
             return {"status": "ok"}
         session_id = session["id"]
 

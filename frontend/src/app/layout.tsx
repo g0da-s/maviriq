@@ -61,7 +61,10 @@ export default async function RootLayout({
           <Providers>
             <OfflineBanner />
             <Nav />
-            <main className="min-h-screen">
+            <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-foreground focus:px-4 focus:py-2 focus:text-background focus:text-sm">
+              Skip to content
+            </a>
+            <main id="main-content" className="min-h-screen">
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
           </Providers>

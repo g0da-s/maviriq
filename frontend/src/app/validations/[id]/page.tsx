@@ -80,8 +80,8 @@ export default function ValidationPage() {
     if (!run || run.status === "running" || run.status === "pending") return;
     const contentLang = run.language || "en";
     if (contentLang !== locale) {
-      document.cookie = `locale=${contentLang};path=/;max-age=31536000`;
-      window.location.reload();
+      document.cookie = `locale=${contentLang};path=/;max-age=31536000;samesite=strict${location.protocol === "https:" ? ";secure" : ""}`;
+      router.refresh();
     }
   }, [run, locale]);
 

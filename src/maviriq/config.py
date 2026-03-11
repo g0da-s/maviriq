@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     anthropic_max_concurrent: int = 5  # Tier 2: bumped from 2
 
     # LangSmith
-    langsmith_tracing: str = "true"
+    langsmith_tracing: str = "false"
     langsmith_api_key: str = ""
     langsmith_project: str = "maviriq"
     langsmith_endpoint: str = "https://eu.api.smith.langchain.com"

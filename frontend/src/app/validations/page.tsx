@@ -117,7 +117,7 @@ function HistoryContent() {
         <div role="alert" className="mb-4 rounded-xl border border-skip/30 bg-skip/5 px-4 py-3 text-sm text-skip flex items-center justify-between">
           <span>{error}</span>
           <button
-            onClick={() => load(page)}
+            onClick={() => { setError(""); load(page); }}
             className="ml-4 shrink-0 rounded-lg border border-skip/30 px-3 py-1 text-xs transition-colors hover:bg-skip/10"
           >
             {tc("retry")}
@@ -181,6 +181,7 @@ function HistoryContent() {
                 <button
                   onClick={() => setConfirmId(item.id)}
                   disabled={deleting === item.id}
+                  aria-label={t("deleteConfirmTitle")}
                   className="shrink-0 rounded-lg p-2 text-muted/30 opacity-100 md:opacity-0 transition-all hover:bg-skip/10 hover:text-skip md:group-hover:opacity-100"
                 >
                   {deleting === item.id ? (
@@ -200,6 +201,9 @@ function HistoryContent() {
             <div className="mt-8 flex items-center justify-center gap-2">
               <Link
                 href={`/validations?page=${page - 1}`}
+                aria-disabled={page <= 1}
+                tabIndex={page <= 1 ? -1 : undefined}
+                onClick={page <= 1 ? (e: React.MouseEvent) => e.preventDefault() : undefined}
                 className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page <= 1 ? "pointer-events-none opacity-30" : ""}`}
               >
                 {t("prev")}
@@ -209,6 +213,9 @@ function HistoryContent() {
               </span>
               <Link
                 href={`/validations?page=${page + 1}`}
+                aria-disabled={page >= totalPages}
+                tabIndex={page >= totalPages ? -1 : undefined}
+                onClick={page >= totalPages ? (e: React.MouseEvent) => e.preventDefault() : undefined}
                 className={`rounded-lg border border-card-border px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 ${page >= totalPages ? "pointer-events-none opacity-30" : ""}`}
               >
                 {t("next")}

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -9,4 +11,4 @@ class UserResponse(BaseModel):
 
 
 class CheckoutRequest(BaseModel):
-    pack: int  # 5, 20, or 50
+    pack: Literal[5, 20, 50]

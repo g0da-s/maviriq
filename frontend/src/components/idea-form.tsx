@@ -9,12 +9,6 @@ import { createValidation, transcribeAudio, ApiError } from "@/lib/api";
 import { mapBackendError } from "@/lib/supabase-error";
 import { useAuth } from "@/lib/auth-context";
 
-const BLOCKED_WORDS = new Set([
-  "fuck", "shit", "ass", "bitch", "damn", "cunt", "dick", "cock",
-  "pussy", "whore", "slut", "bastard", "nigger", "nigga", "faggot",
-  "retard", "retarded",
-]);
-
 // Include Lithuanian consonants (č, š, ž) and vowels (ą, ę, ė, į, ū)
 const CONSONANT_MASH = /[^aeiouąęėįū\s\d\W]{5,}/i;
 const REPEATED_CHARS = /(.)\1{2,}/;
@@ -25,12 +19,6 @@ function validateIdea(text: string): string | null {
 
   if (trimmed.length < 10 || words.length < 3) {
     return "errorMinLength";
-  }
-
-  // Profanity check
-  const inputWords = new Set(trimmed.toLowerCase().match(/[a-z]+/g) ?? []);
-  for (const bad of BLOCKED_WORDS) {
-    if (inputWords.has(bad)) return "errorProfanity";
   }
 
   // Gibberish check — flag words with 5+ consecutive consonants or repeated chars

@@ -108,6 +108,7 @@ async def normalize_idea(text: str) -> str:
         )
         # Sanity check: if the LLM returned something wildly different in length, keep original
         if not cleaned or len(cleaned) > len(text) * 2:
+            logger.warning("Idea normalization produced suspicious output (len %d vs %d) — using original", len(cleaned) if cleaned else 0, len(text))
             return text
         return cleaned.strip()
     except Exception:
