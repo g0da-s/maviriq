@@ -397,6 +397,7 @@ class PipelineGraph:
                 run.error = internal_msg
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
+            await self._refund_credit(user_id, run_id)
             pubsub.publish(
                 run_id,
                 PipelineErrorEvent.create(
@@ -415,6 +416,7 @@ class PipelineGraph:
                 run.error = str(e)
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
+            await self._refund_credit(user_id, run_id)
             pubsub.publish(
                 run_id,
                 PipelineErrorEvent.create(
@@ -432,6 +434,7 @@ class PipelineGraph:
                 run.error = str(e)
                 run.completed_at = datetime.now(timezone.utc)
                 await self.repository.update(run)
+            await self._refund_credit(user_id, run_id)
             pubsub.publish(
                 run_id,
                 PipelineErrorEvent.create(
@@ -441,3 +444,19 @@ class PipelineGraph:
 
         finally:
             pubsub.publish(run_id, None)  # Signal stream end
+
+    async def _refund_credit(self, user_id: str | None, run_id: str) -> None:
+        """Refund 1 credit after a system failure. Idempotent per run_id."""
+        if not user_id:
+            return
+        try:
+            from maviriq.storage.credit_repository import CreditTransactionRepository
+
+            repo = CreditTransactionRepository()
+            refunded = await repo.refund_credit(user_id, run_id)
+            if refunded:
+                logger.info("Auto-refunded credit for failed run %s (user %s)", run_id, user_id)
+            else:
+                logger.debug("Credit already refunded for run %s", run_id)
+        except Exception:
+            logger.exception("Failed to refund credit for run %s", run_id)

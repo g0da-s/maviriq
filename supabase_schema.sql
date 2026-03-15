@@ -216,6 +216,39 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 REVOKE EXECUTE ON FUNCTION public.fulfill_stripe_payment(UUID, INTEGER, TEXT) FROM public, anon, authenticated;
 
+-- Atomic credit refund + transaction record (for pipeline system failures)
+-- SECURITY: Revoke from public/anon/authenticated — only service_role (backend) can call.
+CREATE OR REPLACE FUNCTION public.refund_credit_with_txn(
+    p_user_id UUID,
+    p_run_id TEXT
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    already_refunded BOOLEAN;
+BEGIN
+    -- Idempotent: don't refund twice for the same run
+    SELECT EXISTS(
+        SELECT 1 FROM public.credit_transactions
+        WHERE user_id = p_user_id AND type = 'refund' AND stripe_session_id = p_run_id
+    ) INTO already_refunded;
+
+    IF already_refunded THEN
+        RETURN FALSE;
+    END IF;
+
+    UPDATE public.profiles
+    SET credits = credits + 1
+    WHERE id = p_user_id;
+
+    INSERT INTO public.credit_transactions (id, user_id, amount, type, stripe_session_id)
+    VALUES ('txn_' || substr(md5(random()::text), 1, 12), p_user_id, 1, 'refund', p_run_id);
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION public.refund_credit_with_txn(UUID, TEXT) FROM public, anon, authenticated;
+
 -- Grant signup bonus (atomic check-and-set)
 -- SECURITY: Revoke from public/anon/authenticated — only service_role (backend) can call.
 CREATE OR REPLACE FUNCTION public.grant_signup_bonus(p_user_id UUID)

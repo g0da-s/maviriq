@@ -204,7 +204,17 @@ export function PipelineProgress({ runId, onComplete, onError, onProgress }: Pro
       }
     }
 
+    const MAX_SSE_RETRIES = 6;
+
     function scheduleRetry() {
+      if (retriesRef.current >= MAX_SSE_RETRIES) {
+        // Stop retrying — DB poll fallback will still detect completion,
+        // but show the user a connection error if the pipeline is still running.
+        setReconnecting(false);
+        setFailed(true);
+        onError(t("connectionLost"));
+        return;
+      }
       setReconnecting(true);
       const delay = Math.min(1000 * 2 ** retriesRef.current, 30_000);
       retriesRef.current += 1;

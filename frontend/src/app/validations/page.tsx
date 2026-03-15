@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ApiError, deleteValidation, listValidations } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { ValidationListItem, ValidationListResponse } from "@/lib/types";
@@ -41,6 +41,7 @@ function HistoryContent() {
   const router = useRouter();
   const t = useTranslations("validations");
   const tc = useTranslations("common");
+  const locale = useLocale();
 
   const [data, setData] = useState<ValidationListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,7 +172,7 @@ function HistoryContent() {
                     <p className="truncate text-sm font-medium uppercase">{item.idea}</p>
                     <p className="mt-0.5 text-xs text-muted/50">
                       {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString("lt-LT")
+                        ? new Date(item.created_at).toLocaleDateString(locale === "lt" ? "lt-LT" : "en-US")
                         : item.id}
                     </p>
                   </div>

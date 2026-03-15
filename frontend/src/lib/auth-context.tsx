@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import {
   createContext,
   useContext,
@@ -61,11 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Retry also got 401 — token is truly invalid
         setUser(null);
       } else {
-        console.warn("Profile fetch failed with status", res.status);
+        Sentry.addBreadcrumb({ category: "auth", message: `Profile fetch failed with status ${res.status}`, level: "warning" });
         setUser(null);
       }
     } catch (err) {
-      console.warn("Profile fetch network error", err);
+      Sentry.addBreadcrumb({ category: "auth", message: "Profile fetch network error", level: "warning", data: { error: String(err) } });
       setUser(null);
     }
   }, []);

@@ -43,7 +43,37 @@ class _IdeaCheck(_BM):
 
 @router.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    checks: dict[str, bool] = {}
+
+    # Supabase connectivity
+    try:
+        from maviriq.supabase_client import get_supabase
+
+        sb = await get_supabase()
+        await sb.table("profiles").select("id").limit(1).execute()
+        checks["supabase"] = True
+    except Exception:
+        checks["supabase"] = False
+
+    # Redis connectivity (if configured)
+    if settings.redis_url:
+        try:
+            from maviriq.api.rate_limit import _limiter, _RedisLimiter
+
+            if isinstance(_limiter, _RedisLimiter):
+                _limiter._redis.ping()
+                checks["redis"] = True
+            else:
+                checks["redis"] = False
+        except Exception:
+            checks["redis"] = False
+
+    # API keys present
+    checks["serper"] = bool(settings.serper_api_key)
+    checks["anthropic"] = bool(settings.anthropic_api_key)
+
+    all_ok = all(checks.values())
+    return {"status": "ok" if all_ok else "degraded", **checks}
 
 
 @router.post("/transcribe")

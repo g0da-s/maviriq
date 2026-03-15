@@ -51,6 +51,23 @@ class CreditTransactionRepository:
             raise DatabaseError(str(e)) from e
         return result.data is True
 
+    async def refund_credit(self, user_id: str, run_id: str) -> bool:
+        """Atomically refund 1 credit for a failed pipeline run.
+
+        Idempotent on run_id — calling twice for the same run is a no-op.
+        Returns True if the refund was applied, False if already refunded.
+        """
+        sb = await get_supabase()
+        try:
+            result = await sb.rpc(
+                "refund_credit_with_txn",
+                {"p_user_id": user_id, "p_run_id": run_id},
+            ).execute()
+        except Exception as e:
+            logger.exception("Failed to refund credit for run %s", run_id)
+            raise DatabaseError(str(e)) from e
+        return result.data is True
+
     async def fulfill_stripe_payment(
         self,
         user_id: str,

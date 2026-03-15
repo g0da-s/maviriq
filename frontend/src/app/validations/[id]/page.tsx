@@ -239,7 +239,7 @@ export default function ValidationPage() {
         </Link>
         {run.completed_at && (
           <span className="text-xs text-muted/40">
-            {new Date(run.completed_at).toLocaleDateString("lt-LT")}
+            {new Date(run.completed_at).toLocaleDateString(locale === "lt" ? "lt-LT" : "en-US")}
           </span>
         )}
       </div>
