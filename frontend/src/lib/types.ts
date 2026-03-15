@@ -86,6 +86,7 @@ const CompetitorSchema = z.object({
   review_sentiment: ReviewSentimentSchema,
   review_count: z.number().nullable(),
   source: z.string(),
+  operates_locally: z.boolean().nullable().optional(),
 });
 
 const CompetitorResearchOutputSchema = z.object({

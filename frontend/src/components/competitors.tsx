@@ -41,6 +41,16 @@ export function Competitors({ data }: { data: CompetitorResearchOutput }) {
                   <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted/70">
                     {typeLabel[comp.competitor_type] ?? comp.competitor_type}
                   </span>
+                  {comp.operates_locally === true && (
+                    <span className="rounded-full bg-build/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-build">
+                      {t("local")}
+                    </span>
+                  )}
+                  {comp.operates_locally === false && (
+                    <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted/40">
+                      {t("globalOnly")}
+                    </span>
+                  )}
                 </div>
 
                 {/* description */}

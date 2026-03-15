@@ -112,6 +112,12 @@ If a TARGET MARKET is specified (not "Global"):
   that's "low" saturation locally even if the global count is high.
 - Still report global competitors for context, but make it clear which ones \
   operate locally and which don't.
+- SET operates_locally for EVERY competitor:
+  operates_locally = true → has local-language site, local pricing, \
+    local office, or a meaningful local user base in the target market.
+  operates_locally = false → global/US-only product with no localized \
+    presence in the target market.
+  operates_locally = null → only when target market is "Global" or unset.
 
 When you have mapped the landscape AND scraped pricing, call submit_result with \
 your structured findings. Every competitor should have strengths, weaknesses, \

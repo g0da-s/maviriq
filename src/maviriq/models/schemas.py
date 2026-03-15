@@ -137,6 +137,7 @@ class Competitor(BaseModel):
     review_sentiment: Literal["positive", "mixed", "negative"]
     review_count: int | None = None
     source: str
+    operates_locally: bool | None = None  # True if present in target market
 
     @field_validator("competitor_type", mode="before")
     @classmethod

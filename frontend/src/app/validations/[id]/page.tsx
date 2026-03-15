@@ -300,17 +300,27 @@ export default function ValidationPage() {
             )}
           </div>
         )}
-        {comp && (
-          <div className="rounded-xl border border-card-border bg-card p-4 text-center">
-            <p className="text-sm font-bold text-foreground mb-1">{t("competition")}</p>
-            <p className={`text-sm font-semibold ${
-              comp.market_saturation === "high" ? "text-skip" :
-              comp.market_saturation === "medium" ? "text-maybe" : "text-build"
-            }`}>
-              {t(comp.market_saturation)}
-            </p>
-          </div>
-        )}
+        {comp && (() => {
+          const localCount = comp.competitors.filter(c => c.operates_locally === true).length;
+          const globalCount = comp.competitors.filter(c => c.operates_locally === false).length;
+          const hasLocalData = localCount > 0 || globalCount > 0;
+          return (
+            <div className="rounded-xl border border-card-border bg-card p-4 text-center">
+              <p className="text-sm font-bold text-foreground mb-1">{t("competition")}</p>
+              <p className={`text-sm font-semibold ${
+                comp.market_saturation === "high" ? "text-skip" :
+                comp.market_saturation === "medium" ? "text-maybe" : "text-build"
+              }`}>
+                {t(comp.market_saturation)}
+              </p>
+              {hasLocalData && (
+                <p className="text-[10px] text-muted/50 mt-1">
+                  {localCount} {t("local")} / {globalCount} {t("globalOnly")}
+                </p>
+              )}
+            </div>
+          );
+        })()}
         {(s || via) && (
           <div className="rounded-xl border border-card-border bg-card p-4 text-center">
             <p className="text-sm font-bold text-foreground mb-1">{t("willPay")}</p>

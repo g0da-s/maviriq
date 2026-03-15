@@ -66,11 +66,60 @@ const TARGET_MARKET_OPTIONS = [
   "Switzerland",
 ] as const;
 
+// Map Intl timezone region codes to our target market options
+const TIMEZONE_TO_COUNTRY: Record<string, string> = {
+  LT: "Lithuania",
+  LV: "Latvia",
+  EE: "Estonia",
+  PL: "Poland",
+  DE: "Germany",
+  GB: "United Kingdom",
+  US: "United States",
+  FR: "France",
+  ES: "Spain",
+  IT: "Italy",
+  NL: "Netherlands",
+  SE: "Sweden",
+  FI: "Finland",
+  NO: "Norway",
+  DK: "Denmark",
+  IE: "Ireland",
+  CZ: "Czech Republic",
+  AT: "Austria",
+  CH: "Switzerland",
+};
+
+function detectCountryFromTimezone(): string | null {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Extract region from IANA timezone (e.g. "Europe/Vilnius" → look up mapping)
+    const tzToRegion: Record<string, string> = {
+      "Europe/Vilnius": "LT", "Europe/Riga": "LV", "Europe/Tallinn": "EE",
+      "Europe/Warsaw": "PL", "Europe/Berlin": "DE", "Europe/London": "GB",
+      "America/New_York": "US", "America/Chicago": "US", "America/Denver": "US",
+      "America/Los_Angeles": "US", "America/Anchorage": "US", "Pacific/Honolulu": "US",
+      "Europe/Paris": "FR", "Europe/Madrid": "ES", "Europe/Rome": "IT",
+      "Europe/Amsterdam": "NL", "Europe/Stockholm": "SE", "Europe/Helsinki": "FI",
+      "Europe/Oslo": "NO", "Europe/Copenhagen": "DK", "Europe/Dublin": "IE",
+      "Europe/Prague": "CZ", "Europe/Vienna": "AT", "Europe/Zurich": "CH",
+    };
+    const region = tzToRegion[tz];
+    if (region) return TIMEZONE_TO_COUNTRY[region] ?? null;
+  } catch {
+    // Intl not available
+  }
+  return null;
+}
+
 export function IdeaForm() {
   const t = useTranslations("ideaForm");
   const locale = useLocale();
   const [idea, setIdea] = useState("");
-  const [targetMarket, setTargetMarket] = useState(locale === "lt" ? "Lithuania" : "Global");
+  const [targetMarket, setTargetMarket] = useState(() => {
+    // Priority: locale hint → timezone detection → Global
+    if (locale === "lt") return "Lithuania";
+    return detectCountryFromTimezone() ?? "Global";
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [needsCredits, setNeedsCredits] = useState(false);

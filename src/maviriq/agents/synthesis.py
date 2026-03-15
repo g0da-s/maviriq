@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, field_validator
 
 from maviriq.agents.base import BaseAgent, ToolExecutors, ToolSchemas
+from maviriq.models.countries import get_country_meta
 from maviriq.models.schemas import (
     SynthesisInput,
     SynthesisOutput,
@@ -321,12 +322,33 @@ def _compute_confidence(
     scores["reachability"] = (reach_map.get(viability.reachability, 0.5), 0.15)
 
     # 5. Competition health (weight 0.10) — saturation + unserved needs
-    #    When a specific local market is targeted, soften the saturation
-    #    penalty: global competitors that don't operate locally leave room.
+    #    Use operates_locally counts when a target market is specified,
+    #    graduated by country market tier (small/medium/large).
     sat_map = {"low": 0.75, "medium": 0.6, "high": 0.35}
     comp_score = sat_map.get(comp.market_saturation, 0.5)
-    if has_local_market and comp.market_saturation == "high":
-        comp_score = 0.55  # soften: global saturation != local saturation
+
+    country_meta = get_country_meta(target_market) if has_local_market else None
+    local_count = sum(
+        1 for c in comp.competitors if c.operates_locally is True
+    )
+
+    if has_local_market:
+        tier = country_meta.market_tier if country_meta else "medium"
+        if local_count <= 1:
+            # Almost no local competition — big opportunity
+            comp_score = 0.85
+        elif local_count <= 3:
+            comp_score = 0.70
+        else:
+            # Even in a local market, 4+ local competitors is meaningful
+            comp_score = 0.50
+
+        # Small markets get an extra boost — easier to dominate
+        if tier == "small":
+            comp_score = min(1.0, comp_score + 0.10)
+        elif tier == "medium":
+            comp_score = min(1.0, comp_score + 0.05)
+
     if comp.underserved_needs:
         comp_score = min(1.0, comp_score + len(comp.underserved_needs) * 0.05)
     scores["competition"] = (comp_score, 0.10)
@@ -498,8 +520,24 @@ class SynthesisAgent(BaseAgent[SynthesisInput, SynthesisOutput]):
         )
 
         market_line = ""
+        country_meta = get_country_meta(target_market)
         if target_market and target_market != "Global":
             market_line = f"\nTARGET MARKET: {target_market}"
+            if country_meta:
+                market_line += (
+                    f"\n  Population: {country_meta.population_m}M"
+                    f" | GDP/capita: ${country_meta.gdp_per_capita_usd:,}"
+                    f" | Primary language: {country_meta.primary_language}"
+                    f" | Market tier: {country_meta.market_tier}"
+                )
+
+        # Count local vs global competitors
+        local_competitors = [
+            c for c in competitors.competitors if c.operates_locally is True
+        ]
+        global_only = [
+            c for c in competitors.competitors if c.operates_locally is False
+        ]
 
         context = f"""
 IDEA: {idea}{market_line}
@@ -516,7 +554,7 @@ User segments found:
 {chr(10).join(f"- {s.label} ({s.frequency} mentions, willingness to pay: {s.willingness_to_pay})" for s in pain.user_segments) or "None found"}
 
 ═══ COMPETITIVE LANDSCAPE ═══
-{len(competitors.competitors)} competitors
+{len(competitors.competitors)} competitors{f" ({len(local_competitors)} local, {len(global_only)} global-only)" if target_market and target_market != "Global" else ""}
 Market saturation: {competitors.market_saturation}
 Avg price: {competitors.avg_price_point}
 
@@ -531,11 +569,19 @@ Underserved needs:
 """
 
         if market_intel:
+            tam_note = ""
+            if country_meta:
+                tam_note = (
+                    f"\n⚠ TAM SANITY CHECK: {target_market} has {country_meta.population_m}M people "
+                    f"and GDP/capita of ${country_meta.gdp_per_capita_usd:,}. "
+                    f"If the estimated TAM exceeds what this population can support, "
+                    f"the estimate likely uses global figures — adjust to the local market."
+                )
             context += f"""
 ═══ MARKET INTELLIGENCE ═══
 Market size estimate: {market_intel.market_size_estimate}
 Growth direction: {market_intel.growth_direction}
-TAM reasoning: {market_intel.tam_reasoning}
+TAM reasoning: {market_intel.tam_reasoning}{tam_note}
 
 Distribution channels:
 {chr(10).join(f"- {ch.channel} (reach: {ch.reach_estimate}, effort: {ch.effort})" for ch in market_intel.distribution_channels) or "None found"}

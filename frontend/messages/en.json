@@ -222,7 +222,9 @@
     "failed": "failed",
     "validationNotFound": "validation not found",
     "failedToLoad": "failed to load validation",
-    "targetMarket": "target market"
+    "targetMarket": "target market",
+    "local": "local",
+    "globalOnly": "global"
   },
   "pipeline": {
     "agent0Name": "context research",
@@ -261,6 +263,8 @@
     "typeDirect": "direct",
     "typeIndirect": "indirect",
     "typePotential": "potential",
+    "local": "local",
+    "globalOnly": "global only",
     "gapsCompetitorsArentFilling": "gaps competitors aren't filling",
     "whatUsersComplainAbout": "what users complain about"
   },
