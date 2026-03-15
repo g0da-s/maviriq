@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maviriq — Trumpas gidas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #fafafa;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 56px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Print: fit everything on one A4 page */
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body {
+        max-width: none;
+        width: 210mm;
+        height: 297mm;
+        padding: 20px 26px;
+        overflow: hidden;
+        font-size: 9px;
+      }
+      .header {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+      }
+      .logo { font-size: 20px; }
+      .subtitle { font-size: 9px; }
+      .steps {
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .step {
+        padding: 12px 10px;
+        border-radius: 8px;
+      }
+      .step-number {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+        margin-bottom: 8px;
+      }
+      .step h3 {
+        font-size: 10.5px;
+        margin-bottom: 4px;
+      }
+      .step p {
+        font-size: 9px;
+        line-height: 1.4;
+      }
+      .section {
+        margin-bottom: 14px;
+      }
+      .section-title {
+        font-size: 11.5px;
+        margin-bottom: 8px;
+      }
+      .examples {
+        gap: 6px;
+      }
+      .example {
+        padding: 8px 12px;
+        gap: 10px;
+        border-radius: 6px;
+      }
+      .example-label {
+        font-size: 8px;
+        min-width: 36px;
+      }
+      .example-text {
+        font-size: 9px;
+        line-height: 1.4;
+      }
+      .tips-grid {
+        gap: 8px;
+      }
+      .tip {
+        padding: 10px 12px;
+        border-radius: 6px;
+      }
+      .tip-title {
+        font-size: 9.5px;
+        margin-bottom: 3px;
+      }
+      .tip p {
+        font-size: 8.5px;
+        line-height: 1.4;
+      }
+      .verdicts {
+        gap: 8px;
+      }
+      .verdict {
+        padding: 10px;
+        border-radius: 6px;
+      }
+      .verdict-badge {
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .verdict p {
+        font-size: 8.5px;
+        line-height: 1.35;
+      }
+      .disclaimer {
+        padding: 10px 12px;
+        margin-top: 2px;
+        border-radius: 6px;
+      }
+      .disclaimer p {
+        font-size: 8.5px;
+        line-height: 1.45;
+      }
+      .footer {
+        padding-top: 10px;
+        margin-top: 10px;
+      }
+      .footer p, .footer-url {
+        font-size: 8px;
+      }
+      .onboarding-intro { font-size: 8.5px; margin-bottom: 10px; }
+      .onboarding-steps { gap: 6px; margin-bottom: 10px; }
+      .onboarding-step { padding: 8px 12px; gap: 10px; border-radius: 6px; }
+      .onboarding-step .step-number { width: 20px; height: 20px; font-size: 10px; }
+      .onboarding-step-text { font-size: 8.5px; }
+      .screenshots { gap: 8px; margin-bottom: 10px; }
+      .screenshot-label { font-size: 7px; margin-top: 4px; }
+      .screenshot-box .circle, .screenshot-box .circle-rect { border-width: 2px; }
+      .onboarding-note { padding: 8px 12px; }
+      .onboarding-note p { font-size: 8.5px; }
+      .page-two {
+        break-before: page;
+        padding-top: 28px;
+      }
+      .page-three {
+        break-before: page;
+        padding-top: 28px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      body {
+        padding: 28px 20px;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 32px;
+        padding-bottom: 20px;
+      }
+
+      .steps {
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 32px;
+      }
+
+      .step {
+        padding: 20px 18px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .step-number {
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+
+      .step-content h3 {
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .step-content p {
+        font-size: 11px;
+      }
+
+      .example {
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px 16px;
+      }
+
+      .example-label {
+        min-width: unset;
+      }
+
+      .tips-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .verdicts {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .section {
+        margin-bottom: 28px;
+      }
+
+      .section-title {
+        font-size: 14px;
+        margin-bottom: 14px;
+      }
+
+      .onboarding-step { padding: 12px 16px; gap: 12px; }
+      .screenshots { flex-direction: column; gap: 12px; }
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 44px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fafafa;
+    }
+
+    .subtitle {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      color: #a1a1a1;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 500;
+    }
+
+    /* Steps */
+    .steps {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 44px;
+    }
+
+    .step {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      background: #22c55e;
+      color: #0a0a0a;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fafafa;
+    }
+
+    .step p {
+      font-size: 12px;
+      color: #a1a1a1;
+      line-height: 1.55;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #fafafa;
+      letter-spacing: -0.2px;
+    }
+
+    /* Examples */
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .example {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 16px 24px;
+      gap: 20px;
+    }
+
+    .example-bad {
+      border-left: 3px solid #ef4444;
+    }
+
+    .example-good {
+      border-left: 3px solid #22c55e;
+    }
+
+    .example-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      min-width: 48px;
+      flex-shrink: 0;
+    }
+
+    .example-bad .example-label { color: #ef4444; }
+    .example-good .example-label { color: #22c55e; }
+
+    .example-text {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #d4d4d4;
+    }
+
+    /* Tips grid */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .tip {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 20px 24px;
+    }
+
+    .tip-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fafafa;
+    }
+
+    .tip p {
+      font-size: 12px;
+      color: #a1a1a1;
+      line-height: 1.55;
+    }
+
+    /* Verdicts */
+    .verdicts {
+      display: flex;
+      gap: 20px;
+    }
+
+    .verdict {
+      flex: 1;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .verdict-build {
+      background: rgba(34, 197, 94, 0.06);
+      border-color: rgba(34, 197, 94, 0.15);
+    }
+
+    .verdict-skip {
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(239, 68, 68, 0.15);
+    }
+
+    .verdict-maybe {
+      background: rgba(234, 179, 8, 0.06);
+      border-color: rgba(234, 179, 8, 0.15);
+    }
+
+    .verdict-badge {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+    }
+
+    .verdict-build .verdict-badge { color: #22c55e; }
+    .verdict-skip .verdict-badge { color: #ef4444; }
+    .verdict-maybe .verdict-badge { color: #eab308; }
+
+    .verdict p {
+      font-size: 11.5px;
+      color: #a1a1a1;
+      line-height: 1.5;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 18px 24px;
+      margin-top: 8px;
+    }
+
+    .disclaimer p {
+      font-size: 11.5px;
+      color: #a1a1a1;
+      line-height: 1.6;
+    }
+
+    .disclaimer strong {
+      color: #fafafa;
+      font-weight: 600;
+    }
+
+    /* Onboarding */
+    .onboarding-intro {
+      font-size: 12.5px;
+      color: #a1a1a1;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .onboarding-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .onboarding-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 14px 20px;
+    }
+
+    .onboarding-step .step-number {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .onboarding-step-text {
+      font-size: 12.5px;
+      color: #d4d4d4;
+      line-height: 1.5;
+    }
+
+    .onboarding-step-text strong {
+      color: #fafafa;
+      font-weight: 600;
+    }
+
+    .screenshots {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .screenshot-box {
+      flex: 1;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .screenshot-box img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .screenshot-box .circle {
+      position: absolute;
+      border: 3px solid #22c55e;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .screenshot-box .circle-rect {
+      position: absolute;
+      border: 3px solid #22c55e;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .screenshot-label {
+      text-align: center;
+      font-size: 10px;
+      color: #a1a1a1;
+      margin-top: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .onboarding-note {
+      background: rgba(34, 197, 94, 0.06);
+      border: 1px solid rgba(34, 197, 94, 0.15);
+      border-radius: 10px;
+      padding: 14px 20px;
+    }
+
+    .onboarding-note p {
+      font-size: 12px;
+      color: #d4d4d4;
+      line-height: 1.55;
+    }
+
+    .onboarding-note strong {
+      color: #22c55e;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      padding-top: 20px;
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer p {
+      font-size: 10px;
+      color: #555;
+    }
+
+    .footer-url {
+      font-size: 10px;
+      color: #a1a1a1;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">maviriq</div>
+    <div class="subtitle">Trumpas gidas</div>
+  </div>
+
+  <!-- Onboarding: How to log in -->
+  <div class="section">
+    <div class="section-title">Kaip prisijungti:</div>
+    <p class="onboarding-intro">Kiekviena komanda gauna el. paštą ir slaptažodį. Registruotis nereikia.</p>
+    <div class="tip-title" style="margin-bottom: 12px;">Prisijungimo žingsniai:</div>
+    <div class="onboarding-steps">
+      <div class="onboarding-step">
+        <div class="step-number">1</div>
+        <div class="onboarding-step-text">Atidaryk <strong>maviriq.com</strong></div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">2</div>
+        <div class="onboarding-step-text">Spausk <strong>„prisijungti"</strong> viršuje dešinėje</div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">3</div>
+        <div class="onboarding-step-text">Įvesk gautą <strong>el. paštą</strong> ir <strong>slaptažodį</strong></div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">4</div>
+        <div class="onboarding-step-text">Spausk <strong>„prisijungti"</strong> — viskas!</div>
+      </div>
+    </div>
+    <div class="screenshots">
+      <div>
+        <div class="screenshot-box">
+          <img src="guide-screenshot-1.png" alt="Pagrindinis puslapis">
+          <!-- Circle around "prisijungti" in top-right nav -->
+          <div class="circle" style="top: -1%; left: 81%; width: 12%; height: 14%;"></div>
+        </div>
+        <div class="screenshot-label">spausk „prisijungti"</div>
+      </div>
+      <div>
+        <div class="screenshot-box">
+          <img src="guide-screenshot-2.png" alt="Prisijungimo puslapis">
+          <!-- Rectangle around email + password fields -->
+          <div class="circle-rect" style="top: 28%; left: 28%; width: 44%; height: 30%;"></div>
+        </div>
+        <div class="screenshot-label">įvesk el. paštą ir slaptažodį</div>
+      </div>
+    </div>
+    <div class="onboarding-note">
+      <p><strong>3 kreditai</strong> jau laukia jūsų paskyroje — pakanka 3 idėjoms patikrinti.</p>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="section-title" style="margin-bottom: 20px;">Kaip naudotis:</div>
+
+  <!-- 3 Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>Įvesk idėją</h3>
+      <p>Aprašyk savo verslo idėją keliais sakiniais arba papasakok balsu</p>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>Palauk 1-2 min</h3>
+      <p>6 AI agentai tyrinės rinką, konkurentus, problemas ir žlugusias įmones</p>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>Skaityk ataskaitą</h3>
+      <p>Gausi verdiktą su rinkos tyrimu, konkurentų analize ir veiksmų planu</p>
+    </div>
+  </div>
+
+  <!-- How to write a good idea -->
+  <div class="section page-two">
+    <div class="section-title">Kaip parašyti gerą idėją:</div>
+    <div class="examples">
+      <div class="example example-bad">
+        <div class="example-label">Blogai</div>
+        <div class="example-text">„Kažkas su mokykla" — per abstraktu, AI nežinos ką tirti</div>
+      </div>
+      <div class="example example-good">
+        <div class="example-label">Gerai</div>
+        <div class="example-text">„Programėlė mokiniams, kuri automatiškai suplanuoja namų darbus pagal terminus ir prioritetus" — aišku kas, kam ir kodėl</div>
+      </div>
+      <div class="example example-bad">
+        <div class="example-label">Blogai</div>
+        <div class="example-text">„Maisto pristatymas" — per platu, tūkstančiai įmonių tai jau daro</div>
+      </div>
+      <div class="example example-good">
+        <div class="example-label">Gerai</div>
+        <div class="example-text">„Sveiko maisto pristatymas studentams bendrabučiuose, kur nėra virtuvės — savaitiniai rinkiniai iki 30€" — konkretu ir su tiksline auditorija</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="section">
+    <div class="section-title">Patarimai kokybiškam tyrimui:</div>
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-title">Būk konkretus</div>
+        <p>Aprašyk ką produktas daro, ne tik sritį. „Dirbtinis intelektas" — ne idėja. „AI, kuris rašo konspektus iš vaizdo pamokų" — idėja.</p>
+      </div>
+      <div class="tip">
+        <div class="tip-title">Įvardink auditoriją</div>
+        <p>Kam tai skirta? Studentams, tėvams, smulkiam verslui? Kuo tiksliau, tuo geresnė analizė.</p>
+      </div>
+      <div class="tip">
+        <div class="tip-title">Pasirink tinkamą rinką</div>
+        <p>Jei idėja skirta Lietuvai — rinkis Lietuvą. Jei globaliam produktui — rinkis „Global".</p>
+      </div>
+      <div class="tip">
+        <div class="tip-title">Galima rašyti lietuviškai</div>
+        <p>Įrankis supranta lietuvių kalbą. Rezultatai irgi bus lietuviškai. Gali rašyti ir angliškai.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verdicts explained -->
+  <div class="section">
+    <div class="section-title">Kaip suprasti verdiktą:</div>
+    <div class="verdicts">
+      <div class="verdict verdict-build">
+        <div class="verdict-badge">VERTA</div>
+        <p>Idėja turi potencialą — yra skausmas, rinka ir vieta kurti. Verta plėtoti toliau.</p>
+      </div>
+      <div class="verdict verdict-maybe">
+        <div class="verdict-badge">GALBŪT</div>
+        <p>Idėja gali veikti, bet reikia pakoreguoti — pvz. kitokia auditorija ar kainodara.</p>
+      </div>
+      <div class="verdict verdict-skip">
+        <div class="verdict-badge">NEVERTA</div>
+        <p>Rinka perpildyta arba problemos nėra. Tai nereiškia kad bloga — tiesiog reikia kitos idėjos.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <p><strong>Svarbu:</strong> Maviriq naudoja dirbtinį intelektą, kuris gali klysti. Ataskaita paremta tik ta informacija, kurią AI rado internete tyrimo metu — ji neapima visko. Jei verdiktas sako „neverta", tai nereiškia, kad idėja tikrai bloga — tai tik vienas požiūris. Visada pasitikėk savo nuojauta ir naudok ataskaitą kaip pagalbinę priemonę, o ne galutinį atsakymą.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Maviriq — AI verslo idėjų validacijos platforma &nbsp;|&nbsp; 2026</p>
+    <div class="footer-url">maviriq.com</div>
+  </div>
+
+</body>
+</html>
