@@ -28,6 +28,7 @@ export default function ValidationPage() {
   const locale = useLocale();
   const t = useTranslations("results");
   const tc = useTranslations("common");
+  const tf = useTranslations("ideaForm");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -250,7 +251,7 @@ export default function ValidationPage() {
           <h1 className="font-display text-3xl font-bold leading-tight uppercase">{run.idea}</h1>
           {run.target_market && run.target_market !== "Global" && (
             <span className="shrink-0 rounded-full border border-card-border bg-white/[0.03] px-3 py-0.5 text-xs text-muted">
-              {t("targetMarket")}: {run.target_market}
+              {t("targetMarket")}: {tf(`country${run.target_market.replace(/\s/g, "")}` as Parameters<typeof tf>[0])}
             </span>
           )}
         </div>
