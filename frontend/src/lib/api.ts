@@ -93,41 +93,6 @@ export function createValidation(idea: string, language: string = "lt", targetMa
   });
 }
 
-// ── Transcription (Whisper) ──
-
-export async function transcribeAudio(audioBlob: Blob, language?: string): Promise<string> {
-  const token = await getAccessToken();
-  const formData = new FormData();
-  formData.append("file", audioBlob, "recording.webm");
-  if (language) {
-    formData.append("language", language);
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const res = await fetch(`${API_BASE}/transcribe`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new ApiError(res.status, body.detail || "Transcription failed");
-    }
-    const data = await res.json();
-    return data.text;
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      throw new Error("Transcription timed out");
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export function getValidation(id: string, signal?: AbortSignal) {
   return request<ValidationRun>(`/validations/${id}`, ValidationRunSchema, signal ? { signal } : undefined);
 }

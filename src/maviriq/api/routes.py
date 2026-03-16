@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from pydantic import BaseModel as _BM
@@ -74,34 +74,6 @@ async def health() -> dict:
 
     all_ok = all(checks.values())
     return {"status": "ok" if all_ok else "degraded", **checks}
-
-
-@router.post("/transcribe")
-async def transcribe(
-    file: UploadFile = File(...),
-    language: str | None = Form(default=None),
-    user: dict = Depends(get_current_user),
-) -> dict:
-    """Transcribe audio via OpenAI Whisper API."""
-    from maviriq.services.transcription import transcribe_audio
-
-    if not settings.openai_api_key:
-        raise HTTPException(status_code=503, detail="Transcription not configured")
-
-    contents = await file.read()
-    if len(contents) > 25 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Audio file too large (max 25MB)")
-
-    try:
-        text = await transcribe_audio(
-            contents,
-            filename=file.filename or "recording.webm",
-            language=language,
-        )
-        return {"text": text}
-    except Exception:
-        logger.exception("Transcription failed")
-        raise HTTPException(status_code=502, detail="Transcription failed")
 
 
 @router.get("/stats")

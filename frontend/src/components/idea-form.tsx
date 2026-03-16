@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { useTranslations, useLocale } from "next-intl";
-import { createValidation, transcribeAudio, ApiError } from "@/lib/api";
+import { createValidation, ApiError } from "@/lib/api";
 import { mapBackendError } from "@/lib/supabase-error";
 import { useAuth } from "@/lib/auth-context";
 
@@ -33,14 +33,6 @@ function validateIdea(text: string): string | null {
   }
 
   return null;
-}
-
-function getSupportedMimeType(): string {
-  if (typeof MediaRecorder !== "undefined") {
-    if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
-    if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
-  }
-  return "audio/webm";
 }
 
 const TARGET_MARKET_OPTIONS = [
@@ -123,48 +115,8 @@ export function IdeaForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [needsCredits, setNeedsCredits] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const router = useRouter();
   const { user, session, refreshUser } = useAuth();
-
-  async function toggleRecording() {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = getSupportedMimeType();
-      const recorder = new MediaRecorder(stream, { mimeType });
-      chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        setIsTranscribing(true);
-        try {
-          const text = await transcribeAudio(blob, locale);
-          setIdea((prev) => (prev + " " + text).trim().slice(0, 500));
-        } catch {
-          setError(t("transcriptionFailed"));
-        } finally {
-          setIsTranscribing(false);
-        }
-      };
-
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      setIsRecording(true);
-    } catch {
-      setError(t("micDenied"));
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -218,33 +170,9 @@ export function IdeaForm() {
           rows={3}
           className="w-full resize-none rounded-2xl border border-card-border bg-white/[0.03] px-6 py-4 pr-14 text-lg text-foreground placeholder:text-muted/50 focus:border-white/20 focus:outline-none focus:ring-0 transition-colors"
         />
-        <div className="absolute bottom-3 right-4 flex items-center gap-2">
-          {/* Mic button */}
-          <button
-            type="button"
-            onClick={toggleRecording}
-            disabled={isTranscribing || loading}
-            className="rounded-lg p-1 text-muted/50 transition-colors hover:text-foreground disabled:opacity-40"
-            aria-label={isRecording ? t("stopRecording") : t("startRecording")}
-          >
-            {isTranscribing ? (
-              <span className="block h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-transparent" />
-            ) : isRecording ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-skip animate-pulse">
-                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.07A7 7 0 0 0 19 10Z" />
-              </svg>
-            )}
-          </button>
-          <span className="text-xs text-muted/40">
-            {idea.length}/500
-          </span>
-        </div>
+        <span className="absolute bottom-3 right-4 text-xs text-muted/40">
+          {idea.length}/500
+        </span>
       </div>
 
       <div className="mt-3 flex items-center gap-3">
